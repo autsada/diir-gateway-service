@@ -17,7 +17,7 @@ enum AccountType {
 
 model Account {
     id        String      @id @default(cuid())
-    createdAt DateTime
+    createdAt DateTime    @default(now())
     updatedAt DateTime?
     owner     String      @unique // EOA address
     authUid   String      @unique // Firebase Auth uid
@@ -27,15 +27,194 @@ model Account {
 
 // Station is similar to channel on YouTube
 model Station {
-    id           String    @id @default(cuid())
-    tokenId      String?   @unique // Station NFT token id
-    createdAt    DateTime
-    updatedAt    DateTime?
-    owner        String // EOA Address
-    name         String    @unique
-    originalName String
-    image        String?
-    bannerImage  String?
-    account      Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
-    accountId    String
+    id              String           @id @default(cuid())
+    tokenId         String?          @unique // Station NFT token id
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime?
+    owner           String // EOA Address
+    name            String           @unique
+    originalName    String
+    image           String?
+    bannerImage     String?
+    account         Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    accountId       String
+    followers       Follow[]         @relation("Following")
+    following       Follow[]         @relation("Follower")
+    publishes       Publish[]
+    likes           Like[]
+    disLikes        DisLike[]
+    sentTips        Tip[]            @relation("Sent")
+    receivedTips    Tip[]            @relation("Received")
+    comments        Comment[]
+    commentLikes    CommentLike[]
+    commentDisLikes CommentDisLike[]
+}
+
+model Follow {
+    createdAt   DateTime @default(now())
+    follower    Station  @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+    followerId  String
+    following   Station  @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+    followingId String
+
+    @@id([followerId, followingId])
+}
+
+enum Category {
+    Music
+    Movies
+    Entertainment
+    Sports
+    Food
+    Travel
+    Gaming
+    News
+    Animals
+    Education
+    Science
+    Technology
+    Programming
+    LifeStyle
+    Vehicles
+    Children
+    Women
+    Men
+    Other
+}
+
+enum PublishKind {
+    Video
+    Adds
+    // Audio
+    // Blog
+    // Course
+    // Art
+    // Podcast
+}
+
+// A model for the link to playback a publish typed video
+model PlaybackLink {
+    id        String    @id @default(cuid())
+    createdAt DateTime  @default(now())
+    updatedAt DateTime?
+    thumbnail String // Thumbnail image
+    preview   String // Preview url
+    duration  Float // Duration
+    hls       String // Playback url - hls
+    dash      String // Playback url - dash
+    publish   Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String    @unique
+}
+
+enum ThumbnailSource {
+    generated
+    custom
+}
+
+model Publish {
+    id                String          @id @default(cuid())
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime?
+    creator           Station         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+    creatorId         String
+    rawContentURI     String
+    filename          String
+    thumbnail         String // A video thumbnail
+    thumbSource       ThumbnailSource
+    title             String
+    description       String?
+    views             Int?
+    primaryCategory   Category
+    secondaryCategory Category?
+    kind              PublishKind
+    playback          PlaybackLink?
+    public            Boolean         @default(false)
+    uploadError       Boolean         @default(false)
+    transcodError     Boolean         @default(false)
+    uploading         Boolean         @default(false)
+    likes             Like[]
+    dislikes          DisLike[]
+    tips              Tip[]
+    comments          Comment[]       @relation("MainComment")
+}
+
+// Publish's Like
+model Like {
+    createdAt DateTime @default(now())
+    station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+    stationId String
+    publish   Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String
+
+    @@unique(fields: [stationId, publishId], name: "identifier")
+}
+
+// Publish's DisLike
+model DisLike {
+    createdAt DateTime @default(now())
+    publish   Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String
+    station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+    stationId String
+
+    @@unique(fields: [publishId, stationId], name: "identifier")
+}
+
+// Publish' tip
+model Tip {
+    id         String   @id @default(cuid())
+    createdAt  DateTime @default(now())
+    sender     Station  @relation("Sent", fields: [senderId], references: [id])
+    senderId   String
+    publish    Publish  @relation(fields: [publishId], references: [id])
+    publishId  String
+    receiver   Station  @relation("Received", fields: [receiverId], references: [id])
+    receiverId String
+    amount     String // Use String for ether amount
+    fee        String // Use String for ether amount
+}
+
+enum CommentType {
+    PUBLISH
+    COMMENT
+}
+
+// Publish's Comment
+model Comment {
+    id          String           @id @default(cuid())
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime?
+    creator     Station          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+    creatorId   String
+    publish     Publish          @relation("MainComment", fields: [publishId], references: [id], onDelete: Cascade) // The publish that the comment belongs to.
+    publishId   String
+    comment     Comment?         @relation("SubComment", fields: [commentId], references: [id], onDelete: Cascade) // The comment that the comment belongs to, if `null` it means the comment was made on a publish directly, otherwise it was made on a comment.
+    commentId   String?
+    comments    Comment[]        @relation("SubComment") // The child comments
+    content     String
+    commentType CommentType
+    likes       CommentLike[]
+    disLikes    CommentDisLike[]
+}
+
+// Comment's Like
+model CommentLike {
+    createdAt DateTime @default(now())
+    comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    commentId String
+    station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+    stationId String
+
+    @@unique(fields: [commentId, stationId], name: "identifier")
+}
+
+// Comment's DisLike
+model CommentDisLike {
+    createdAt DateTime @default(now())
+    comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    commentId String
+    station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+    stationId String
+
+    @@unique(fields: [commentId, stationId], name: "identifier")
 }
