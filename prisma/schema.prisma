@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+    TRADITIONAL
+    WALLET
+}
+
+model Account {
+    id        String      @id @default(cuid())
+    createdAt DateTime
+    updatedAt DateTime?
+    owner     String      @unique // EOA address
+    authUid   String      @unique // Firebase Auth uid
+    type      AccountType
+    stations  Station[]
+}
+
+// Station is similar to channel on YouTube
+model Station {
+    id           String    @id @default(cuid())
+    tokenId      String?   @unique // Station NFT token id
+    createdAt    DateTime
+    updatedAt    DateTime?
+    owner        String // EOA Address
+    name         String    @unique
+    originalName String
+    image        String?
+    bannerImage  String?
+    account      Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    accountId    String
+}
