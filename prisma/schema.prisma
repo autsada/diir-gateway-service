@@ -33,13 +33,13 @@ model Station {
     updatedAt       DateTime?
     owner           String // EOA Address
     name            String           @unique
-    originalName    String
+    displayName     String
     image           String?
     bannerImage     String?
     account         Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
     accountId       String
-    followers       Follow[]         @relation("Following")
-    following       Follow[]         @relation("Follower")
+    followers       Follow[]         @relation("Follower")
+    following       Follow[]         @relation("Following")
     publishes       Publish[]
     likes           Like[]
     disLikes        DisLike[]
@@ -85,8 +85,8 @@ enum Category {
 enum PublishKind {
     Video
     Adds
+    Blog
     // Audio
-    // Blog
     // Course
     // Art
     // Podcast
@@ -127,11 +127,11 @@ model Publish {
     primaryCategory   Category
     secondaryCategory Category?
     kind              PublishKind
-    playback          PlaybackLink?
     public            Boolean         @default(false)
     uploadError       Boolean         @default(false)
-    transcodError     Boolean         @default(false)
+    transcodeError    Boolean         @default(false)
     uploading         Boolean         @default(false)
+    playback          PlaybackLink?
     likes             Like[]
     dislikes          DisLike[]
     tips              Tip[]
@@ -188,7 +188,8 @@ model Comment {
     creatorId   String
     publish     Publish          @relation("MainComment", fields: [publishId], references: [id], onDelete: Cascade) // The publish that the comment belongs to.
     publishId   String
-    comment     Comment?         @relation("SubComment", fields: [commentId], references: [id], onDelete: Cascade) // The comment that the comment belongs to, if `null` it means the comment was made on a publish directly, otherwise it was made on a comment.
+    comment     Comment?         @relation("SubComment", fields: [commentId], references: [id], onDelete: Cascade)
+    // A comment that the comment belongs to, if `null` it means the comment was made on a publish directly, otherwise it was made on a comment.
     commentId   String?
     comments    Comment[]        @relation("SubComment") // The child comments
     content     String

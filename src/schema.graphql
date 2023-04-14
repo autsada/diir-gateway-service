@@ -7,6 +7,7 @@ type Account {
   createdAt: DateTime!
   id: String!
   owner: String!
+  stations: [Station]!
   type: AccountType!
   updatedAt: DateTime
 }
@@ -14,6 +15,65 @@ type Account {
 enum AccountType {
   TRADITIONAL
   WALLET
+}
+
+type AuthUser {
+  uid: String!
+}
+
+input CacheSessionInput {
+  address: String!
+  stationId: String!
+}
+
+enum Category {
+  Animals
+  Children
+  Education
+  Entertainment
+  Food
+  Gaming
+  LifeStyle
+  Men
+  Movies
+  Music
+  News
+  Other
+  Programming
+  Science
+  Sports
+  Technology
+  Travel
+  Vehicles
+  Women
+}
+
+type Comment {
+  commentId: String
+  commentType: CommentType!
+  commentsCount: Int!
+  content: String!
+  createdAt: DateTime!
+  creator: Station
+  creatorId: String!
+  disLiked: Boolean
+  disLikesCount: Int!
+  id: String!
+  liked: Boolean
+  likes: [Station]!
+  likesCount: Int!
+  publishId: String!
+  updatedAt: DateTime
+}
+
+enum CommentType {
+  COMMENT
+  PUBLISH
+}
+
+type CreateWalletResult {
+  address: String!
+  uid: String!
 }
 
 """
@@ -26,20 +86,85 @@ type Edge {
   node: Station
 }
 
+type Mutation {
+  cacheSession(input: CacheSessionInput!): WriteResult!
+  createAccount: Account
+  createUser(address: String!): AuthUser
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean
 }
 
+type PlaybackLink {
+  createdAt: DateTime!
+  dash: String!
+  duration: Float!
+  hls: String!
+  id: String!
+  preview: String!
+  publishId: String!
+  thumbnail: String!
+  updatedAt: DateTime
+}
+
 type PreviewStation {
+  createdAt: DateTime!
+  displayName: String!
   id: String!
   image: String
   name: String!
-  originalName: String!
+}
+
+type Publish {
+  commentsCount: Int!
+  createdAt: DateTime!
+  creator: Station
+  creatorId: String!
+  description: String
+  disLiked: Boolean
+  disLikesCount: Int!
+  filename: String!
+  id: String!
+  kind: PublishKind!
+  lastComment: Comment
+  liked: Boolean
+  likes: [Station]!
+  likesCount: Int!
+  playback: PlaybackLink
+  primaryCategory: Category!
+  public: Boolean!
+  rawContentURI: String!
+  secondaryCategory: Category
+  thumbSource: ThumbSource!
+  thumbnail: String
+  tips: [Tip]!
+  tipsCount: Int!
+  title: String!
+  transcodeError: Boolean!
+  updatedAt: DateTime
+  uploadError: Boolean!
+  uploading: Boolean!
+  views: Int
+}
+
+enum PublishKind {
+  Adds
+  Blog
+  Video
 }
 
 type Query {
-  getAccount(owner: String!): Account
+  getAccountByOwner(owner: String!): Account
+  getStationById(input: QueryByIdInput!): Station
+  listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
+  listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
+}
+
+input QueryByIdInput {
+  requestorId: String
+  targetId: String!
 }
 
 type Response {
@@ -51,11 +176,39 @@ type Station {
   accountId: Int!
   bannerImage: String
   createdAt: DateTime!
+  displayName: String!
+  followers: [Station!]!
+  followersCount: Int!
+  following: [Station]!
+  followingCount: Int!
   id: String!
   image: String
+  isFollowing: Boolean
   name: String!
-  originalName: String!
   owner: String!
-  tokenId: String!
+  publishesCount: Int!
+  tokenId: String
   updatedAt: DateTime
+}
+
+enum ThumbSource {
+  custom
+  generated
+}
+
+type Tip {
+  amount: String!
+  createdAt: DateTime!
+  fee: String!
+  id: String!
+  publish: Publish
+  publishId: String!
+  receiver: Station
+  receiverId: String!
+  sender: Station
+  senderId: String!
+}
+
+type WriteResult {
+  status: String!
 }

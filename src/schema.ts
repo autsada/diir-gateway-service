@@ -12,6 +12,7 @@ export const schema = makeSchema({
     schema: path.join(process.cwd(), "src/schema.graphql"),
   },
   contextType: {
+    // module: require.resolve("./context"),
     module: path.join(
       process.cwd(),
       `src/${NODE_ENV === "development" ? "context.ts" : "context.js"}`

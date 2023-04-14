@@ -1,10 +1,10 @@
 import path from "path"
 import dotenv from "dotenv"
 dotenv.config({ path: path.join(__dirname, "../.env") })
-import express from "express"
+import express, { json } from "express"
 import cors from "cors"
 import http from "http"
-import workerpool from "workerpool"
+// import workerpool from "workerpool"
 import { ApolloServer } from "@apollo/server"
 import { expressMiddleware } from "@apollo/server/express4"
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer"
@@ -12,8 +12,10 @@ import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin
 import { InMemoryLRUCache } from "@apollo/utils.keyvaluecache"
 
 import { schema } from "./schema"
-import { context, Context } from "./context"
-import { Environment } from "./types"
+import { prisma } from "./client"
+import { WalletAPI } from "./dataSources/walletAPI"
+import type { Context } from "./context"
+import type { Environment } from "./types"
 
 const { PORT, NODE_ENV } = process.env
 const env = NODE_ENV as Environment
@@ -55,7 +57,20 @@ async function startServer() {
   app.use(
     "/graphql",
     expressMiddleware(server, {
-      context: async () => context,
+      context: async ({ req }) => {
+        const { cache } = server
+        // Get the user token from the headers.
+        const authorization = req.headers["authorization"]
+        const idToken = authorization?.split(" ")[1]
+
+        return {
+          prisma,
+          idToken,
+          dataSources: {
+            walletAPI: new WalletAPI({ idToken, cache }),
+          },
+        }
+      },
     })
   )
 
@@ -68,3 +83,16 @@ async function startServer() {
 }
 
 startServer()
+
+process.on("uncaughtException", (err, origin) => {
+  console.log("uncaught: ", err)
+})
+
+process.once("SIGUSR2", function () {
+  process.kill(process.pid, "SIGUSR2")
+})
+
+process.on("SIGINT", function () {
+  // this is only called on ctrl+c, not restart
+  process.kill(process.pid, "SIGINT")
+})

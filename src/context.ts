@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client"
 
-import { prisma } from "./client"
+import { WalletAPI } from "./dataSources/walletAPI"
 
 export interface Context {
+  dataSources: {
+    walletAPI: WalletAPI
+  }
   prisma: PrismaClient
-}
-
-export const context: Context = {
-  prisma,
+  idToken: string | undefined
 }

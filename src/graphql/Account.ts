@@ -1,5 +1,4 @@
 import { Station } from "@prisma/client"
-import { GraphQLError } from "graphql"
 import {
   extendType,
   objectType,
@@ -10,6 +9,7 @@ import {
   inputObjectType,
 } from "nexus"
 import { cacheTokenId, getStationFromCache } from "../client/redis"
+import { NexusGenObjects } from "../typegen"
 
 import { throwError, badInputErrMessage } from "./Error"
 
@@ -54,13 +54,35 @@ export const Account = objectType({
     t.nonNull.string("owner")
     t.nonNull.string("authUid")
     t.nonNull.field("type", { type: "AccountType" })
+    t.nonNull.list.field("stations", {
+      type: "Station",
+      resolve: async (parent, _, { prisma }) => {
+        const stations = (await prisma.account
+          .findUnique({
+            where: {
+              id: parent.id,
+            },
+          })
+          .stations({
+            orderBy: {
+              createdAt: "desc",
+            },
+          })) as unknown as NexusGenObjects["Station"][]
+
+        if (!stations) return []
+        else return stations
+      },
+    })
   },
 })
 
 export const AccountQuery = extendType({
   type: "Query",
   definition(t) {
-    t.field("getAccount", {
+    /**
+     * Get an account by owner address (EOA)
+     */
+    t.field("getAccountByOwner", {
       type: nullable("Account"),
       args: { owner: nonNull(stringArg()) },
       async resolve(_parent, { owner }, { prisma }) {
@@ -84,7 +106,51 @@ export const AccountQuery = extendType({
               ? await getStationFromCache(owner, account.stations as Station[])
               : null
 
-          return { ...account, station }
+          return { ...account, defaultStation: station }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+  },
+})
+
+/**
+ * Returned type of all the write operations that doesn't require return values.
+ */
+export const WriteResult = objectType({
+  name: "WriteResult",
+  definition(t) {
+    t.nonNull.string("status")
+  },
+})
+
+export const CacheSessionInput = inputObjectType({
+  name: "CacheSessionInput",
+  definition(t) {
+    t.nonNull.string("address")
+    t.nonNull.string("stationId")
+  },
+})
+
+export const AccountMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.field("createAccount", {
+      type: "Account",
+    })
+
+    t.field("cacheSession", {
+      type: nonNull("WriteResult"),
+      args: { input: nonNull("CacheSessionInput") },
+      async resolve(_parent, { input }) {
+        try {
+          if (!input || !input.address || !input.stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          await cacheTokenId(input.address, input.stationId)
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }

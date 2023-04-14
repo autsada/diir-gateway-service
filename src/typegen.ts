@@ -29,10 +29,22 @@ declare global {
 }
 
 export interface NexusGenInputs {
+  CacheSessionInput: { // input type
+    address: string; // String!
+    stationId: string; // String!
+  }
+  QueryByIdInput: { // input type
+    requestorId?: string | null; // String
+    targetId: string; // String!
+  }
 }
 
 export interface NexusGenEnums {
   AccountType: "TRADITIONAL" | "WALLET"
+  Category: "Animals" | "Children" | "Education" | "Entertainment" | "Food" | "Gaming" | "LifeStyle" | "Men" | "Movies" | "Music" | "News" | "Other" | "Programming" | "Science" | "Sports" | "Technology" | "Travel" | "Vehicles" | "Women"
+  CommentType: "COMMENT" | "PUBLISH"
+  PublishKind: "Adds" | "Blog" | "Video"
+  ThumbSource: "custom" | "generated"
 }
 
 export interface NexusGenScalars {
@@ -53,19 +65,69 @@ export interface NexusGenObjects {
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
   }
+  AuthUser: { // root type
+    uid: string; // String!
+  }
+  Comment: { // root type
+    commentId?: string | null; // String
+    commentType: NexusGenEnums['CommentType']; // CommentType!
+    content: string; // String!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creatorId: string; // String!
+    id: string; // String!
+    publishId: string; // String!
+    updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  CreateWalletResult: { // root type
+    address: string; // String!
+    uid: string; // String!
+  }
   Edge: { // root type
     cursor?: string | null; // String
     node?: NexusGenRootTypes['Station'] | null; // Station
   }
+  Mutation: {};
   PageInfo: { // root type
     endCursor?: string | null; // String
     hasNextPage?: boolean | null; // Boolean
   }
+  PlaybackLink: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    dash: string; // String!
+    duration: number; // Float!
+    hls: string; // String!
+    id: string; // String!
+    preview: string; // String!
+    publishId: string; // String!
+    thumbnail: string; // String!
+    updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+  }
   PreviewStation: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    displayName: string; // String!
     id: string; // String!
     image?: string | null; // String
     name: string; // String!
-    originalName: string; // String!
+  }
+  Publish: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creatorId: string; // String!
+    description?: string | null; // String
+    filename: string; // String!
+    id: string; // String!
+    kind: NexusGenEnums['PublishKind']; // PublishKind!
+    primaryCategory: NexusGenEnums['Category']; // Category!
+    public: boolean; // Boolean!
+    rawContentURI: string; // String!
+    secondaryCategory?: NexusGenEnums['Category'] | null; // Category
+    thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
+    thumbnail?: string | null; // String
+    title: string; // String!
+    transcodeError: boolean; // Boolean!
+    updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+    uploadError: boolean; // Boolean!
+    uploading: boolean; // Boolean!
+    views?: number | null; // Int
   }
   Query: {};
   Response: { // root type
@@ -76,13 +138,25 @@ export interface NexusGenObjects {
     accountId: number; // Int!
     bannerImage?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    displayName: string; // String!
     id: string; // String!
     image?: string | null; // String
     name: string; // String!
-    originalName: string; // String!
     owner: string; // String!
-    tokenId: string; // String!
+    tokenId?: string | null; // String
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  Tip: { // root type
+    amount: string; // String!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    fee: string; // String!
+    id: string; // String!
+    publishId: string; // String!
+    receiverId: string; // String!
+    senderId: string; // String!
+  }
+  WriteResult: { // root type
+    status: string; // String!
   }
 }
 
@@ -102,25 +176,101 @@ export interface NexusGenFieldTypes {
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     id: string; // String!
     owner: string; // String!
+    stations: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  AuthUser: { // field return type
+    uid: string; // String!
+  }
+  Comment: { // field return type
+    commentId: string | null; // String
+    commentType: NexusGenEnums['CommentType']; // CommentType!
+    commentsCount: number; // Int!
+    content: string; // String!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creator: NexusGenRootTypes['Station'] | null; // Station
+    creatorId: string; // String!
+    disLiked: boolean | null; // Boolean
+    disLikesCount: number; // Int!
+    id: string; // String!
+    liked: boolean | null; // Boolean
+    likes: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
+    likesCount: number; // Int!
+    publishId: string; // String!
+    updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  CreateWalletResult: { // field return type
+    address: string; // String!
+    uid: string; // String!
   }
   Edge: { // field return type
     cursor: string | null; // String
     node: NexusGenRootTypes['Station'] | null; // Station
   }
+  Mutation: { // field return type
+    cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
+    createAccount: NexusGenRootTypes['Account'] | null; // Account
+    createUser: NexusGenRootTypes['AuthUser'] | null; // AuthUser
+  }
   PageInfo: { // field return type
     endCursor: string | null; // String
     hasNextPage: boolean | null; // Boolean
   }
+  PlaybackLink: { // field return type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    dash: string; // String!
+    duration: number; // Float!
+    hls: string; // String!
+    id: string; // String!
+    preview: string; // String!
+    publishId: string; // String!
+    thumbnail: string; // String!
+    updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+  }
   PreviewStation: { // field return type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    displayName: string; // String!
     id: string; // String!
     image: string | null; // String
     name: string; // String!
-    originalName: string; // String!
+  }
+  Publish: { // field return type
+    commentsCount: number; // Int!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creator: NexusGenRootTypes['Station'] | null; // Station
+    creatorId: string; // String!
+    description: string | null; // String
+    disLiked: boolean | null; // Boolean
+    disLikesCount: number; // Int!
+    filename: string; // String!
+    id: string; // String!
+    kind: NexusGenEnums['PublishKind']; // PublishKind!
+    lastComment: NexusGenRootTypes['Comment'] | null; // Comment
+    liked: boolean | null; // Boolean
+    likes: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
+    likesCount: number; // Int!
+    playback: NexusGenRootTypes['PlaybackLink'] | null; // PlaybackLink
+    primaryCategory: NexusGenEnums['Category']; // Category!
+    public: boolean; // Boolean!
+    rawContentURI: string; // String!
+    secondaryCategory: NexusGenEnums['Category'] | null; // Category
+    thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
+    thumbnail: string | null; // String
+    tips: Array<NexusGenRootTypes['Tip'] | null>; // [Tip]!
+    tipsCount: number; // Int!
+    title: string; // String!
+    transcodeError: boolean; // Boolean!
+    updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+    uploadError: boolean; // Boolean!
+    uploading: boolean; // Boolean!
+    views: number | null; // Int
   }
   Query: { // field return type
-    getAccount: NexusGenRootTypes['Account'] | null; // Account
+    getAccountByOwner: NexusGenRootTypes['Account'] | null; // Account
+    getStationById: NexusGenRootTypes['Station'] | null; // Station
+    listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
+    listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
   }
   Response: { // field return type
     edges: Array<NexusGenRootTypes['Edge'] | null>; // [Edge]!
@@ -130,13 +280,34 @@ export interface NexusGenFieldTypes {
     accountId: number; // Int!
     bannerImage: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    displayName: string; // String!
+    followers: NexusGenRootTypes['Station'][]; // [Station!]!
+    followersCount: number; // Int!
+    following: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
+    followingCount: number; // Int!
     id: string; // String!
     image: string | null; // String
+    isFollowing: boolean | null; // Boolean
     name: string; // String!
-    originalName: string; // String!
     owner: string; // String!
-    tokenId: string; // String!
+    publishesCount: number; // Int!
+    tokenId: string | null; // String
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  Tip: { // field return type
+    amount: string; // String!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    fee: string; // String!
+    id: string; // String!
+    publish: NexusGenRootTypes['Publish'] | null; // Publish
+    publishId: string; // String!
+    receiver: NexusGenRootTypes['Station'] | null; // Station
+    receiverId: string; // String!
+    sender: NexusGenRootTypes['Station'] | null; // Station
+    senderId: string; // String!
+  }
+  WriteResult: { // field return type
+    status: string; // String!
   }
 }
 
@@ -146,25 +317,101 @@ export interface NexusGenFieldTypeNames {
     createdAt: 'DateTime'
     id: 'String'
     owner: 'String'
+    stations: 'Station'
     type: 'AccountType'
     updatedAt: 'DateTime'
+  }
+  AuthUser: { // field return type name
+    uid: 'String'
+  }
+  Comment: { // field return type name
+    commentId: 'String'
+    commentType: 'CommentType'
+    commentsCount: 'Int'
+    content: 'String'
+    createdAt: 'DateTime'
+    creator: 'Station'
+    creatorId: 'String'
+    disLiked: 'Boolean'
+    disLikesCount: 'Int'
+    id: 'String'
+    liked: 'Boolean'
+    likes: 'Station'
+    likesCount: 'Int'
+    publishId: 'String'
+    updatedAt: 'DateTime'
+  }
+  CreateWalletResult: { // field return type name
+    address: 'String'
+    uid: 'String'
   }
   Edge: { // field return type name
     cursor: 'String'
     node: 'Station'
   }
+  Mutation: { // field return type name
+    cacheSession: 'WriteResult'
+    createAccount: 'Account'
+    createUser: 'AuthUser'
+  }
   PageInfo: { // field return type name
     endCursor: 'String'
     hasNextPage: 'Boolean'
   }
+  PlaybackLink: { // field return type name
+    createdAt: 'DateTime'
+    dash: 'String'
+    duration: 'Float'
+    hls: 'String'
+    id: 'String'
+    preview: 'String'
+    publishId: 'String'
+    thumbnail: 'String'
+    updatedAt: 'DateTime'
+  }
   PreviewStation: { // field return type name
+    createdAt: 'DateTime'
+    displayName: 'String'
     id: 'String'
     image: 'String'
     name: 'String'
-    originalName: 'String'
+  }
+  Publish: { // field return type name
+    commentsCount: 'Int'
+    createdAt: 'DateTime'
+    creator: 'Station'
+    creatorId: 'String'
+    description: 'String'
+    disLiked: 'Boolean'
+    disLikesCount: 'Int'
+    filename: 'String'
+    id: 'String'
+    kind: 'PublishKind'
+    lastComment: 'Comment'
+    liked: 'Boolean'
+    likes: 'Station'
+    likesCount: 'Int'
+    playback: 'PlaybackLink'
+    primaryCategory: 'Category'
+    public: 'Boolean'
+    rawContentURI: 'String'
+    secondaryCategory: 'Category'
+    thumbSource: 'ThumbSource'
+    thumbnail: 'String'
+    tips: 'Tip'
+    tipsCount: 'Int'
+    title: 'String'
+    transcodeError: 'Boolean'
+    updatedAt: 'DateTime'
+    uploadError: 'Boolean'
+    uploading: 'Boolean'
+    views: 'Int'
   }
   Query: { // field return type name
-    getAccount: 'Account'
+    getAccountByOwner: 'Account'
+    getStationById: 'Station'
+    listCommentsByCommentId: 'Comment'
+    listCommentsByPublishId: 'Comment'
   }
   Response: { // field return type name
     edges: 'Edge'
@@ -174,20 +421,58 @@ export interface NexusGenFieldTypeNames {
     accountId: 'Int'
     bannerImage: 'String'
     createdAt: 'DateTime'
+    displayName: 'String'
+    followers: 'Station'
+    followersCount: 'Int'
+    following: 'Station'
+    followingCount: 'Int'
     id: 'String'
     image: 'String'
+    isFollowing: 'Boolean'
     name: 'String'
-    originalName: 'String'
     owner: 'String'
+    publishesCount: 'Int'
     tokenId: 'String'
     updatedAt: 'DateTime'
+  }
+  Tip: { // field return type name
+    amount: 'String'
+    createdAt: 'DateTime'
+    fee: 'String'
+    id: 'String'
+    publish: 'Publish'
+    publishId: 'String'
+    receiver: 'Station'
+    receiverId: 'String'
+    sender: 'Station'
+    senderId: 'String'
+  }
+  WriteResult: { // field return type name
+    status: 'String'
   }
 }
 
 export interface NexusGenArgTypes {
+  Mutation: {
+    cacheSession: { // args
+      input: NexusGenInputs['CacheSessionInput']; // CacheSessionInput!
+    }
+    createUser: { // args
+      address: string; // String!
+    }
+  }
   Query: {
-    getAccount: { // args
+    getAccountByOwner: { // args
       owner: string; // String!
+    }
+    getStationById: { // args
+      input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!
+    }
+    listCommentsByCommentId: { // args
+      input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!
+    }
+    listCommentsByPublishId: { // args
+      input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!
     }
   }
 }
@@ -200,7 +485,7 @@ export interface NexusGenTypeInterfaces {
 
 export type NexusGenObjectNames = keyof NexusGenObjects;
 
-export type NexusGenInputNames = never;
+export type NexusGenInputNames = keyof NexusGenInputs;
 
 export type NexusGenEnumNames = keyof NexusGenEnums;
 
