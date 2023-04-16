@@ -33,6 +33,10 @@ export interface NexusGenInputs {
     address: string; // String!
     stationId: string; // String!
   }
+  GetMyAccountInput: { // input type
+    accountType: NexusGenEnums['AccountType']; // AccountType!
+    address: string; // String!
+  }
   QueryByIdInput: { // input type
     requestorId?: string | null; // String
     targetId: string; // String!
@@ -58,8 +62,9 @@ export interface NexusGenScalars {
 
 export interface NexusGenObjects {
   Account: { // root type
-    authUid: string; // String!
+    authUid?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    defaultStation?: NexusGenRootTypes['Station'] | null; // Station
     id: string; // String!
     owner: string; // String!
     type: NexusGenEnums['AccountType']; // AccountType!
@@ -86,6 +91,10 @@ export interface NexusGenObjects {
     cursor?: string | null; // String
     node?: NexusGenRootTypes['Station'] | null; // Station
   }
+  GetAccountResult: { // root type
+    account?: NexusGenRootTypes['Account'] | null; // Account
+    defaultStation?: NexusGenRootTypes['Station'] | null; // Station
+  }
   Mutation: {};
   PageInfo: { // root type
     endCursor?: string | null; // String
@@ -101,13 +110,6 @@ export interface NexusGenObjects {
     publishId: string; // String!
     thumbnail: string; // String!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
-  }
-  PreviewStation: { // root type
-    createdAt: NexusGenScalars['DateTime']; // DateTime!
-    displayName: string; // String!
-    id: string; // String!
-    image?: string | null; // String
-    name: string; // String!
   }
   Publish: { // root type
     createdAt: NexusGenScalars['DateTime']; // DateTime!
@@ -135,7 +137,7 @@ export interface NexusGenObjects {
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
   Station: { // root type
-    accountId: number; // Int!
+    accountId: string; // String!
     bannerImage?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     displayName: string; // String!
@@ -172,8 +174,9 @@ export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnu
 
 export interface NexusGenFieldTypes {
   Account: { // field return type
-    authUid: string; // String!
+    authUid: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    defaultStation: NexusGenRootTypes['Station'] | null; // Station
     id: string; // String!
     owner: string; // String!
     stations: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
@@ -208,6 +211,10 @@ export interface NexusGenFieldTypes {
     cursor: string | null; // String
     node: NexusGenRootTypes['Station'] | null; // Station
   }
+  GetAccountResult: { // field return type
+    account: NexusGenRootTypes['Account'] | null; // Account
+    defaultStation: NexusGenRootTypes['Station'] | null; // Station
+  }
   Mutation: { // field return type
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
     createAccount: NexusGenRootTypes['Account'] | null; // Account
@@ -227,13 +234,6 @@ export interface NexusGenFieldTypes {
     publishId: string; // String!
     thumbnail: string; // String!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
-  }
-  PreviewStation: { // field return type
-    createdAt: NexusGenScalars['DateTime']; // DateTime!
-    displayName: string; // String!
-    id: string; // String!
-    image: string | null; // String
-    name: string; // String!
   }
   Publish: { // field return type
     commentsCount: number; // Int!
@@ -267,7 +267,8 @@ export interface NexusGenFieldTypes {
     views: number | null; // Int
   }
   Query: { // field return type
-    getAccountByOwner: NexusGenRootTypes['Account'] | null; // Account
+    getMyAccount: NexusGenRootTypes['GetAccountResult']; // GetAccountResult!
+    getMyBalance: string; // String!
     getStationById: NexusGenRootTypes['Station'] | null; // Station
     listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
@@ -277,7 +278,8 @@ export interface NexusGenFieldTypes {
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
   Station: { // field return type
-    accountId: number; // Int!
+    account: NexusGenRootTypes['Account'] | null; // Account
+    accountId: string; // String!
     bannerImage: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     displayName: string; // String!
@@ -315,6 +317,7 @@ export interface NexusGenFieldTypeNames {
   Account: { // field return type name
     authUid: 'String'
     createdAt: 'DateTime'
+    defaultStation: 'Station'
     id: 'String'
     owner: 'String'
     stations: 'Station'
@@ -349,6 +352,10 @@ export interface NexusGenFieldTypeNames {
     cursor: 'String'
     node: 'Station'
   }
+  GetAccountResult: { // field return type name
+    account: 'Account'
+    defaultStation: 'Station'
+  }
   Mutation: { // field return type name
     cacheSession: 'WriteResult'
     createAccount: 'Account'
@@ -368,13 +375,6 @@ export interface NexusGenFieldTypeNames {
     publishId: 'String'
     thumbnail: 'String'
     updatedAt: 'DateTime'
-  }
-  PreviewStation: { // field return type name
-    createdAt: 'DateTime'
-    displayName: 'String'
-    id: 'String'
-    image: 'String'
-    name: 'String'
   }
   Publish: { // field return type name
     commentsCount: 'Int'
@@ -408,7 +408,8 @@ export interface NexusGenFieldTypeNames {
     views: 'Int'
   }
   Query: { // field return type name
-    getAccountByOwner: 'Account'
+    getMyAccount: 'GetAccountResult'
+    getMyBalance: 'String'
     getStationById: 'Station'
     listCommentsByCommentId: 'Comment'
     listCommentsByPublishId: 'Comment'
@@ -418,7 +419,8 @@ export interface NexusGenFieldTypeNames {
     pageInfo: 'PageInfo'
   }
   Station: { // field return type name
-    accountId: 'Int'
+    account: 'Account'
+    accountId: 'String'
     bannerImage: 'String'
     createdAt: 'DateTime'
     displayName: 'String'
@@ -457,13 +459,19 @@ export interface NexusGenArgTypes {
     cacheSession: { // args
       input: NexusGenInputs['CacheSessionInput']; // CacheSessionInput!
     }
+    createAccount: { // args
+      input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
+    }
     createUser: { // args
       address: string; // String!
     }
   }
   Query: {
-    getAccountByOwner: { // args
-      owner: string; // String!
+    getMyAccount: { // args
+      input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
+    }
+    getMyBalance: { // args
+      address: string; // String!
     }
     getStationById: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!

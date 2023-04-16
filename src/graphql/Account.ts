@@ -4,7 +4,6 @@ import {
   objectType,
   nullable,
   nonNull,
-  stringArg,
   enumType,
   inputObjectType,
 } from "nexus"
@@ -52,7 +51,7 @@ export const Account = objectType({
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
     t.nonNull.string("owner")
-    t.nonNull.string("authUid")
+    t.string("authUid")
     t.nonNull.field("type", { type: "AccountType" })
     t.nonNull.list.field("stations", {
       type: "Station",
@@ -73,6 +72,23 @@ export const Account = objectType({
         else return stations
       },
     })
+    t.field("defaultStation", { type: "Station" })
+  },
+})
+
+export const GetMyAccountInput = inputObjectType({
+  name: "GetMyAccountInput",
+  definition(t) {
+    t.nonNull.field("accountType", { type: "AccountType" })
+    t.nonNull.string("address")
+  },
+})
+
+export const GetAccountResult = objectType({
+  name: "GetAccountResult",
+  definition(t) {
+    t.field("account", { type: "Account" })
+    t.field("defaultStation", { type: "Station" })
   },
 })
 
@@ -80,38 +96,98 @@ export const AccountQuery = extendType({
   type: "Query",
   definition(t) {
     /**
-     * Get an account by owner address (EOA)
+     * Get user's account
      */
-    t.field("getAccountByOwner", {
-      type: nullable("Account"),
-      args: { owner: nonNull(stringArg()) },
-      async resolve(_parent, { owner }, { prisma }) {
+    t.field("getMyAccount", {
+      type: nonNull("GetAccountResult"),
+      args: { input: nullable("GetMyAccountInput") },
+      async resolve(_parent, { input }, { dataSources, prisma }) {
         try {
-          if (!owner) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          // Verify id token first.
+          await dataSources.walletAPI.verifyUser()
 
-          const account = await prisma.account.findUnique({
-            where: {
-              owner: owner.toLowerCase(),
-            },
-            include: {
-              stations: true,
-            },
-          })
+          let account:
+            | (NexusGenObjects["Account"] & {
+                stations: NexusGenObjects["Station"][]
+              })
+            | null = null
+          let owner: string | null = null
 
-          if (!account) return null
+          if (!input) {
+            // `TRADITIONAL` account
+            // Get user's wallet address
+            const { address } = await dataSources.walletAPI.getWalletAddress()
+
+            if (address) {
+              // Query account from the database
+              owner = address.toLowerCase()
+              const ac = await prisma.account.findUnique({
+                where: {
+                  owner,
+                },
+                include: {
+                  stations: true,
+                },
+              })
+
+              account = ac
+            }
+          } else {
+            // `WALLET` account
+            const { accountType, address } = input
+
+            if (accountType && accountType === "WALLET" && address) {
+              // Query account from the database
+              owner = address.toLowerCase()
+              const ac = await prisma.account.findUnique({
+                where: {
+                  owner,
+                },
+                include: {
+                  stations: true,
+                },
+              })
+
+              account = ac
+            }
+          }
 
           // Find the previous logged in station
-          const station =
-            account.stations.length > 0
-              ? await getStationFromCache(owner, account.stations as Station[])
-              : null
+          const defaultStation =
+            !account || !owner || account.stations.length === 0
+              ? null
+              : await getStationFromCache(owner, account.stations as Station[])
 
-          return { ...account, defaultStation: station }
+          return { account, defaultStation }
         } catch (error) {
           throw error
         }
       },
     })
+
+    t.field("getMyBalance", {
+      type: nonNull("String"),
+      args: { address: nonNull("String") },
+      async resolve(_root, { address }, { dataSources }) {
+        try {
+          if (!address) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const { balance } = await dataSources.walletAPI.getBalance(address)
+
+          return balance
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+  },
+})
+
+export const CacheSessionInput = inputObjectType({
+  name: "CacheSessionInput",
+  definition(t) {
+    t.nonNull.string("address")
+    t.nonNull.string("stationId")
   },
 })
 
@@ -125,19 +201,73 @@ export const WriteResult = objectType({
   },
 })
 
-export const CacheSessionInput = inputObjectType({
-  name: "CacheSessionInput",
-  definition(t) {
-    t.nonNull.string("address")
-    t.nonNull.string("stationId")
-  },
-})
-
 export const AccountMutation = extendType({
   type: "Mutation",
   definition(t) {
     t.field("createAccount", {
       type: "Account",
+      args: { input: nullable("GetMyAccountInput") },
+      async resolve(_parent, { input }, { dataSources, prisma }) {
+        try {
+          // Verify id token first.
+          await dataSources.walletAPI.verifyUser()
+
+          if (!input) {
+            // `TRADITIONAL` account
+            // Create wallet first
+            const { address, uid } = await dataSources.walletAPI.createWallet()
+            const accountOwner = address.toLowerCase()
+
+            // Create (if not exist)  an account in the database
+            let account = await prisma.account.findUnique({
+              where: {
+                owner: accountOwner,
+              },
+            })
+
+            if (!account) {
+              account = await prisma.account.create({
+                data: {
+                  type: "TRADITIONAL",
+                  owner: accountOwner,
+                  authUid: uid,
+                },
+              })
+            }
+
+            return account
+          } else {
+            // `WALLET` account
+            const { accountType, address } = input
+
+            if (accountType && accountType === "WALLET" && address) {
+              const accountOwner = address.toLowerCase()
+
+              // Create (if not exist)  an account in the database
+              let account = await prisma.account.findUnique({
+                where: {
+                  owner: accountOwner,
+                },
+              })
+
+              if (!account) {
+                account = await prisma.account.create({
+                  data: {
+                    type: accountType,
+                    owner: accountOwner,
+                  },
+                })
+              }
+
+              return account
+            } else {
+              return null
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
     })
 
     t.field("cacheSession", {

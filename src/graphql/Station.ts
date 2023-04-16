@@ -10,21 +10,6 @@ import { NexusGenInputs, NexusGenObjects } from "../typegen"
 import { throwError, badInputErrMessage } from "./Error"
 
 /**
- * A preview version of the Station.
- * @dev Use this type where we just need to know a station briefly and don't need to know the detail and relation of that station.
- */
-export const PreviewStation = objectType({
-  name: "PreviewStation",
-  definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.nonNull.string("name")
-    t.nonNull.string("displayName")
-    t.string("image")
-  },
-})
-
-/**
  * A Station type that map to the prisma Station model.
  */
 export const Station = objectType({
@@ -39,7 +24,18 @@ export const Station = objectType({
     t.nonNull.string("displayName")
     t.string("image")
     t.string("bannerImage")
-    t.nonNull.int("accountId")
+    t.nonNull.string("accountId")
+
+    t.field("account", {
+      type: "Account",
+      resolve: async (parent, _, { prisma }) => {
+        return prisma.account.findUnique({
+          where: {
+            id: parent.accountId,
+          },
+        })
+      },
+    })
 
     t.nonNull.list.nonNull.field("followers", {
       type: "Station",
@@ -59,11 +55,7 @@ export const Station = objectType({
             },
           })
 
-        return !data
-          ? []
-          : (data.map(
-              (d) => d.following
-            ) as unknown as NexusGenObjects["Station"][])
+        return !data ? [] : data.map((d) => d.following)
       },
     })
     t.nonNull.field("followersCount", {
@@ -95,11 +87,7 @@ export const Station = objectType({
             },
           })
 
-        return !data
-          ? []
-          : (data.map(
-              (d) => d.follower
-            ) as unknown as NexusGenObjects["Station"][])
+        return !data ? [] : data.map((d) => d.follower)
       },
     })
     t.nonNull.field("followingCount", {

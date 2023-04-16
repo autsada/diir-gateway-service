@@ -1,7 +1,7 @@
 import path from "path"
 import dotenv from "dotenv"
 dotenv.config({ path: path.join(__dirname, "../.env") })
-import express, { json } from "express"
+import express from "express"
 import cors from "cors"
 import http from "http"
 // import workerpool from "workerpool"
@@ -62,10 +62,12 @@ async function startServer() {
         // Get the user token from the headers.
         const authorization = req.headers["authorization"]
         const idToken = authorization?.split(" ")[1]
+        const apiKey = req.headers["api-key"] as string | undefined
 
         return {
           prisma,
           idToken,
+          apiKey,
           dataSources: {
             walletAPI: new WalletAPI({ idToken, cache }),
           },

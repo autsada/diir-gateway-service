@@ -3,8 +3,9 @@
 
 
 type Account {
-  authUid: String!
+  authUid: String
   createdAt: DateTime!
+  defaultStation: Station
   id: String!
   owner: String!
   stations: [Station]!
@@ -86,9 +87,19 @@ type Edge {
   node: Station
 }
 
+type GetAccountResult {
+  account: Account
+  defaultStation: Station
+}
+
+input GetMyAccountInput {
+  accountType: AccountType!
+  address: String!
+}
+
 type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
-  createAccount: Account
+  createAccount(input: GetMyAccountInput): Account
   createUser(address: String!): AuthUser
 }
 
@@ -107,14 +118,6 @@ type PlaybackLink {
   publishId: String!
   thumbnail: String!
   updatedAt: DateTime
-}
-
-type PreviewStation {
-  createdAt: DateTime!
-  displayName: String!
-  id: String!
-  image: String
-  name: String!
 }
 
 type Publish {
@@ -156,7 +159,8 @@ enum PublishKind {
 }
 
 type Query {
-  getAccountByOwner(owner: String!): Account
+  getMyAccount(input: GetMyAccountInput): GetAccountResult!
+  getMyBalance(address: String!): String!
   getStationById(input: QueryByIdInput!): Station
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
   listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
@@ -173,7 +177,8 @@ type Response {
 }
 
 type Station {
-  accountId: Int!
+  account: Account
+  accountId: String!
   bannerImage: String
   createdAt: DateTime!
   displayName: String!

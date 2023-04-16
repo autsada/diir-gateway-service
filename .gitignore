@@ -5,3 +5,4 @@ node_modules
 .env.test
 .env.prod
 gcp.txt
+*test*

@@ -6,12 +6,13 @@ import { NexusGenObjects, NexusGenEnums, NexusGenInputs } from "../typegen"
 import type { Environment } from "../types"
 import { authClient } from "../client/authClient"
 
-const { NODE_ENV } = process.env
+const { NODE_ENV, WALLET_SERVICE_URL } = process.env
 
 const env = NODE_ENV as Environment
 
 export class WalletAPI extends RESTDataSource {
-  override baseURL = "http://localhost:8000"
+  override baseURL =
+    env === "development" ? "http://localhost:8000" : WALLET_SERVICE_URL!
   private idToken: string | undefined
 
   constructor(options: { idToken: string | undefined; cache: KeyValueCache }) {
@@ -36,27 +37,48 @@ export class WalletAPI extends RESTDataSource {
   // }
 
   /**
+   * @dev A route to get user's auth provider
+   */
+  async verifyUser(): Promise<{ uid: string }> {
+    return this.get("auth/verify")
+  }
+
+  /**
    * @dev A route to create Firebase auth user
    */
   async createAuthUser(
     address: string
-  ): Promise<NexusGenObjects["AuthUser"] | null> {
+  ): Promise<{ user: NexusGenObjects["AuthUser"] }> {
     return this.post("auth/user/create", { body: { address } })
   }
 
   /**
-   * @dev A route to create blockchain wallet.
+   * @dev A route to get user's auth provider
    */
-  async createWallet(): Promise<NexusGenObjects["CreateWalletResult"] | null> {
+  async getAuthProvider(): Promise<{ provider: NexusGenEnums["AccountType"] }> {
+    return this.get("auth/provider")
+  }
+
+  /**
+   * @dev A route to get user's wallet address (for `TRADITIONAL` account)
+   */
+  async getWalletAddress(): Promise<{ address: string }> {
+    return this.get("wallet/address")
+  }
+
+  /**
+   * @dev A route to create blockchain wallet (for `TRADITIONAL` account).
+   */
+  async createWallet(): Promise<NexusGenObjects["CreateWalletResult"]> {
     return this.post("wallet/create")
   }
 
-  //   /**
-  //    * @dev The route to get balance of a specific address.
-  //    */
-  //   async getBalance(address: string): Promise<{ balance: string }> {
-  //     return this.get(`wallet/balance/${encodeURIComponent(address)}`)
-  //   }
+  /**
+   * @dev A route to get balance of a specific address.
+   */
+  async getBalance(address: string): Promise<{ balance: string }> {
+    return this.get(`wallet/balance/${encodeURIComponent(address)}`)
+  }
 
   //   // =========================== //
   //   // These below functions except `createFirstProfile` are for only admin role, and will be used in development only, in production admin will connect to the blockchain directly from the UI for better security.
