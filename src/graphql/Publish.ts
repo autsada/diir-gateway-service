@@ -75,7 +75,7 @@ export const Publish = objectType({
     t.nonNull.string("creatorId")
     t.nonNull.string("rawContentURI")
     t.nonNull.string("filename")
-    t.string("thumbnail")
+    t.nonNull.string("thumbnail")
     t.nonNull.field("thumbSource", { type: nonNull("ThumbSource") })
     t.nonNull.string("title")
     t.string("description")
@@ -94,13 +94,11 @@ export const Publish = objectType({
     t.field("creator", {
       type: "Station",
       resolve: (parent, _, { prisma }) => {
-        return prisma.publish
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .creator() as unknown as NexusGenObjects["Station"]
+        return prisma.station.findUnique({
+          where: {
+            id: parent.creatorId,
+          },
+        })
       },
     })
 
@@ -280,6 +278,27 @@ export const Publish = objectType({
             createdAt: "desc",
           },
         })
+      },
+    })
+  },
+})
+
+export const PublishQuery = extendType({
+  type: "Query",
+  definition(t) {
+    t.field("getPublishById", {
+      type: "Publish",
+      args: { id: nonNull(stringArg()) },
+      resolve: async (_parent, { id }, { prisma }) => {
+        try {
+          return prisma.publish.findUnique({
+            where: {
+              id,
+            },
+          })
+        } catch (error) {
+          throw error
+        }
       },
     })
   },

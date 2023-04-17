@@ -147,7 +147,7 @@ export interface NexusGenObjects {
     rawContentURI: string; // String!
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
-    thumbnail?: string | null; // String
+    thumbnail: string; // String!
     title: string; // String!
     transcodeError: boolean; // Boolean!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -296,7 +296,7 @@ export interface NexusGenFieldTypes {
     rawContentURI: string; // String!
     secondaryCategory: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
-    thumbnail: string | null; // String
+    thumbnail: string; // String!
     tips: Array<NexusGenRootTypes['Tip'] | null>; // [Tip]!
     tipsCount: number; // Int!
     title: string; // String!
@@ -309,6 +309,7 @@ export interface NexusGenFieldTypes {
   Query: { // field return type
     getMyAccount: NexusGenRootTypes['GetAccountResult']; // GetAccountResult!
     getMyBalance: string; // String!
+    getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station
     listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
@@ -466,6 +467,7 @@ export interface NexusGenFieldTypeNames {
   Query: { // field return type name
     getMyAccount: 'GetAccountResult'
     getMyBalance: 'String'
+    getPublishById: 'Publish'
     getStationById: 'Station'
     listCommentsByCommentId: 'Comment'
     listCommentsByPublishId: 'Comment'
@@ -551,6 +553,9 @@ export interface NexusGenArgTypes {
     }
     getMyBalance: { // args
       address: string; // String!
+    }
+    getPublishById: { // args
+      id: string; // String!
     }
     getStationById: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!

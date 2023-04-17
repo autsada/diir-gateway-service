@@ -167,7 +167,7 @@ type Publish {
   rawContentURI: String!
   secondaryCategory: Category
   thumbSource: ThumbSource!
-  thumbnail: String
+  thumbnail: String!
   tips: [Tip]!
   tipsCount: Int!
   title: String!
@@ -187,6 +187,7 @@ enum PublishKind {
 type Query {
   getMyAccount(input: GetMyAccountInput): GetAccountResult!
   getMyBalance(address: String!): String!
+  getPublishById(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
   listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
