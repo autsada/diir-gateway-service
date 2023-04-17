@@ -80,95 +80,54 @@ export class WalletAPI extends RESTDataSource {
     return this.get(`wallet/balance/${encodeURIComponent(address)}`)
   }
 
-  //   // =========================== //
-  //   // These below functions except `createFirstProfile` are for only admin role, and will be used in development only, in production admin will connect to the blockchain directly from the UI for better security.
-  //   async setProfileForFollow(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/profile-follow", { body: { contractAddress } })
-  //   }
+  /// ***********************
+  /// ***** Station Contract *****
+  /// ***********************
 
-  //   async setProfileForPublish(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/profile-publish", { body: { contractAddress } })
-  //   }
+  /**
+   * @dev Validate station name
+   * @param name {string}
+   * @returns {valid} boolean
+   */
+  async validateName(name: string): Promise<{ valid: boolean }> {
+    return this.post("station/validate", { body: { name } })
+  }
 
-  //   async setOwner(ownerAddress: string): Promise<{ status: string }> {
-  //     return this.post("admin/set/owner", { body: { ownerAddress } })
-  //   }
+  /**
+   * @dev Mint user's first Station NFT
+   */
+  async mintStationNFTByAdmin(input: {
+    to: string
+    name: string
+  }): Promise<{ tokenId: number }> {
+    return this.post("station/mint-first", { body: input })
+  }
 
-  //   async setProfileForLike(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/profile-like", { body: { contractAddress } })
-  //   }
+  /**
+   * @dev Mint Station NFT
+   */
+  async mintStationNFT(input: {
+    to: string
+    name: string
+  }): Promise<{ tokenId: number }> {
+    return this.post("station/mint", { body: input })
+  }
 
-  //   async setPublishForLike(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/publish-like", { body: { contractAddress } })
-  //   }
+  /**
+   * @dev Calculate how much tips in wei for a given usd amount
+   */
+  async calculateTips(qty: number): Promise<{ tips: number }> {
+    return this.post("station/tips/check", { body: { qty } })
+  }
 
-  //   async setLikeFee(fee: number): Promise<{ status: string }> {
-  //     return this.post("admin/set/fee/like", { body: { fee } })
-  //   }
-
-  //   async setPlatformFee(fee: number): Promise<{ status: string }> {
-  //     return this.post("admin/set/fee/platform", { body: { fee } })
-  //   }
-
-  //   async withdrawFunds(): Promise<{ status: string }> {
-  //     return this.post("admin/withdraw")
-  //   }
-
-  //   async setProfileForComment(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/profile-comment", { body: { contractAddress } })
-  //   }
-
-  //   async setPublishForComment(
-  //     contractAddress: string
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/set/publish-comment", { body: { contractAddress } })
-  //   }
-
-  //   /**
-  //    * This function will be also used in production
-  //    */
-  //   async createFirstProfile(
-  //     input: NexusGenInputs["CreateDefaultProfileInput"]
-  //   ): Promise<{ status: string }> {
-  //     return this.post("admin/profile/create", { body: { ...input } })
-  //   }
-
-  //   // ======================= //
-  //   /**
-  //    * A route to verify id token
-  //    * @dev We need to verify user's id token for the mutation/route that makes write request to the `API` service directly.
-  //    */
-  //   async verifyIdToken(): Promise<{ uid: string }> {
-  //     return this.get("token/verify")
-  //   }
-
-  //   // ======================= //
-
-  //   /// ***********************
-  //   /// ***** Profile Contract *****
-  //   /// ***********************
-
-  //   /**
-  //    * @dev The route to check if an address has specified role.
-  //    * @param role {Role} - see Role enum
-  //    */
-  //   async hasRoleProfile(
-  //     role: NexusGenEnums["Role"]
-  //   ): Promise<{ hasRole: boolean }> {
-  //     return this.post(`profiles/role`, {
-  //       body: { role },
-  //     })
-  //   }
+  /**
+   * @dev Send tips to station owner
+   * @param to station NAME to send the tips to
+   * @param qty usd amount to be sent
+   */
+  async sendTips(to: string, qty: number): Promise<{ result: NexusGenObjects['SendTipsResult'] }> {
+    return this.post("station/tips/send", { body: { to, qty } })
+  }
 
   //   /**
   //    * @dev Create profile NFT.
@@ -188,14 +147,6 @@ export class WalletAPI extends RESTDataSource {
   //     return this.post(`profiles/default`, {
   //       body: { handle },
   //     })
-  //   }
-
-  //   /**
-  //    * @dev Call validate handle on the contract which will validate length and uniqueness.
-  //    * @param handle {string}
-  //    */
-  //   async verifyHandle(handle: string): Promise<{ valid: boolean }> {
-  //     return this.post("profiles/handle/verify", { body: { handle } })
   //   }
 
   //   /**

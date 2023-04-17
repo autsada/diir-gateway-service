@@ -27,6 +27,10 @@ input CacheSessionInput {
   stationId: String!
 }
 
+type CalculateTipsResult {
+  tips: Int!
+}
+
 enum Category {
   Animals
   Children
@@ -72,6 +76,23 @@ enum CommentType {
   PUBLISH
 }
 
+input CreateStationInput {
+  accountId: String!
+  displayName: String!
+  name: String!
+  owner: String!
+}
+
+input CreateTipInput {
+  amount: String!
+  fee: String!
+  from: String!
+  publishId: String!
+  receiverId: String!
+  senderId: String!
+  to: String!
+}
+
 type CreateWalletResult {
   address: String!
   uid: String!
@@ -99,8 +120,13 @@ input GetMyAccountInput {
 
 type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
+  calculateTips(qty: Int!): CalculateTipsResult
   createAccount(input: GetMyAccountInput): Account
+  createStation(input: CreateStationInput!): Station
+  createTip(input: CreateTipInput!): Tip
   createUser(address: String!): AuthUser
+  sendTips(input: SendTipsInput!): SendTipsResult
+  validateName(name: String!): Boolean!
 }
 
 type PageInfo {
@@ -176,6 +202,20 @@ type Response {
   pageInfo: PageInfo!
 }
 
+input SendTipsInput {
+  publishId: String!
+  qty: Int!
+  receiverId: String!
+  senderId: String!
+}
+
+type SendTipsResult {
+  amount: String!
+  fee: String!
+  from: String!
+  to: String!
+}
+
 type Station {
   account: Account
   accountId: String!
@@ -205,6 +245,7 @@ type Tip {
   amount: String!
   createdAt: DateTime!
   fee: String!
+  from: String!
   id: String!
   publish: Publish
   publishId: String!
@@ -212,6 +253,7 @@ type Tip {
   receiverId: String!
   sender: Station
   senderId: String!
+  to: String!
 }
 
 type WriteResult {

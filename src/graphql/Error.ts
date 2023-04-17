@@ -5,6 +5,8 @@ export type AuthorizedErrorCode = "UN_AUTHORIZED"
 export type AuthenticatedErrorCode = "UN_AUTHENTICATED"
 
 export const badInputErrMessage = "*** Bad Input Error ***"
+export const unauthenticatedErrMessage = "*** Unauthenticated ***"
+export const unauthorizedErrMessage = "*** Unauthorized ***"
 
 export function throwError(
   message: string,

@@ -33,6 +33,21 @@ export interface NexusGenInputs {
     address: string; // String!
     stationId: string; // String!
   }
+  CreateStationInput: { // input type
+    accountId: string; // String!
+    displayName: string; // String!
+    name: string; // String!
+    owner: string; // String!
+  }
+  CreateTipInput: { // input type
+    amount: string; // String!
+    fee: string; // String!
+    from: string; // String!
+    publishId: string; // String!
+    receiverId: string; // String!
+    senderId: string; // String!
+    to: string; // String!
+  }
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
     address: string; // String!
@@ -40,6 +55,12 @@ export interface NexusGenInputs {
   QueryByIdInput: { // input type
     requestorId?: string | null; // String
     targetId: string; // String!
+  }
+  SendTipsInput: { // input type
+    publishId: string; // String!
+    qty: number; // Int!
+    receiverId: string; // String!
+    senderId: string; // String!
   }
 }
 
@@ -72,6 +93,9 @@ export interface NexusGenObjects {
   }
   AuthUser: { // root type
     uid: string; // String!
+  }
+  CalculateTipsResult: { // root type
+    tips: number; // Int!
   }
   Comment: { // root type
     commentId?: string | null; // String
@@ -136,6 +160,12 @@ export interface NexusGenObjects {
     edges: Array<NexusGenRootTypes['Edge'] | null>; // [Edge]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
+  SendTipsResult: { // root type
+    amount: string; // String!
+    fee: string; // String!
+    from: string; // String!
+    to: string; // String!
+  }
   Station: { // root type
     accountId: string; // String!
     bannerImage?: string | null; // String
@@ -152,10 +182,12 @@ export interface NexusGenObjects {
     amount: string; // String!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     fee: string; // String!
+    from: string; // String!
     id: string; // String!
     publishId: string; // String!
     receiverId: string; // String!
     senderId: string; // String!
+    to: string; // String!
   }
   WriteResult: { // root type
     status: string; // String!
@@ -185,6 +217,9 @@ export interface NexusGenFieldTypes {
   }
   AuthUser: { // field return type
     uid: string; // String!
+  }
+  CalculateTipsResult: { // field return type
+    tips: number; // Int!
   }
   Comment: { // field return type
     commentId: string | null; // String
@@ -217,8 +252,13 @@ export interface NexusGenFieldTypes {
   }
   Mutation: { // field return type
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
+    calculateTips: NexusGenRootTypes['CalculateTipsResult'] | null; // CalculateTipsResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
+    createStation: NexusGenRootTypes['Station'] | null; // Station
+    createTip: NexusGenRootTypes['Tip'] | null; // Tip
     createUser: NexusGenRootTypes['AuthUser'] | null; // AuthUser
+    sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
+    validateName: boolean; // Boolean!
   }
   PageInfo: { // field return type
     endCursor: string | null; // String
@@ -277,6 +317,12 @@ export interface NexusGenFieldTypes {
     edges: Array<NexusGenRootTypes['Edge'] | null>; // [Edge]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
+  SendTipsResult: { // field return type
+    amount: string; // String!
+    fee: string; // String!
+    from: string; // String!
+    to: string; // String!
+  }
   Station: { // field return type
     account: NexusGenRootTypes['Account'] | null; // Account
     accountId: string; // String!
@@ -300,6 +346,7 @@ export interface NexusGenFieldTypes {
     amount: string; // String!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     fee: string; // String!
+    from: string; // String!
     id: string; // String!
     publish: NexusGenRootTypes['Publish'] | null; // Publish
     publishId: string; // String!
@@ -307,6 +354,7 @@ export interface NexusGenFieldTypes {
     receiverId: string; // String!
     sender: NexusGenRootTypes['Station'] | null; // Station
     senderId: string; // String!
+    to: string; // String!
   }
   WriteResult: { // field return type
     status: string; // String!
@@ -326,6 +374,9 @@ export interface NexusGenFieldTypeNames {
   }
   AuthUser: { // field return type name
     uid: 'String'
+  }
+  CalculateTipsResult: { // field return type name
+    tips: 'Int'
   }
   Comment: { // field return type name
     commentId: 'String'
@@ -358,8 +409,13 @@ export interface NexusGenFieldTypeNames {
   }
   Mutation: { // field return type name
     cacheSession: 'WriteResult'
+    calculateTips: 'CalculateTipsResult'
     createAccount: 'Account'
+    createStation: 'Station'
+    createTip: 'Tip'
     createUser: 'AuthUser'
+    sendTips: 'SendTipsResult'
+    validateName: 'Boolean'
   }
   PageInfo: { // field return type name
     endCursor: 'String'
@@ -418,6 +474,12 @@ export interface NexusGenFieldTypeNames {
     edges: 'Edge'
     pageInfo: 'PageInfo'
   }
+  SendTipsResult: { // field return type name
+    amount: 'String'
+    fee: 'String'
+    from: 'String'
+    to: 'String'
+  }
   Station: { // field return type name
     account: 'Account'
     accountId: 'String'
@@ -441,6 +503,7 @@ export interface NexusGenFieldTypeNames {
     amount: 'String'
     createdAt: 'DateTime'
     fee: 'String'
+    from: 'String'
     id: 'String'
     publish: 'Publish'
     publishId: 'String'
@@ -448,6 +511,7 @@ export interface NexusGenFieldTypeNames {
     receiverId: 'String'
     sender: 'Station'
     senderId: 'String'
+    to: 'String'
   }
   WriteResult: { // field return type name
     status: 'String'
@@ -459,11 +523,26 @@ export interface NexusGenArgTypes {
     cacheSession: { // args
       input: NexusGenInputs['CacheSessionInput']; // CacheSessionInput!
     }
+    calculateTips: { // args
+      qty: number; // Int!
+    }
     createAccount: { // args
       input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
     }
+    createStation: { // args
+      input: NexusGenInputs['CreateStationInput']; // CreateStationInput!
+    }
+    createTip: { // args
+      input: NexusGenInputs['CreateTipInput']; // CreateTipInput!
+    }
     createUser: { // args
       address: string; // String!
+    }
+    sendTips: { // args
+      input: NexusGenInputs['SendTipsInput']; // SendTipsInput!
+    }
+    validateName: { // args
+      name: string; // String!
     }
   }
   Query: {

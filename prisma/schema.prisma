@@ -165,11 +165,13 @@ model Tip {
     id         String   @id @default(cuid())
     createdAt  DateTime @default(now())
     sender     Station  @relation("Sent", fields: [senderId], references: [id])
-    senderId   String
+    senderId   String // Sender station id
+    from       String // Sender address
     publish    Publish  @relation(fields: [publishId], references: [id])
     publishId  String
     receiver   Station  @relation("Received", fields: [receiverId], references: [id])
-    receiverId String
+    receiverId String // Receiver station id
+    to         String // Receiver address
     amount     String // Use String for ether amount
     fee        String // Use String for ether amount
 }
