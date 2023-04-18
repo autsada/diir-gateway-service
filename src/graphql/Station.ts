@@ -23,7 +23,9 @@ export const Station = objectType({
     t.nonNull.string("name")
     t.nonNull.string("displayName")
     t.string("image")
+    t.string("imageRef")
     t.string("bannerImage")
+    t.string("bannerImageRef")
     t.nonNull.string("accountId")
 
     t.field("account", {
@@ -237,17 +239,34 @@ export const StationMutation = extendType({
     t.field("createStation", {
       type: nullable("Station"),
       args: { input: nonNull("CreateStationInput") },
-      resolve: async (_parent, { input }, { prisma, dataSources }) => {
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, walletAccount }
+      ) => {
         try {
           // Verify if user is authenticated
           const { uid } = await dataSources.walletAPI.verifyUser()
 
           // Find account by the authenticated user's uid
-          const account1 = await prisma.account.findUnique({
+          let account1 = await prisma.account.findUnique({
             where: {
               authUid: uid,
             },
           })
+
+          // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent by the frontend in the headers
+          if (!account1 && walletAccount) {
+            account1 = await prisma.account.findUnique({
+              where: {
+                owner: walletAccount.toLowerCase(),
+              },
+            })
+          }
+
+          // Account must be found at this point
+          if (!account1) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          const account1Address = account1?.owner.toLowerCase()
 
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
@@ -262,17 +281,22 @@ export const StationMutation = extendType({
             },
           })
           if (!account2) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          const account2Address = account2?.owner.toLowerCase()
 
-          // If `account1` found --> `TRADITIONAL` account
-          if (account1 && account2?.type === "WALLET")
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
+          // // If `account1` found --> `TRADITIONAL` account
+          // if (account1 && account2?.type === "WALLET")
+          //   throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
 
-          // If NO `account1` found --> `WALLET` account because on a wallet typed account we don't store auth uid as we use anonymous sign in.
-          if (!account1 && account2?.type === "TRADITIONAL")
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
+          // // If NO `account1` found --> `WALLET` account because on a wallet typed account we don't store auth uid as we use anonymous sign in.
+          // if (!account1 && account2?.type === "TRADITIONAL")
+          //   throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
 
           const ownerAddress = owner.toLowerCase()
-          if (account2?.owner.toLowerCase() !== ownerAddress)
+
+          // Validate if the accounts and the given address are correct
+          if (account1Address !== account2Address)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          if (account2Address !== ownerAddress)
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Check if the name is valid

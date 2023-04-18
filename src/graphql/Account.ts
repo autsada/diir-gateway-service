@@ -10,7 +10,7 @@ import {
 import { cacheTokenId, getStationFromCache } from "../client/redis"
 import { NexusGenObjects } from "../typegen"
 
-import { throwError, badInputErrMessage } from "./Error"
+import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
 
 export const Edge = objectType({
   name: "Edge",
@@ -210,7 +210,7 @@ export const AccountMutation = extendType({
       async resolve(_parent, { input }, { dataSources, prisma }) {
         try {
           // Verify id token first.
-          await dataSources.walletAPI.verifyUser()
+          const { uid } = await dataSources.walletAPI.verifyUser()
 
           if (!input) {
             // `TRADITIONAL` account
@@ -239,6 +239,15 @@ export const AccountMutation = extendType({
           } else {
             // `WALLET` account
             const { accountType, address } = input
+
+            // Make sure that the authenticated user doesn't own an account yet.
+            const ac = await prisma.account.findUnique({
+              where: {
+                authUid: uid,
+              },
+            })
+
+            if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
             if (accountType && accountType === "WALLET" && address) {
               const accountOwner = address.toLowerCase()

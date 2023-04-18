@@ -221,6 +221,7 @@ type Station {
   account: Account
   accountId: String!
   bannerImage: String
+  bannerImageRef: String
   createdAt: DateTime!
   displayName: String!
   followers: [Station!]!
@@ -229,6 +230,7 @@ type Station {
   followingCount: Int!
   id: String!
   image: String
+  imageRef: String
   isFollowing: Boolean
   name: String!
   owner: String!

@@ -169,10 +169,12 @@ export interface NexusGenObjects {
   Station: { // root type
     accountId: string; // String!
     bannerImage?: string | null; // String
+    bannerImageRef?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     displayName: string; // String!
     id: string; // String!
     image?: string | null; // String
+    imageRef?: string | null; // String
     name: string; // String!
     owner: string; // String!
     tokenId?: string | null; // String
@@ -328,6 +330,7 @@ export interface NexusGenFieldTypes {
     account: NexusGenRootTypes['Account'] | null; // Account
     accountId: string; // String!
     bannerImage: string | null; // String
+    bannerImageRef: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     displayName: string; // String!
     followers: NexusGenRootTypes['Station'][]; // [Station!]!
@@ -336,6 +339,7 @@ export interface NexusGenFieldTypes {
     followingCount: number; // Int!
     id: string; // String!
     image: string | null; // String
+    imageRef: string | null; // String
     isFollowing: boolean | null; // Boolean
     name: string; // String!
     owner: string; // String!
@@ -486,6 +490,7 @@ export interface NexusGenFieldTypeNames {
     account: 'Account'
     accountId: 'String'
     bannerImage: 'String'
+    bannerImageRef: 'String'
     createdAt: 'DateTime'
     displayName: 'String'
     followers: 'Station'
@@ -494,6 +499,7 @@ export interface NexusGenFieldTypeNames {
     followingCount: 'Int'
     id: 'String'
     image: 'String'
+    imageRef: 'String'
     isFollowing: 'Boolean'
     name: 'String'
     owner: 'String'

@@ -8,5 +8,5 @@ export interface Context {
   }
   prisma: PrismaClient
   idToken: string | undefined
-  apiKey?: string
+  walletAccount?: string
 }
