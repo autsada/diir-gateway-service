@@ -14,6 +14,7 @@ import { InMemoryLRUCache } from "@apollo/utils.keyvaluecache"
 import { schema } from "./schema"
 import { prisma } from "./client"
 import { WalletAPI } from "./dataSources/walletAPI"
+import { router } from "./webhooks/routes"
 import type { Context } from "./context"
 import type { Environment } from "./types"
 
@@ -32,6 +33,9 @@ async function startServer() {
   )
   app.use(express.urlencoded({ extended: true }))
   app.use(cors<cors.CorsRequest>())
+
+  // Webhooks route for listening to activity occurred to user's blockchain address
+  app.use("/webhooks", router)
 
   const httpServer = http.createServer(app)
 
