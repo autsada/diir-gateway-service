@@ -154,23 +154,23 @@ type Publish {
   description: String
   disLiked: Boolean
   disLikesCount: Int!
-  filename: String!
+  filename: String
   id: String!
-  kind: PublishKind!
+  kind: PublishKind
   lastComment: Comment
   liked: Boolean
   likes: [Station]!
   likesCount: Int!
   playback: PlaybackLink
-  primaryCategory: Category!
+  primaryCategory: Category
   public: Boolean!
-  rawContentURI: String!
+  rawContentURI: String
   secondaryCategory: Category
   thumbSource: ThumbSource!
-  thumbnail: String!
+  thumbnail: String
   tips: [Tip]!
   tipsCount: Int!
-  title: String!
+  title: String
   transcodeError: Boolean!
   updatedAt: DateTime
   uploadError: Boolean!

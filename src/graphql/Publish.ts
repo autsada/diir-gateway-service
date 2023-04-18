@@ -73,16 +73,16 @@ export const Publish = objectType({
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
     t.nonNull.string("creatorId")
-    t.nonNull.string("rawContentURI")
-    t.nonNull.string("filename")
-    t.nonNull.string("thumbnail")
-    t.nonNull.field("thumbSource", { type: nonNull("ThumbSource") })
-    t.nonNull.string("title")
+    t.string("rawContentURI")
+    t.string("filename")
+    t.string("thumbnail")
+    t.field("thumbSource", { type: nonNull("ThumbSource") })
+    t.string("title")
     t.string("description")
     t.int("views")
-    t.nonNull.field("primaryCategory", { type: "Category" })
+    t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
-    t.nonNull.field("kind", { type: "PublishKind" })
+    t.field("kind", { type: "PublishKind" })
     t.nonNull.boolean("public")
     t.nonNull.boolean("uploadError")
     t.nonNull.boolean("transcodeError")
@@ -295,7 +295,7 @@ export const PublishQuery = extendType({
             where: {
               id,
             },
-          })
+          }) as unknown as NexusGenObjects["Publish"]
         } catch (error) {
           throw error
         }

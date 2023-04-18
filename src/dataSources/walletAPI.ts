@@ -2,7 +2,7 @@ import { WillSendRequestOptions, RESTDataSource } from "@apollo/datasource-rest"
 // KeyValueCache is the type of Apollo server's default cache
 import type { KeyValueCache } from "@apollo/utils.keyvaluecache"
 
-import { NexusGenObjects, NexusGenEnums, NexusGenInputs } from "../typegen"
+import { NexusGenObjects, NexusGenEnums } from "../typegen"
 import type { Environment } from "../types"
 import { authClient } from "../client/authClient"
 
@@ -125,7 +125,10 @@ export class WalletAPI extends RESTDataSource {
    * @param to station NAME to send the tips to
    * @param qty usd amount to be sent
    */
-  async sendTips(to: string, qty: number): Promise<{ result: NexusGenObjects['SendTipsResult'] }> {
+  async sendTips(
+    to: string,
+    qty: number
+  ): Promise<{ result: NexusGenObjects["SendTipsResult"] }> {
     return this.post("station/tips/send", { body: { to, qty } })
   }
 

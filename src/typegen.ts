@@ -139,16 +139,16 @@ export interface NexusGenObjects {
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     creatorId: string; // String!
     description?: string | null; // String
-    filename: string; // String!
+    filename?: string | null; // String
     id: string; // String!
-    kind: NexusGenEnums['PublishKind']; // PublishKind!
-    primaryCategory: NexusGenEnums['Category']; // Category!
+    kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
+    primaryCategory?: NexusGenEnums['Category'] | null; // Category
     public: boolean; // Boolean!
-    rawContentURI: string; // String!
+    rawContentURI?: string | null; // String
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
-    thumbnail: string; // String!
-    title: string; // String!
+    thumbnail?: string | null; // String
+    title?: string | null; // String
     transcodeError: boolean; // Boolean!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
     uploadError: boolean; // Boolean!
@@ -285,23 +285,23 @@ export interface NexusGenFieldTypes {
     description: string | null; // String
     disLiked: boolean | null; // Boolean
     disLikesCount: number; // Int!
-    filename: string; // String!
+    filename: string | null; // String
     id: string; // String!
-    kind: NexusGenEnums['PublishKind']; // PublishKind!
+    kind: NexusGenEnums['PublishKind'] | null; // PublishKind
     lastComment: NexusGenRootTypes['Comment'] | null; // Comment
     liked: boolean | null; // Boolean
     likes: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
     likesCount: number; // Int!
     playback: NexusGenRootTypes['PlaybackLink'] | null; // PlaybackLink
-    primaryCategory: NexusGenEnums['Category']; // Category!
+    primaryCategory: NexusGenEnums['Category'] | null; // Category
     public: boolean; // Boolean!
-    rawContentURI: string; // String!
+    rawContentURI: string | null; // String
     secondaryCategory: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
-    thumbnail: string; // String!
+    thumbnail: string | null; // String
     tips: Array<NexusGenRootTypes['Tip'] | null>; // [Tip]!
     tipsCount: number; // Int!
-    title: string; // String!
+    title: string | null; // String
     transcodeError: boolean; // Boolean!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
     uploadError: boolean; // Boolean!
