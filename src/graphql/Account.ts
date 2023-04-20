@@ -80,7 +80,6 @@ export const GetMyAccountInput = inputObjectType({
   name: "GetMyAccountInput",
   definition(t) {
     t.nonNull.field("accountType", { type: "AccountType" })
-    t.nonNull.string("address")
   },
 })
 
@@ -101,7 +100,11 @@ export const AccountQuery = extendType({
     t.field("getMyAccount", {
       type: nonNull("GetAccountResult"),
       args: { input: nullable("GetMyAccountInput") },
-      async resolve(_parent, { input }, { dataSources, prisma }) {
+      async resolve(
+        _parent,
+        { input },
+        { dataSources, prisma, walletAccount }
+      ) {
         try {
           // Verify id token first.
           await dataSources.walletAPI.verifyUser()
@@ -134,11 +137,11 @@ export const AccountQuery = extendType({
             }
           } else {
             // `WALLET` account
-            const { accountType, address } = input
+            const { accountType } = input
 
-            if (accountType && accountType === "WALLET" && address) {
+            if (accountType && accountType === "WALLET" && walletAccount) {
               // Query account from the database
-              owner = address.toLowerCase()
+              owner = walletAccount.toLowerCase()
               const ac = await prisma.account.findUnique({
                 where: {
                   owner,
@@ -207,7 +210,11 @@ export const AccountMutation = extendType({
     t.field("createAccount", {
       type: "Account",
       args: { input: nullable("GetMyAccountInput") },
-      async resolve(_parent, { input }, { dataSources, prisma }) {
+      async resolve(
+        _parent,
+        { input },
+        { dataSources, prisma, walletAccount }
+      ) {
         try {
           // Verify id token first.
           const { uid } = await dataSources.walletAPI.verifyUser()
@@ -216,12 +223,12 @@ export const AccountMutation = extendType({
             // `TRADITIONAL` account
             // Create wallet first
             const { address, uid } = await dataSources.walletAPI.createWallet()
-            const accountOwner = address.toLowerCase()
+            const owner = address.toLowerCase()
 
             // Create (if not exist)  an account in the database
             let account = await prisma.account.findUnique({
               where: {
-                owner: accountOwner,
+                owner,
               },
             })
 
@@ -229,7 +236,7 @@ export const AccountMutation = extendType({
               account = await prisma.account.create({
                 data: {
                   type: "TRADITIONAL",
-                  owner: accountOwner,
+                  owner,
                   authUid: uid,
                 },
               })
@@ -238,7 +245,7 @@ export const AccountMutation = extendType({
             return account
           } else {
             // `WALLET` account
-            const { accountType, address } = input
+            const { accountType } = input
 
             // Make sure that the authenticated user doesn't own an account yet.
             const ac = await prisma.account.findUnique({
@@ -249,13 +256,13 @@ export const AccountMutation = extendType({
 
             if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-            if (accountType && accountType === "WALLET" && address) {
-              const accountOwner = address.toLowerCase()
+            if (accountType && accountType === "WALLET" && walletAccount) {
+              const owner = walletAccount.toLowerCase()
 
               // Create (if not exist)  an account in the database
               let account = await prisma.account.findUnique({
                 where: {
-                  owner: accountOwner,
+                  owner,
                 },
               })
 
@@ -263,7 +270,7 @@ export const AccountMutation = extendType({
                 account = await prisma.account.create({
                   data: {
                     type: accountType,
-                    owner: accountOwner,
+                    owner,
                   },
                 })
               }

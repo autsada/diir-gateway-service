@@ -131,7 +131,6 @@ type GetAccountResult {
 
 input GetMyAccountInput {
   accountType: AccountType!
-  address: String!
 }
 
 type Mutation {

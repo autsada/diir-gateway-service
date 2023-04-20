@@ -55,7 +55,6 @@ export interface NexusGenInputs {
   }
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
-    address: string; // String!
   }
   QueryByIdInput: { // input type
     requestorId?: string | null; // String
