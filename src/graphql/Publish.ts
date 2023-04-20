@@ -2,16 +2,15 @@ import {
   extendType,
   objectType,
   enumType,
-  nullable,
   nonNull,
-  list,
   inputObjectType,
-  intArg,
   stringArg,
+  list,
 } from "nexus"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
-import { badInputErrMessage, throwError } from "./Error"
+import { badInputErrMessage, throwError, unauthorizedErrMessage } from "./Error"
+import { validateAuthenticity } from "../lib"
 
 /**
  * Publish's category.
@@ -64,6 +63,19 @@ export const PlaybackLink = objectType({
 export const ThumbSource = enumType({
   name: "ThumbSource",
   members: ["generated", "custom"],
+})
+
+export const DraftPublish = objectType({
+  name: "DraftPublish",
+  definition(t) {
+    t.nonNull.string("id")
+    t.nonNull.field("createdAt", { type: "DateTime" })
+    t.nonNull.string("creatorId")
+    t.nonNull.boolean("public")
+    t.nonNull.boolean("uploadError")
+    t.nonNull.boolean("transcodeError")
+    t.nonNull.boolean("uploading")
+  },
 })
 
 export const Publish = objectType({
@@ -297,6 +309,147 @@ export const PublishQuery = extendType({
             },
           }) as unknown as NexusGenObjects["Publish"]
         } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    // TODO: Implement pagination
+    t.field("fetchPublishes", {
+      type: nonNull(list("Publish")),
+      resolve(_parent, _, { prisma }) {
+        try {
+          return prisma.publish.findMany(
+            {}
+          ) as unknown as NexusGenObjects["Publish"][]
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+  },
+})
+
+export const CreateDraftPublishInput = inputObjectType({
+  name: "CreateDraftPublishInput",
+  definition(t) {
+    t.nonNull.string("creatorId")
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+  },
+})
+
+export const UpdatePublishInput = inputObjectType({
+  name: "UpdatePublishInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("publishId")
+    t.string("thumbnail")
+    t.field("thumbSource", { type: "ThumbSource" })
+    t.string("title")
+    t.string("description")
+    t.field("primaryCategory", { type: "Category" })
+    t.field("secondaryCategory", { type: "Category" })
+    t.field("kind", { type: "PublishKind" })
+    t.boolean("isPublic")
+  },
+})
+
+export const PublishMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.field("createDraftPublish", {
+      type: "DraftPublish",
+      args: { input: nonNull("CreateDraftPublishInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, walletAccount }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { creatorId, owner, accountId } = input
+          if (!creatorId || !owner || !accountId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            walletAccount,
+          })
+
+          // Create a draft publish
+          const draft = await prisma.publish.create({
+            data: {
+              creatorId,
+            },
+          })
+
+          return draft
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("updatePublish", {
+      type: "Publish",
+      args: { input: nonNull("UpdatePublishInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, walletAccount }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const {
+            owner,
+            accountId,
+            publishId,
+            thumbnail,
+            thumbSource,
+            title,
+            description,
+            primaryCategory,
+            secondaryCategory,
+            kind,
+            isPublic,
+          } = input
+          if (!owner || !accountId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            walletAccount,
+          })
+
+          const publish = (await prisma.publish.update({
+            where: {
+              id: publishId,
+            },
+            data: {
+              thumbnail,
+              thumbSource,
+              title,
+              description,
+              primaryCategory,
+              secondaryCategory,
+              kind,
+              public: !!isPublic,
+            },
+          })) as unknown as NexusGenObjects["Publish"]
+
+          return publish
+        } catch (error) {
+          console.log("error: ", error)
           throw error
         }
       },

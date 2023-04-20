@@ -76,6 +76,12 @@ enum CommentType {
   PUBLISH
 }
 
+input CreateDraftPublishInput {
+  accountId: String!
+  creatorId: String!
+  owner: String!
+}
+
 input CreateStationInput {
   accountId: String!
   displayName: String!
@@ -103,6 +109,16 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type DraftPublish {
+  createdAt: DateTime!
+  creatorId: String!
+  id: String!
+  public: Boolean!
+  transcodeError: Boolean!
+  uploadError: Boolean!
+  uploading: Boolean!
+}
+
 type Edge {
   cursor: String
   node: Station
@@ -122,10 +138,12 @@ type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   createAccount(input: GetMyAccountInput): Account
+  createDraftPublish(input: CreateDraftPublishInput!): DraftPublish
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
   createUser(address: String!): AuthUser
   sendTips(input: SendTipsInput!): SendTipsResult
+  updatePublish(input: UpdatePublishInput!): Publish
   validateName(name: String!): Boolean!
 }
 
@@ -185,6 +203,7 @@ enum PublishKind {
 }
 
 type Query {
+  fetchPublishes: [Publish]!
   getMyAccount(input: GetMyAccountInput): GetAccountResult!
   getMyBalance(address: String!): String!
   getPublishById(id: String!): Publish
@@ -257,6 +276,20 @@ type Tip {
   sender: Station
   senderId: String!
   to: String!
+}
+
+input UpdatePublishInput {
+  accountId: String!
+  description: String
+  isPublic: Boolean
+  kind: PublishKind
+  owner: String!
+  primaryCategory: Category
+  publishId: String!
+  secondaryCategory: Category
+  thumbSource: ThumbSource
+  thumbnail: String
+  title: String
 }
 
 type WriteResult {

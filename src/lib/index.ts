@@ -1,6 +1,10 @@
 import * as crypto from "crypto"
 
-const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY } = process.env
+import { prisma as prismaClient } from "../client"
+import { WalletAPI } from "../dataSources/walletAPI"
+import { throwError, unauthorizedErrMessage } from "../graphql/Error"
+
+const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, UPLOAD_AUTH_TOKEN } = process.env
 
 export function isAuthorizedRequestor(key: string) {
   return key === API_KEY
@@ -14,4 +18,61 @@ export function isValidAchemySignature(
   hmac.update(body, "utf8") // Update the token hash with the request body using utf8
   const digest = hmac.digest("hex")
   return signature === digest
+}
+
+export function isWebhookRequestAuthorized(token: string) {
+  return token === UPLOAD_AUTH_TOKEN
+}
+
+export async function validateAuthenticity({
+  accountId,
+  owner,
+  dataSources,
+  prisma,
+  walletAccount,
+}: {
+  accountId: string
+  owner: string
+  dataSources: { walletAPI: WalletAPI }
+  prisma: typeof prismaClient
+  walletAccount?: string
+}) {
+  // User must be authenticated
+  const { uid } = await dataSources.walletAPI.verifyUser()
+
+  // Find account by the authenticated user's uid
+  let account1 = await prisma.account.findUnique({
+    where: {
+      authUid: uid,
+    },
+  })
+
+  // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent by the frontend in the headers
+  if (!account1 && walletAccount) {
+    account1 = await prisma.account.findUnique({
+      where: {
+        owner: walletAccount.toLowerCase(),
+      },
+    })
+  }
+
+  // Account1 must be found at this point
+  if (!account1) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+  const account1Address = account1?.owner.toLowerCase()
+
+  // Find account2 by the provided account id
+  const account2 = await prisma.account.findUnique({
+    where: {
+      id: accountId,
+    },
+  })
+  if (!account2) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+  const account2Address = account2?.owner.toLowerCase()
+  const ownerAddress = owner.toLowerCase()
+
+  if (account1Address !== account2Address)
+    throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+  if (account2Address !== ownerAddress)
+    throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 }

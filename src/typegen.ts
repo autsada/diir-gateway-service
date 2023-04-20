@@ -33,6 +33,11 @@ export interface NexusGenInputs {
     address: string; // String!
     stationId: string; // String!
   }
+  CreateDraftPublishInput: { // input type
+    accountId: string; // String!
+    creatorId: string; // String!
+    owner: string; // String!
+  }
   CreateStationInput: { // input type
     accountId: string; // String!
     displayName: string; // String!
@@ -61,6 +66,19 @@ export interface NexusGenInputs {
     qty: number; // Int!
     receiverId: string; // String!
     senderId: string; // String!
+  }
+  UpdatePublishInput: { // input type
+    accountId: string; // String!
+    description?: string | null; // String
+    isPublic?: boolean | null; // Boolean
+    kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
+    owner: string; // String!
+    primaryCategory?: NexusGenEnums['Category'] | null; // Category
+    publishId: string; // String!
+    secondaryCategory?: NexusGenEnums['Category'] | null; // Category
+    thumbSource?: NexusGenEnums['ThumbSource'] | null; // ThumbSource
+    thumbnail?: string | null; // String
+    title?: string | null; // String
   }
 }
 
@@ -110,6 +128,15 @@ export interface NexusGenObjects {
   CreateWalletResult: { // root type
     address: string; // String!
     uid: string; // String!
+  }
+  DraftPublish: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creatorId: string; // String!
+    id: string; // String!
+    public: boolean; // Boolean!
+    transcodeError: boolean; // Boolean!
+    uploadError: boolean; // Boolean!
+    uploading: boolean; // Boolean!
   }
   Edge: { // root type
     cursor?: string | null; // String
@@ -244,6 +271,15 @@ export interface NexusGenFieldTypes {
     address: string; // String!
     uid: string; // String!
   }
+  DraftPublish: { // field return type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    creatorId: string; // String!
+    id: string; // String!
+    public: boolean; // Boolean!
+    transcodeError: boolean; // Boolean!
+    uploadError: boolean; // Boolean!
+    uploading: boolean; // Boolean!
+  }
   Edge: { // field return type
     cursor: string | null; // String
     node: NexusGenRootTypes['Station'] | null; // Station
@@ -256,10 +292,12 @@ export interface NexusGenFieldTypes {
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
     calculateTips: NexusGenRootTypes['CalculateTipsResult'] | null; // CalculateTipsResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
+    createDraftPublish: NexusGenRootTypes['DraftPublish'] | null; // DraftPublish
     createStation: NexusGenRootTypes['Station'] | null; // Station
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
     createUser: NexusGenRootTypes['AuthUser'] | null; // AuthUser
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
+    updatePublish: NexusGenRootTypes['Publish'] | null; // Publish
     validateName: boolean; // Boolean!
   }
   PageInfo: { // field return type
@@ -309,6 +347,7 @@ export interface NexusGenFieldTypes {
     views: number | null; // Int
   }
   Query: { // field return type
+    fetchPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
     getMyAccount: NexusGenRootTypes['GetAccountResult']; // GetAccountResult!
     getMyBalance: string; // String!
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
@@ -404,6 +443,15 @@ export interface NexusGenFieldTypeNames {
     address: 'String'
     uid: 'String'
   }
+  DraftPublish: { // field return type name
+    createdAt: 'DateTime'
+    creatorId: 'String'
+    id: 'String'
+    public: 'Boolean'
+    transcodeError: 'Boolean'
+    uploadError: 'Boolean'
+    uploading: 'Boolean'
+  }
   Edge: { // field return type name
     cursor: 'String'
     node: 'Station'
@@ -416,10 +464,12 @@ export interface NexusGenFieldTypeNames {
     cacheSession: 'WriteResult'
     calculateTips: 'CalculateTipsResult'
     createAccount: 'Account'
+    createDraftPublish: 'DraftPublish'
     createStation: 'Station'
     createTip: 'Tip'
     createUser: 'AuthUser'
     sendTips: 'SendTipsResult'
+    updatePublish: 'Publish'
     validateName: 'Boolean'
   }
   PageInfo: { // field return type name
@@ -469,6 +519,7 @@ export interface NexusGenFieldTypeNames {
     views: 'Int'
   }
   Query: { // field return type name
+    fetchPublishes: 'Publish'
     getMyAccount: 'GetAccountResult'
     getMyBalance: 'String'
     getPublishById: 'Publish'
@@ -537,6 +588,9 @@ export interface NexusGenArgTypes {
     createAccount: { // args
       input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
     }
+    createDraftPublish: { // args
+      input: NexusGenInputs['CreateDraftPublishInput']; // CreateDraftPublishInput!
+    }
     createStation: { // args
       input: NexusGenInputs['CreateStationInput']; // CreateStationInput!
     }
@@ -548,6 +602,9 @@ export interface NexusGenArgTypes {
     }
     sendTips: { // args
       input: NexusGenInputs['SendTipsInput']; // SendTipsInput!
+    }
+    updatePublish: { // args
+      input: NexusGenInputs['UpdatePublishInput']; // UpdatePublishInput!
     }
     validateName: { // args
       name: string; // String!

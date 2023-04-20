@@ -8,6 +8,7 @@ import {
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
 import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
+import { validateAuthenticity } from "../lib"
 
 /**
  * A Station type that map to the prisma Station model.
@@ -191,9 +192,9 @@ export const CreateStationInput = inputObjectType({
   name: "CreateStationInput",
   definition(t) {
     t.nonNull.string("owner")
+    t.nonNull.string("accountId")
     t.nonNull.string("name")
     t.nonNull.string("displayName")
-    t.nonNull.string("accountId")
   },
 })
 
@@ -245,59 +246,21 @@ export const StationMutation = extendType({
         { prisma, dataSources, walletAccount }
       ) => {
         try {
-          // Verify if user is authenticated
-          const { uid } = await dataSources.walletAPI.verifyUser()
-
-          // Find account by the authenticated user's uid
-          let account1 = await prisma.account.findUnique({
-            where: {
-              authUid: uid,
-            },
-          })
-
-          // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent by the frontend in the headers
-          if (!account1 && walletAccount) {
-            account1 = await prisma.account.findUnique({
-              where: {
-                owner: walletAccount.toLowerCase(),
-              },
-            })
-          }
-
-          // Account must be found at this point
-          if (!account1) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
-          const account1Address = account1?.owner.toLowerCase()
-
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-
           const { owner, name, displayName, accountId } = input
           if (!owner || !name || !displayName || !accountId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          // Find account by the provided account id
-          const account2 = await prisma.account.findUnique({
-            where: {
-              id: accountId,
-            },
-          })
-          if (!account2) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
-          const account2Address = account2?.owner.toLowerCase()
-
-          // // If `account1` found --> `TRADITIONAL` account
-          // if (account1 && account2?.type === "WALLET")
-          //   throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
-
-          // // If NO `account1` found --> `WALLET` account because on a wallet typed account we don't store auth uid as we use anonymous sign in.
-          // if (!account1 && account2?.type === "TRADITIONAL")
-          //   throwError(unauthorizedErrMessage, "UN_AUTHORIZED") // the provided accountId is wrong
-
           const ownerAddress = owner.toLowerCase()
 
-          // Validate if the accounts and the given address are correct
-          if (account1Address !== account2Address)
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
-          if (account2Address !== ownerAddress)
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            walletAccount,
+          })
 
           // Check if the name is valid
           const { valid } = await dataSources.walletAPI.validateName(name)
@@ -389,6 +352,12 @@ export const StationMutation = extendType({
       args: { input: nonNull("SendTipsInput") },
       resolve: async (_parent, { input }, { dataSources, prisma }) => {
         try {
+          // Validate input
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { senderId, receiverId, publishId, qty } = input
+          if (!senderId || !receiverId || !publishId || !qty)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
           // Verify if user is authenticated
           const { uid } = await dataSources.walletAPI.verifyUser()
 
@@ -399,12 +368,6 @@ export const StationMutation = extendType({
             },
           })
           if (!account) throwError(unauthorizedErrMessage, "UN_AUTHENTICATED")
-
-          // Validate input
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { senderId, receiverId, publishId, qty } = input
-          if (!senderId || !receiverId || !publishId || !qty)
-            throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Check if the given sender id is valid
           const sender = await prisma.station.findUnique({

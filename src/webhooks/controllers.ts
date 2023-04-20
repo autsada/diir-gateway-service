@@ -4,13 +4,8 @@ import axios from "axios"
 import { prisma } from "../client"
 import { isValidAchemySignature } from "../lib"
 
-const {
-  CLOUDFLAR_BASE_URL,
-  CLOUDFLAR_API_TOKEN,
-  CLOUDFLAR_ACCOUNT_ID,
-  FUNCTIONS_WEBHOOK_URL,
-  FUNCTIONS_WEBHOOK_AUTH_KEY,
-} = process.env
+const { CLOUDFLAR_BASE_URL, CLOUDFLAR_API_TOKEN, CLOUDFLAR_ACCOUNT_ID } =
+  process.env
 
 /**
  * This route will be called by Alchemy to notify when there is any activity occurred on an address
@@ -127,7 +122,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       // `readyToStream` is a boolean that indicate if the playback urls are ready.
       if (body.readyToStream) {
         const contentPah = body.meta?.path as string
-        publishId = contentPah.split("/")[3]
+        publishId = contentPah.split("/")[2]
 
         // Create (if not exist) or update (if exists) a playback in the database.
         const playback = await prisma.playbackLink.findUnique({
@@ -176,28 +171,21 @@ export async function onTranscodingFinished(req: Request, res: Response) {
               id: publishId,
             },
             data: {
+              uploadError: false,
               uploading: false,
+              transcodeError: false,
               thumbSource: !publish.thumbSource
                 ? "generated"
                 : publish.thumbSource,
             },
           })
         }
-
-        // Call Cloud functions to create/update a new doc in Firestore so the UIs can be notified (The UIs will be listening for the `playbacks` collection)
-        await axios({
-          method: "POST",
-          url: FUNCTIONS_WEBHOOK_URL,
-          headers: {
-            Authorization: `Bearer ${FUNCTIONS_WEBHOOK_AUTH_KEY}`,
-          },
-          data: { publishId, status: "transcoded", updateType: "update" },
-        })
       }
 
       res.status(200).end()
     }
   } catch (error) {
+    console.log("error: ", error)
     // In case of an error occurred, we have to update the publish so the publish owner will know
     const publish = await prisma.publish.findUnique({
       where: {
@@ -216,6 +204,68 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       })
     }
 
+    res.status(500).end()
+  }
+}
+
+export async function onUploadStarted(req: Request, res: Response) {
+  const body = req.body as { publishId: string }
+  const { publishId } = body
+
+  try {
+    // Find the publish
+    const publish = await prisma.publish.findUnique({
+      where: {
+        id: publishId,
+      },
+    })
+
+    if (publish) {
+      // Update the loading status so the UIs can use
+      await prisma.publish.update({
+        where: {
+          id: publishId,
+        },
+        data: {
+          uploading: true,
+        },
+      })
+    }
+
+    res.status(200).end()
+  } catch (error) {
+    res.status(500).end()
+  }
+}
+
+export async function onUploadFinished(req: Request, res: Response) {
+  const body = req.body as { publishId: string; uri: string }
+  const { publishId, uri } = body
+
+  try {
+    // Find the publish
+    const publish = await prisma.publish.findUnique({
+      where: {
+        id: publishId,
+      },
+    })
+
+    if (publish) {
+      // Update the publish in the database
+      await prisma.publish.update({
+        where: {
+          id: publishId,
+        },
+        data: {
+          rawContentURI: uri,
+          uploading: false,
+          uploadError: false,
+        },
+      })
+    }
+
+    res.status(200).end()
+  } catch (error) {
     res.status(500).end()
   }
 }
