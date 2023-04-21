@@ -98,7 +98,7 @@ export const AccountQuery = extendType({
      * Get user's account
      */
     t.field("getMyAccount", {
-      type: nonNull("GetAccountResult"),
+      type: "GetAccountResult",
       args: { input: nullable("GetMyAccountInput") },
       async resolve(
         _parent,
@@ -163,7 +163,8 @@ export const AccountQuery = extendType({
 
           return { account, defaultStation }
         } catch (error) {
-          throw error
+          // Don't throw as we need the client to continue without breaking.
+          return null
         }
       },
     })
