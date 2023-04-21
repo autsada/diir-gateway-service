@@ -85,7 +85,7 @@ export interface NexusGenEnums {
   AccountType: "TRADITIONAL" | "WALLET"
   Category: "Animals" | "Children" | "Education" | "Entertainment" | "Food" | "Gaming" | "LifeStyle" | "Men" | "Movies" | "Music" | "News" | "Other" | "Programming" | "Science" | "Sports" | "Technology" | "Travel" | "Vehicles" | "Women"
   CommentType: "COMMENT" | "PUBLISH"
-  PublishKind: "Adds" | "Blog" | "Video"
+  PublishKind: "Adds" | "Blog" | "Podcast" | "Video"
   ThumbSource: "custom" | "generated"
 }
 
@@ -347,7 +347,7 @@ export interface NexusGenFieldTypes {
   }
   Query: { // field return type
     fetchPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
-    getMyAccount: NexusGenRootTypes['GetAccountResult']; // GetAccountResult!
+    getMyAccount: NexusGenRootTypes['GetAccountResult'] | null; // GetAccountResult
     getMyBalance: string; // String!
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station

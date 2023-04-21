@@ -91,10 +91,10 @@ enum PublishKind {
     Video
     Adds
     Blog
+    Podcast
     // Audio
     // Course
     // Art
-    // Podcast
 }
 
 // A model for the link to playback a publish typed video

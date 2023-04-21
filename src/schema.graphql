@@ -198,12 +198,13 @@ type Publish {
 enum PublishKind {
   Adds
   Blog
+  Podcast
   Video
 }
 
 type Query {
   fetchPublishes: [Publish]!
-  getMyAccount(input: GetMyAccountInput): GetAccountResult!
+  getMyAccount(input: GetMyAccountInput): GetAccountResult
   getMyBalance(address: String!): String!
   getPublishById(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
