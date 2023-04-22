@@ -163,8 +163,7 @@ export const AccountQuery = extendType({
 
           return { account, defaultStation }
         } catch (error) {
-          // Don't throw as we need the client to continue without breaking.
-          return null
+          throw error
         }
       },
     })

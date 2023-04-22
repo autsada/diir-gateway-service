@@ -92,6 +92,7 @@ enum PublishKind {
     Adds
     Blog
     Podcast
+    Short
     // Audio
     // Course
     // Art

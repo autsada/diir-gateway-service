@@ -42,7 +42,7 @@ export const Category = enumType({
 
 export const PublishKind = enumType({
   name: "PublishKind",
-  members: ["Video", "Adds", "Blog", "Podcast"],
+  members: ["Video", "Adds", "Blog", "Podcast", "Short"],
 })
 
 export const PlaybackLink = objectType({

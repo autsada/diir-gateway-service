@@ -85,7 +85,7 @@ export interface NexusGenEnums {
   AccountType: "TRADITIONAL" | "WALLET"
   Category: "Animals" | "Children" | "Education" | "Entertainment" | "Food" | "Gaming" | "LifeStyle" | "Men" | "Movies" | "Music" | "News" | "Other" | "Programming" | "Science" | "Sports" | "Technology" | "Travel" | "Vehicles" | "Women"
   CommentType: "COMMENT" | "PUBLISH"
-  PublishKind: "Adds" | "Blog" | "Podcast" | "Video"
+  PublishKind: "Adds" | "Blog" | "Podcast" | "Short" | "Video"
   ThumbSource: "custom" | "generated"
 }
 
