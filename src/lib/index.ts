@@ -29,13 +29,13 @@ export async function validateAuthenticity({
   owner,
   dataSources,
   prisma,
-  walletAccount,
+  walletAddress,
 }: {
   accountId: string
   owner: string
   dataSources: { walletAPI: WalletAPI }
   prisma: typeof prismaClient
-  walletAccount?: string
+  walletAddress?: string
 }) {
   // User must be authenticated
   const { uid } = await dataSources.walletAPI.verifyUser()
@@ -48,10 +48,10 @@ export async function validateAuthenticity({
   })
 
   // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent by the frontend in the headers
-  if (!account1 && walletAccount) {
+  if (!account1 && walletAddress) {
     account1 = await prisma.account.findUnique({
       where: {
-        owner: walletAccount.toLowerCase(),
+        owner: walletAddress.toLowerCase(),
       },
     })
   }

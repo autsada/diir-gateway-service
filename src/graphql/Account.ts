@@ -72,7 +72,6 @@ export const Account = objectType({
         else return stations
       },
     })
-    t.field("defaultStation", { type: "Station" })
   },
 })
 
@@ -103,7 +102,7 @@ export const AccountQuery = extendType({
       async resolve(
         _parent,
         { input },
-        { dataSources, prisma, walletAccount }
+        { dataSources, prisma, signedMessage }
       ) {
         try {
           // Verify id token first.
@@ -139,9 +138,9 @@ export const AccountQuery = extendType({
             // `WALLET` account
             const { accountType } = input
 
-            if (accountType && accountType === "WALLET" && walletAccount) {
+            if (accountType && accountType === "WALLET" && signedMessage) {
               // Query account from the database
-              owner = walletAccount.toLowerCase()
+              owner = signedMessage.toLowerCase()
               const ac = await prisma.account.findUnique({
                 where: {
                   owner,
@@ -213,17 +212,20 @@ export const AccountMutation = extendType({
       async resolve(
         _parent,
         { input },
-        { dataSources, prisma, walletAccount }
+        { dataSources, prisma, signedMessage }
       ) {
         try {
           // Verify id token first.
           const { uid } = await dataSources.walletAPI.verifyUser()
+          console.log("uid: ", uid)
 
           if (!input) {
             // `TRADITIONAL` account
             // Create wallet first
             const { address, uid } = await dataSources.walletAPI.createWallet()
             const owner = address.toLowerCase()
+
+            console.log("owner: ", owner)
 
             // Create (if not exist)  an account in the database
             let account = await prisma.account.findUnique({
@@ -256,8 +258,8 @@ export const AccountMutation = extendType({
 
             if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-            if (accountType && accountType === "WALLET" && walletAccount) {
-              const owner = walletAccount.toLowerCase()
+            if (accountType && accountType === "WALLET" && signedMessage) {
+              const owner = signedMessage.toLowerCase()
 
               // Create (if not exist)  an account in the database
               let account = await prisma.account.findUnique({
@@ -281,6 +283,7 @@ export const AccountMutation = extendType({
             }
           }
         } catch (error) {
+          console.log("error: ", error)
           throw error
         }
       },

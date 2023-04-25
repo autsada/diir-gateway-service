@@ -67,14 +67,14 @@ async function startServer() {
         const authorization = req.headers["authorization"]
         const idToken = authorization?.split(" ")[1]
         // For `WALLET` accounts, frontend must also wallet address in the headers for use in conjunction with the id token
-        const walletAccount = req.headers["auth-wallet-account"] as
+        const signedMessage = req.headers["auth-wallet-account"] as
           | string
           | undefined
 
         return {
           prisma,
           idToken,
-          walletAccount,
+          signedMessage,
           dataSources: {
             walletAPI: new WalletAPI({ idToken, cache }),
           },

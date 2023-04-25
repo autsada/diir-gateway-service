@@ -5,7 +5,6 @@
 type Account {
   authUid: String
   createdAt: DateTime!
-  defaultStation: Station
   id: String!
   owner: String!
   stations: [Station]!

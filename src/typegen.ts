@@ -102,7 +102,6 @@ export interface NexusGenObjects {
   Account: { // root type
     authUid?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
-    defaultStation?: NexusGenRootTypes['Station'] | null; // Station
     id: string; // String!
     owner: string; // String!
     type: NexusGenEnums['AccountType']; // AccountType!
@@ -236,7 +235,6 @@ export interface NexusGenFieldTypes {
   Account: { // field return type
     authUid: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
-    defaultStation: NexusGenRootTypes['Station'] | null; // Station
     id: string; // String!
     owner: string; // String!
     stations: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
@@ -408,7 +406,6 @@ export interface NexusGenFieldTypeNames {
   Account: { // field return type name
     authUid: 'String'
     createdAt: 'DateTime'
-    defaultStation: 'Station'
     id: 'String'
     owner: 'String'
     stations: 'Station'
