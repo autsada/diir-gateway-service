@@ -5,9 +5,10 @@
 type Account {
   authUid: String
   createdAt: DateTime!
+  defaultStation: Station
   id: String!
   owner: String!
-  stations: [Station]!
+  stations: [Station]
   type: AccountType!
   updatedAt: DateTime
 }
@@ -83,9 +84,9 @@ input CreateDraftPublishInput {
 
 input CreateStationInput {
   accountId: String!
-  displayName: String!
   name: String!
   owner: String!
+  tokenId: Int!
 }
 
 input CreateTipInput {
@@ -123,13 +124,17 @@ type Edge {
   node: Station
 }
 
-type GetAccountResult {
-  account: Account
-  defaultStation: Station
-}
-
 input GetMyAccountInput {
   accountType: AccountType!
+}
+
+input MintStationNFTInput {
+  name: String!
+  to: String!
+}
+
+type MintStationNFTResult {
+  tokenId: Int!
 }
 
 type Mutation {
@@ -140,6 +145,8 @@ type Mutation {
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
   createUser(address: String!): AuthUser
+  mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
+  mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updatePublish(input: UpdatePublishInput!): Publish
   validateName(name: String!): Boolean!
@@ -204,7 +211,7 @@ enum PublishKind {
 
 type Query {
   fetchPublishes: [Publish]!
-  getMyAccount(input: GetMyAccountInput): GetAccountResult
+  getMyAccount(input: GetMyAccountInput): Account
   getMyBalance(address: String!): String!
   getPublishById(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
@@ -254,7 +261,7 @@ type Station {
   name: String!
   owner: String!
   publishesCount: Int!
-  tokenId: String
+  tokenId: Int
   updatedAt: DateTime
 }
 

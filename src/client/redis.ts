@@ -8,7 +8,7 @@ const redis = new Redis({
   port: Number(REDIS_PORT),
 })
 
-export function cacheTokenId(address: string, stationId: string) {
+export function cacheLoggedInSession(address: string, stationId: string) {
   return redis.set(address.toLowerCase(), stationId)
 }
 

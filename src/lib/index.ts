@@ -1,8 +1,10 @@
 import * as crypto from "crypto"
+import { ethers } from "ethers"
 
 import { prisma as prismaClient } from "../client"
 import { WalletAPI } from "../dataSources/walletAPI"
 import { throwError, unauthorizedErrMessage } from "../graphql/Error"
+import { hashMessage } from "@ethersproject/hash"
 
 const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, UPLOAD_AUTH_TOKEN } = process.env
 
@@ -29,13 +31,13 @@ export async function validateAuthenticity({
   owner,
   dataSources,
   prisma,
-  walletAddress,
+  signature,
 }: {
   accountId: string
   owner: string
   dataSources: { walletAPI: WalletAPI }
   prisma: typeof prismaClient
-  walletAddress?: string
+  signature?: string
 }) {
   // User must be authenticated
   const { uid } = await dataSources.walletAPI.verifyUser()
@@ -47,8 +49,10 @@ export async function validateAuthenticity({
     },
   })
 
-  // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent by the frontend in the headers
-  if (!account1 && walletAddress) {
+  // For `WALLET` account, account query by authUid will be null, for this case we have to query the account by a wallet address that is sent in the form of signed message by the frontend in the headers
+  if (!account1 && signature) {
+    const walletAddress = recoverAddress(signature)
+
     account1 = await prisma.account.findUnique({
       where: {
         owner: walletAddress.toLowerCase(),
@@ -75,4 +79,13 @@ export async function validateAuthenticity({
     throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
   if (account2Address !== ownerAddress)
     throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+}
+
+export function recoverAddress(signature: string) {
+  const messages = signature.split(" ")
+  const sig = messages[0]
+  const message = messages[1]
+  const walletAddress = ethers.utils.recoverAddress(hashMessage(message), sig)
+
+  return walletAddress
 }

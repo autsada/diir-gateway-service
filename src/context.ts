@@ -8,5 +8,5 @@ export interface Context {
   }
   prisma: PrismaClient
   idToken: string | undefined
-  signedMessage?: string // A signed message for `WALLET` account
+  signature?: string // A signature signed by a `WALLET` account
 }

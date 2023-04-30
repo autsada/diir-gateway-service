@@ -28,7 +28,7 @@ model Account {
 // Station is similar to channel on YouTube
 model Station {
     id                String           @id @default(cuid())
-    tokenId           String?          @unique // Station NFT token id
+    tokenId           Int?             @unique // Station NFT token id
     createdAt         DateTime         @default(now())
     updatedAt         DateTime?
     owner             String // EOA Address

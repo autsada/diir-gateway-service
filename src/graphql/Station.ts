@@ -17,7 +17,7 @@ export const Station = objectType({
   name: "Station",
   definition(t) {
     t.nonNull.string("id")
-    t.string("tokenId")
+    t.int("tokenId")
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
     t.nonNull.string("owner")
@@ -186,6 +186,27 @@ export const StationQuery = extendType({
 })
 
 /**
+ * An input type for `mintStationNFT` mutation.
+ */
+export const MintStationNFTInput = inputObjectType({
+  name: "MintStationNFTInput",
+  definition(t) {
+    t.nonNull.string("to")
+    t.nonNull.string("name")
+  },
+})
+
+/**
+ * A result for `mintStationNFT` mutation
+ */
+export const MintStationNFTResult = objectType({
+  name: "MintStationNFTResult",
+  definition(t) {
+    t.nonNull.int("tokenId")
+  },
+})
+
+/**
  * An input type for `createStation` mutation.
  */
 export const CreateStationInput = inputObjectType({
@@ -194,7 +215,7 @@ export const CreateStationInput = inputObjectType({
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("name")
-    t.nonNull.string("displayName")
+    t.nonNull.int("tokenId")
   },
 })
 
@@ -237,18 +258,68 @@ export const SendTipsResult = objectType({
 export const StationMutation = extendType({
   type: "Mutation",
   definition(t) {
+    /**
+     * For user's first station, mint a Station NFT by admin so user will not have to pay gas
+     */
+    t.field("mintFirstStationNFT", {
+      type: "MintStationNFTResult",
+      args: { input: nonNull("MintStationNFTInput") },
+      resolve: async (_parent, { input }, { dataSources }) => {
+        try {
+          // User must be authenticated
+          await dataSources.walletAPI.verifyUser()
+          const { to, name } = input
+          if (!to || !name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const result = await dataSources.walletAPI.mintStationNFTByAdmin({
+            to,
+            name,
+          })
+
+          return { tokenId: result?.tokenId }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * For user's first station, mint a Station NFT by admin so user will not have to pay gas
+     */
+    t.field("mintStationNFT", {
+      type: "MintStationNFTResult",
+      args: { input: nonNull("MintStationNFTInput") },
+      resolve: async (_parent, { input }, { dataSources }) => {
+        try {
+          // User must be authenticated
+          await dataSources.walletAPI.verifyUser()
+          const { to, name } = input
+          if (!to || !name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const result = await dataSources.walletAPI.mintStationNFT({
+            to,
+            name,
+          })
+
+          return { tokenId: result?.tokenId }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
     t.field("createStation", {
-      type: nullable("Station"),
+      type: "Station",
       args: { input: nonNull("CreateStationInput") },
       resolve: async (
         _parent,
         { input },
-        { prisma, dataSources, walletAccount }
+        { prisma, dataSources, signature }
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, name, displayName, accountId } = input
-          if (!owner || !name || !displayName || !accountId)
+          const { owner, accountId, name, tokenId } = input
+          if (!owner || !accountId || !name || !tokenId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           const ownerAddress = owner.toLowerCase()
@@ -259,51 +330,23 @@ export const StationMutation = extendType({
             owner,
             dataSources,
             prisma,
-            walletAccount,
+            signature,
           })
-
-          // Check if the name is valid
-          const { valid } = await dataSources.walletAPI.validateName(name)
-          if (!valid) throw new Error(`The name: '${name}' is taken or invalid`)
-
-          // Mint station NFT
-          // Check if it's the user's first station, if yes create an NFT by admin so user doesn't have to pay gas.
-          const stations = await prisma.station.findMany({
-            where: {
-              owner: ownerAddress,
-            },
-          })
-
-          let tokenId: string = ""
-          if (stations.length === 0) {
-            // First station
-            const result = await dataSources.walletAPI.mintStationNFTByAdmin({
-              to: owner,
-              name,
-            })
-            tokenId = `${result.tokenId}`
-          } else {
-            // Not the first station
-            const result = await dataSources.walletAPI.mintStationNFT({
-              to: owner,
-              name,
-            })
-            tokenId = `${result.tokenId}`
-          }
 
           // Create a station in the database
           const station = await prisma.station.create({
             data: {
               tokenId,
               owner: ownerAddress,
-              name, // Make sure to lowercase name
-              displayName,
+              name: name.toLowerCase(), // Make sure to lowercase name
+              displayName: name,
               accountId,
             },
           })
 
           return station
         } catch (error) {
+          console.log("error: ", error)
           throw error
         }
       },

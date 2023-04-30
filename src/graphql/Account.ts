@@ -6,11 +6,13 @@ import {
   nonNull,
   enumType,
   inputObjectType,
+  list,
 } from "nexus"
-import { cacheTokenId, getStationFromCache } from "../client/redis"
+import { cacheLoggedInSession, getStationFromCache } from "../client/redis"
 import { NexusGenObjects } from "../typegen"
 
 import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
+import { recoverAddress, validateAuthenticity } from "../lib"
 
 export const Edge = objectType({
   name: "Edge",
@@ -53,10 +55,11 @@ export const Account = objectType({
     t.nonNull.string("owner")
     t.string("authUid")
     t.nonNull.field("type", { type: "AccountType" })
-    t.nonNull.list.field("stations", {
-      type: "Station",
+    t.field("defaultStation", { type: "Station" })
+    t.field("stations", {
+      type: list("Station"),
       resolve: async (parent, _, { prisma }) => {
-        const stations = (await prisma.account
+        return prisma.account
           .findUnique({
             where: {
               id: parent.id,
@@ -66,10 +69,7 @@ export const Account = objectType({
             orderBy: {
               createdAt: "desc",
             },
-          })) as unknown as NexusGenObjects["Station"][]
-
-        if (!stations) return []
-        else return stations
+          })
       },
     })
   },
@@ -82,14 +82,6 @@ export const GetMyAccountInput = inputObjectType({
   },
 })
 
-export const GetAccountResult = objectType({
-  name: "GetAccountResult",
-  definition(t) {
-    t.field("account", { type: "Account" })
-    t.field("defaultStation", { type: "Station" })
-  },
-})
-
 export const AccountQuery = extendType({
   type: "Query",
   definition(t) {
@@ -97,13 +89,9 @@ export const AccountQuery = extendType({
      * Get user's account
      */
     t.field("getMyAccount", {
-      type: "GetAccountResult",
+      type: "Account",
       args: { input: nullable("GetMyAccountInput") },
-      async resolve(
-        _parent,
-        { input },
-        { dataSources, prisma, signedMessage }
-      ) {
+      async resolve(_parent, { input }, { dataSources, prisma, signature }) {
         try {
           // Verify id token first.
           await dataSources.walletAPI.verifyUser()
@@ -138,9 +126,9 @@ export const AccountQuery = extendType({
             // `WALLET` account
             const { accountType } = input
 
-            if (accountType && accountType === "WALLET" && signedMessage) {
+            if (accountType && accountType === "WALLET" && signature) {
               // Query account from the database
-              owner = signedMessage.toLowerCase()
+              const owner = recoverAddress(signature).toLowerCase()
               const ac = await prisma.account.findUnique({
                 where: {
                   owner,
@@ -154,13 +142,16 @@ export const AccountQuery = extendType({
             }
           }
 
+          // Return null if no account found or no owner address
+          if (!account || !owner) return null
+
           // Find the previous logged in station
           const defaultStation =
-            !account || !owner || account.stations.length === 0
+            account.stations.length === 0
               ? null
               : await getStationFromCache(owner, account.stations as Station[])
 
-          return { account, defaultStation }
+          return { ...account, defaultStation } as NexusGenObjects["Account"]
         } catch (error) {
           throw error
         }
@@ -209,23 +200,16 @@ export const AccountMutation = extendType({
     t.field("createAccount", {
       type: "Account",
       args: { input: nullable("GetMyAccountInput") },
-      async resolve(
-        _parent,
-        { input },
-        { dataSources, prisma, signedMessage }
-      ) {
+      async resolve(_parent, { input }, { dataSources, prisma, signature }) {
         try {
           // Verify id token first.
           const { uid } = await dataSources.walletAPI.verifyUser()
-          console.log("uid: ", uid)
 
           if (!input) {
             // `TRADITIONAL` account
             // Create wallet first
             const { address, uid } = await dataSources.walletAPI.createWallet()
             const owner = address.toLowerCase()
-
-            console.log("owner: ", owner)
 
             // Create (if not exist)  an account in the database
             let account = await prisma.account.findUnique({
@@ -258,8 +242,9 @@ export const AccountMutation = extendType({
 
             if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-            if (accountType && accountType === "WALLET" && signedMessage) {
-              const owner = signedMessage.toLowerCase()
+            if (accountType && accountType === "WALLET" && signature) {
+              const ownerAddress = recoverAddress(signature)
+              const owner = ownerAddress.toLowerCase()
 
               // Create (if not exist)  an account in the database
               let account = await prisma.account.findUnique({
@@ -283,7 +268,6 @@ export const AccountMutation = extendType({
             }
           }
         } catch (error) {
-          console.log("error: ", error)
           throw error
         }
       },
@@ -297,7 +281,7 @@ export const AccountMutation = extendType({
           if (!input || !input.address || !input.stationId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          await cacheTokenId(input.address, input.stationId)
+          await cacheLoggedInSession(input.address, input.stationId)
 
           return { status: "Ok" }
         } catch (error) {

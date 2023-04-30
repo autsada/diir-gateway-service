@@ -365,7 +365,7 @@ export const PublishMutation = extendType({
       resolve: async (
         _parent,
         { input },
-        { prisma, dataSources, signedMessage }
+        { prisma, dataSources, signature }
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
@@ -379,7 +379,7 @@ export const PublishMutation = extendType({
             owner,
             dataSources,
             prisma,
-            walletAddress: signedMessage,
+            signature,
           })
 
           // Create a draft publish
@@ -402,7 +402,7 @@ export const PublishMutation = extendType({
       resolve: async (
         _parent,
         { input },
-        { dataSources, prisma, signedMessage }
+        { dataSources, prisma, signature }
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
@@ -428,7 +428,7 @@ export const PublishMutation = extendType({
             owner,
             dataSources,
             prisma,
-            walletAddress: signedMessage,
+            signature,
           })
 
           const publish = (await prisma.publish.update({
