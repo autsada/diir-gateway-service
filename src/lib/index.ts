@@ -6,7 +6,8 @@ import { WalletAPI } from "../dataSources/walletAPI"
 import { throwError, unauthorizedErrMessage } from "../graphql/Error"
 import { hashMessage } from "@ethersproject/hash"
 
-const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, UPLOAD_AUTH_TOKEN } = process.env
+const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, UPLOAD_AUTH_TOKEN, MESSAGE } =
+  process.env
 
 export function isAuthorizedRequestor(key: string) {
   return key === API_KEY
@@ -82,10 +83,10 @@ export async function validateAuthenticity({
 }
 
 export function recoverAddress(signature: string) {
-  const messages = signature.split(" ")
-  const sig = messages[0]
-  const message = messages[1]
-  const walletAddress = ethers.utils.recoverAddress(hashMessage(message), sig)
+  const walletAddress = ethers.utils.recoverAddress(
+    hashMessage(MESSAGE!),
+    signature
+  )
 
   return walletAddress
 }
