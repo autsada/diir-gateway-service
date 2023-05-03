@@ -4,6 +4,7 @@ import {
   extendType,
   nonNull,
   nullable,
+  list,
 } from "nexus"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
@@ -143,6 +144,49 @@ export const Station = objectType({
         })
       },
     })
+
+    /**
+     * Query first 20 publishes of the station
+     */
+    t.field("publishes", {
+      type: list("Publish"),
+      resolve: (parent, _, { prisma }) => {
+        return prisma.publish.findMany({
+          where: {
+            creatorId: parent.id,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 20,
+        }) as unknown as NexusGenObjects["Publish"][]
+      },
+    })
+
+    /**
+     * A boolean to indicate of the querying user is the owner of the station
+     */
+    t.nullable.field("isOwner", {
+      type: "Boolean",
+      resolve: async (parent, _, { prisma }, info) => {
+        const { input } = info.variableValues as {
+          input: NexusGenInputs["QueryByIdInput"]
+        }
+
+        if (!input || !input.requestorId) return null
+        const { requestorId } = input
+        const stationOwner = parent.owner.toLowerCase()
+
+        // Get requestor station
+        const requestor = await prisma.station.findUnique({
+          where: {
+            id: requestorId,
+          },
+        })
+
+        return stationOwner === requestor?.owner?.toLowerCase()
+      },
+    })
   },
 })
 
@@ -159,9 +203,25 @@ export const QueryByIdInput = inputObjectType({
   },
 })
 
+/**
+ * An input type for `getStationByName` query.
+ */
+export const QueryByNameInput = inputObjectType({
+  name: "QueryByNameInput",
+  definition(t) {
+    // A name of the target station.
+    t.nonNull.string("name")
+    // An id of the requestor station.
+    t.nullable.string("requestorId")
+  },
+})
+
 export const StationQuery = extendType({
   type: "Query",
   definition(t) {
+    /**
+     * Query station by id
+     */
     t.field("getStationById", {
       type: nullable("Station"),
       args: { input: nonNull("QueryByIdInput") },
@@ -174,6 +234,30 @@ export const StationQuery = extendType({
 
           const station = (await prisma.station.findUnique({
             where: { id: targetId },
+          })) as NexusGenObjects["Station"] | null
+
+          return station
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Query station by name
+     */
+    t.field("getStationByName", {
+      type: nullable("Station"),
+      args: { input: nonNull("QueryByNameInput") },
+      async resolve(_parent, { input }, { prisma }) {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { name } = input
+
+          if (!name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const station = (await prisma.station.findUnique({
+            where: { name },
           })) as NexusGenObjects["Station"] | null
 
           return station
@@ -369,7 +453,8 @@ export const StationMutation = extendType({
           const { valid } = await dataSources.walletAPI.validateName(name)
           return valid
         } catch (error) {
-          throw error
+          // DON'T throw, return false instead
+          return false
         }
       },
     })

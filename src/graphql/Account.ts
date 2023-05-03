@@ -158,7 +158,7 @@ export const AccountQuery = extendType({
       },
     })
 
-    t.field("getMyBalance", {
+    t.field("getBalance", {
       type: nonNull("String"),
       args: { address: nonNull("String") },
       async resolve(_root, { address }, { dataSources }) {
@@ -276,8 +276,11 @@ export const AccountMutation = extendType({
     t.field("cacheSession", {
       type: nonNull("WriteResult"),
       args: { input: nonNull("CacheSessionInput") },
-      async resolve(_parent, { input }) {
+      async resolve(_parent, { input }, { dataSources }) {
         try {
+          // Verify id token first.
+          await dataSources.walletAPI.verifyUser()
+
           if (!input || !input.address || !input.stationId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 

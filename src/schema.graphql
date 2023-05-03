@@ -211,10 +211,11 @@ enum PublishKind {
 
 type Query {
   fetchPublishes: [Publish]!
+  getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput): Account
-  getMyBalance(address: String!): String!
   getPublishById(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
+  getStationByName(input: QueryByNameInput!): Station
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
   listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
 }
@@ -222,6 +223,11 @@ type Query {
 input QueryByIdInput {
   requestorId: String
   targetId: String!
+}
+
+input QueryByNameInput {
+  name: String!
+  requestorId: String
 }
 
 type Response {
@@ -258,8 +264,10 @@ type Station {
   image: String
   imageRef: String
   isFollowing: Boolean
+  isOwner: Boolean
   name: String!
   owner: String!
+  publishes: [Publish]
   publishesCount: Int!
   tokenId: Int
   updatedAt: DateTime
