@@ -23,6 +23,7 @@ type AuthUser {
 }
 
 input CacheSessionInput {
+  accountId: String!
   address: String!
   stationId: String!
 }

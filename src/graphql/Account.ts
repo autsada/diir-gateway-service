@@ -12,7 +12,7 @@ import { cacheLoggedInSession, getStationFromCache } from "../client/redis"
 import { NexusGenObjects } from "../typegen"
 
 import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
-import { recoverAddress } from "../lib"
+import { recoverAddress, validateAuthenticity } from "../lib"
 
 export const Edge = objectType({
   name: "Edge",
@@ -184,6 +184,7 @@ export const CacheSessionInput = inputObjectType({
   definition(t) {
     t.nonNull.string("address")
     t.nonNull.string("stationId")
+    t.nonNull.string("accountId")
   },
 })
 
@@ -279,13 +280,21 @@ export const AccountMutation = extendType({
     t.field("cacheSession", {
       type: nonNull("WriteResult"),
       args: { input: nonNull("CacheSessionInput") },
-      async resolve(_parent, { input }, { dataSources }) {
+      async resolve(_parent, { input }, { dataSources, prisma, signature }) {
         try {
-          // Verify id token first.
-          await dataSources.walletAPI.verifyUser()
-
-          if (!input || !input.address || !input.stationId)
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { address, stationId, accountId } = input
+          if (!address || !stationId || !accountId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner: address,
+            dataSources,
+            prisma,
+            signature,
+          })
 
           await cacheLoggedInSession(input.address, input.stationId)
 

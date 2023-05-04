@@ -30,6 +30,7 @@ declare global {
 
 export interface NexusGenInputs {
   CacheSessionInput: { // input type
+    accountId: string; // String!
     address: string; // String!
     stationId: string; // String!
   }
