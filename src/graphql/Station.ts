@@ -277,6 +277,7 @@ export const MintStationNFTInput = inputObjectType({
   definition(t) {
     t.nonNull.string("to")
     t.nonNull.string("name")
+    t.nonNull.string("accountId")
   },
 })
 
@@ -348,12 +349,25 @@ export const StationMutation = extendType({
     t.field("mintFirstStationNFT", {
       type: "MintStationNFTResult",
       args: { input: nonNull("MintStationNFTInput") },
-      resolve: async (_parent, { input }, { dataSources }) => {
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
         try {
-          // User must be authenticated
-          await dataSources.walletAPI.verifyUser()
-          const { to, name } = input
-          if (!to || !name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { to, name, accountId } = input
+          if (!to || !name || !accountId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner: to,
+            dataSources,
+            prisma,
+            signature,
+          })
 
           const result = await dataSources.walletAPI.mintStationNFTByAdmin({
             to,
@@ -373,12 +387,25 @@ export const StationMutation = extendType({
     t.field("mintStationNFT", {
       type: "MintStationNFTResult",
       args: { input: nonNull("MintStationNFTInput") },
-      resolve: async (_parent, { input }, { dataSources }) => {
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
         try {
-          // User must be authenticated
-          await dataSources.walletAPI.verifyUser()
-          const { to, name } = input
-          if (!to || !name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { to, name, accountId } = input
+          if (!to || !name || !accountId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner: to,
+            dataSources,
+            prisma,
+            signature,
+          })
 
           const result = await dataSources.walletAPI.mintStationNFT({
             to,

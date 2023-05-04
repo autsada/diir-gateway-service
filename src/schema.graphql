@@ -129,6 +129,7 @@ input GetMyAccountInput {
 }
 
 input MintStationNFTInput {
+  accountId: String!
   name: String!
   to: String!
 }
@@ -140,7 +141,7 @@ type MintStationNFTResult {
 type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
-  createAccount(input: GetMyAccountInput): Account
+  createAccount(input: GetMyAccountInput!): Account
   createDraftPublish(input: CreateDraftPublishInput!): DraftPublish
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
@@ -212,7 +213,7 @@ enum PublishKind {
 type Query {
   fetchPublishes: [Publish]!
   getBalance(address: String!): String!
-  getMyAccount(input: GetMyAccountInput): Account
+  getMyAccount(input: GetMyAccountInput!): Account
   getPublishById(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station

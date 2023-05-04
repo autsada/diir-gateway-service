@@ -57,6 +57,7 @@ export interface NexusGenInputs {
     accountType: NexusGenEnums['AccountType']; // AccountType!
   }
   MintStationNFTInput: { // input type
+    accountId: string; // String!
     name: string; // String!
     to: string; // String!
   }
@@ -600,7 +601,7 @@ export interface NexusGenArgTypes {
       qty: number; // Int!
     }
     createAccount: { // args
-      input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
+      input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!
     }
     createDraftPublish: { // args
       input: NexusGenInputs['CreateDraftPublishInput']; // CreateDraftPublishInput!
@@ -635,7 +636,7 @@ export interface NexusGenArgTypes {
       address: string; // String!
     }
     getMyAccount: { // args
-      input?: NexusGenInputs['GetMyAccountInput'] | null; // GetMyAccountInput
+      input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!
     }
     getPublishById: { // args
       id: string; // String!

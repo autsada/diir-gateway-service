@@ -12,7 +12,7 @@ import { cacheLoggedInSession, getStationFromCache } from "../client/redis"
 import { NexusGenObjects } from "../typegen"
 
 import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
-import { recoverAddress, validateAuthenticity } from "../lib"
+import { recoverAddress } from "../lib"
 
 export const Edge = objectType({
   name: "Edge",
@@ -90,9 +90,11 @@ export const AccountQuery = extendType({
      */
     t.field("getMyAccount", {
       type: "Account",
-      args: { input: nullable("GetMyAccountInput") },
+      args: { input: nonNull("GetMyAccountInput") },
       async resolve(_parent, { input }, { dataSources, prisma, signature }) {
         try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
           // Verify id token first.
           await dataSources.walletAPI.verifyUser()
 
@@ -103,7 +105,8 @@ export const AccountQuery = extendType({
             | null = null
           let owner: string | null = null
 
-          if (!input) {
+          const { accountType } = input
+          if (accountType === "TRADITIONAL") {
             // `TRADITIONAL` account
             // Get user's wallet address
             const { address } = await dataSources.walletAPI.getWalletAddress()
@@ -122,24 +125,24 @@ export const AccountQuery = extendType({
 
               account = ac
             }
-          } else {
+          }
+
+          if (accountType === "WALLET") {
             // `WALLET` account
-            const { accountType } = input
+            if (!signature) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-            if (accountType && accountType === "WALLET" && signature) {
-              // Query account from the database
-              const owner = recoverAddress(signature).toLowerCase()
-              const ac = await prisma.account.findUnique({
-                where: {
-                  owner,
-                },
-                include: {
-                  stations: true,
-                },
-              })
+            // Query account from the database
+            owner = recoverAddress(signature!).toLowerCase()
+            const ac = await prisma.account.findUnique({
+              where: {
+                owner,
+              },
+              include: {
+                stations: true,
+              },
+            })
 
-              account = ac
-            }
+            account = ac
           }
 
           // Return null if no account found or no owner address
@@ -199,13 +202,16 @@ export const AccountMutation = extendType({
   definition(t) {
     t.field("createAccount", {
       type: "Account",
-      args: { input: nullable("GetMyAccountInput") },
+      args: { input: nonNull("GetMyAccountInput") },
       async resolve(_parent, { input }, { dataSources, prisma, signature }) {
         try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
           // Verify id token first.
           const { uid } = await dataSources.walletAPI.verifyUser()
 
-          if (!input) {
+          const { accountType } = input
+          if (accountType === "TRADITIONAL") {
             // `TRADITIONAL` account
             // Create wallet first
             const { address, uid } = await dataSources.walletAPI.createWallet()
@@ -231,7 +237,8 @@ export const AccountMutation = extendType({
             return account
           } else {
             // `WALLET` account
-            const { accountType } = input
+            if (!signature || accountType !== "WALLET")
+              throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
             // Make sure that the authenticated user doesn't own an account yet.
             const ac = await prisma.account.findUnique({
@@ -242,30 +249,26 @@ export const AccountMutation = extendType({
 
             if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-            if (accountType && accountType === "WALLET" && signature) {
-              const ownerAddress = recoverAddress(signature)
-              const owner = ownerAddress.toLowerCase()
+            const ownerAddress = recoverAddress(signature!)
+            const owner = ownerAddress.toLowerCase()
 
-              // Create (if not exist)  an account in the database
-              let account = await prisma.account.findUnique({
-                where: {
+            // Create (if not exist)  an account in the database
+            let account = await prisma.account.findUnique({
+              where: {
+                owner,
+              },
+            })
+
+            if (!account) {
+              account = await prisma.account.create({
+                data: {
+                  type: accountType,
                   owner,
                 },
               })
-
-              if (!account) {
-                account = await prisma.account.create({
-                  data: {
-                    type: accountType,
-                    owner,
-                  },
-                })
-              }
-
-              return account
-            } else {
-              return null
             }
+
+            return account
           }
         } catch (error) {
           throw error
