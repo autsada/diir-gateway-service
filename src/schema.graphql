@@ -150,8 +150,9 @@ type Mutation {
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   sendTips(input: SendTipsInput!): SendTipsResult
+  updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
-  updateProfileImage(input: UpdateProfileImageInput!): WriteResult
+  updateProfileImage(input: UpdateImageInput!): WriteResult
   updatePublish(input: UpdatePublishInput!): Publish
   validateDisplayName(name: String!): Boolean
   validateName(name: String!): Boolean
@@ -305,9 +306,10 @@ input UpdateDisplayNameInput {
   stationId: String!
 }
 
-input UpdateProfileImageInput {
+input UpdateImageInput {
   accountId: String!
   image: String!
+  imageRef: String!
   owner: String!
   stationId: String!
 }

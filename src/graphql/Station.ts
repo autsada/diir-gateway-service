@@ -325,12 +325,13 @@ export const UpdateDisplayNameInput = inputObjectType({
 /**
  * An input type for `updateProfileImage` mutation.
  */
-export const UpdateProfileImageInput = inputObjectType({
-  name: "UpdateProfileImageInput",
+export const UpdateImageInput = inputObjectType({
+  name: "UpdateImageInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("image")
+    t.nonNull.string("imageRef")
     t.nonNull.string("stationId")
   },
 })
@@ -608,12 +609,12 @@ export const StationMutation = extendType({
      */
     t.field("updateProfileImage", {
       type: "WriteResult",
-      args: { input: nonNull("UpdateProfileImageInput") },
+      args: { input: nonNull("UpdateImageInput") },
       async resolve(_root, { input }, { dataSources, prisma, signature }) {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, image, stationId } = input
-          if (!owner || !accountId || !image || !stationId)
+          const { owner, accountId, image, imageRef, stationId } = input
+          if (!owner || !accountId || !image || !imageRef || !stationId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Validate authentication/authorization
@@ -644,12 +645,64 @@ export const StationMutation = extendType({
             },
             data: {
               image,
+              imageRef,
             },
           })
 
           return { status: "Ok" }
         } catch (error) {
-          console.log("error -->", error)
+          throw error
+        }
+      },
+    })
+
+    /**
+     * @dev Update banner image
+     */
+    t.field("updateBannerImage", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdateImageInput") },
+      async resolve(_root, { input }, { dataSources, prisma, signature }) {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, image, imageRef, stationId } = input
+          if (!owner || !accountId || !image || !imageRef || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          const account = await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+          if (!account) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const station = await prisma.station.findUnique({
+            where: {
+              id: stationId,
+            },
+          })
+          if (!station) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check ownership of the to-be-updated station
+          if (account?.owner?.toLowerCase() !== station?.owner?.toLowerCase())
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Update display name in the database.
+          await prisma.station.update({
+            where: {
+              id: stationId,
+            },
+            data: {
+              bannerImage: image,
+              bannerImageRef: imageRef,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
           throw error
         }
       },

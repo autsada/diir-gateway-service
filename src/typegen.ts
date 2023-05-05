@@ -82,9 +82,10 @@ export interface NexusGenInputs {
     owner: string; // String!
     stationId: string; // String!
   }
-  UpdateProfileImageInput: { // input type
+  UpdateImageInput: { // input type
     accountId: string; // String!
     image: string; // String!
+    imageRef: string; // String!
     owner: string; // String!
     stationId: string; // String!
   }
@@ -318,6 +319,7 @@ export interface NexusGenFieldTypes {
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
+    updateBannerImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateDisplayName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateProfileImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePublish: NexusGenRootTypes['Publish'] | null; // Publish
@@ -497,6 +499,7 @@ export interface NexusGenFieldTypeNames {
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
     sendTips: 'SendTipsResult'
+    updateBannerImage: 'WriteResult'
     updateDisplayName: 'WriteResult'
     updateProfileImage: 'WriteResult'
     updatePublish: 'Publish'
@@ -643,11 +646,14 @@ export interface NexusGenArgTypes {
     sendTips: { // args
       input: NexusGenInputs['SendTipsInput']; // SendTipsInput!
     }
+    updateBannerImage: { // args
+      input: NexusGenInputs['UpdateImageInput']; // UpdateImageInput!
+    }
     updateDisplayName: { // args
       input: NexusGenInputs['UpdateDisplayNameInput']; // UpdateDisplayNameInput!
     }
     updateProfileImage: { // args
-      input: NexusGenInputs['UpdateProfileImageInput']; // UpdateProfileImageInput!
+      input: NexusGenInputs['UpdateImageInput']; // UpdateImageInput!
     }
     updatePublish: { // args
       input: NexusGenInputs['UpdatePublishInput']; // UpdatePublishInput!
