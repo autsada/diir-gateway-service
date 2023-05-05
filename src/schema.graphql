@@ -150,8 +150,11 @@ type Mutation {
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   sendTips(input: SendTipsInput!): SendTipsResult
+  updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
+  updateProfileImage(input: UpdateProfileImageInput!): WriteResult
   updatePublish(input: UpdatePublishInput!): Publish
-  validateName(name: String!): Boolean!
+  validateDisplayName(name: String!): Boolean
+  validateName(name: String!): Boolean
 }
 
 type PageInfo {
@@ -293,6 +296,20 @@ type Tip {
   sender: Station
   senderId: String!
   to: String!
+}
+
+input UpdateDisplayNameInput {
+  accountId: String!
+  name: String!
+  owner: String!
+  stationId: String!
+}
+
+input UpdateProfileImageInput {
+  accountId: String!
+  image: String!
+  owner: String!
+  stationId: String!
 }
 
 input UpdatePublishInput {

@@ -8,7 +8,12 @@ import {
 } from "nexus"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
-import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
+import {
+  throwError,
+  badInputErrMessage,
+  unauthorizedErrMessage,
+  notFoundErrMessage,
+} from "./Error"
 import { validateAuthenticity } from "../lib"
 
 /**
@@ -305,6 +310,32 @@ export const CreateStationInput = inputObjectType({
 })
 
 /**
+ * An input type for `updateDisplayName` mutation.
+ */
+export const UpdateDisplayNameInput = inputObjectType({
+  name: "UpdateDisplayNameInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("name")
+    t.nonNull.string("stationId")
+  },
+})
+
+/**
+ * An input type for `updateProfileImage` mutation.
+ */
+export const UpdateProfileImageInput = inputObjectType({
+  name: "UpdateProfileImageInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("image")
+    t.nonNull.string("stationId")
+  },
+})
+
+/**
  * A result for `calculateTips` mutation
  */
 export const CalculateTipsResult = objectType({
@@ -464,24 +495,162 @@ export const StationMutation = extendType({
     })
 
     /**
-     * @dev Validate name length and uniqueness
+     * @dev Validate display name uniqueness
      * @param name {string}
      */
-    t.field("validateName", {
-      type: nonNull("Boolean"),
+    t.field("validateDisplayName", {
+      type: "Boolean",
       args: { name: nonNull("String") },
-      async resolve(_root, { name }, { dataSources }) {
+      async resolve(_root, { name }, { dataSources, prisma }) {
         try {
           // Validation.
           if (!name) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          // Call the api.
-          // Has to lowercase the name before sending to the blockchain.
+          // Check if the displayName is unique in the database.
+          const exist = await prisma.station.findUnique({
+            where: {
+              displayName: name,
+            },
+          })
+
+          return !exist
+        } catch (error) {
+          // DON'T throw, return false instead
+          return false
+        }
+      },
+    })
+
+    /**
+     * @dev Validate name length and uniqueness
+     * @param name {string}
+     */
+    t.field("validateName", {
+      type: "Boolean",
+      args: { name: nonNull("String") },
+      async resolve(_root, { name }, { dataSources, prisma }) {
+        try {
+          // Validation.
+          if (!name) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Check if the name (displayName) is unique in the database.
+          const exist = await prisma.station.findUnique({
+            where: {
+              displayName: name,
+            },
+          })
+          if (exist) return false
+
+          // Check if the name is unique in the smart contract
+          // Has to lowercase the name
           const { valid } = await dataSources.walletAPI.validateName(name)
           return valid
         } catch (error) {
           // DON'T throw, return false instead
           return false
+        }
+      },
+    })
+
+    /**
+     * @dev Update display name
+     */
+    t.field("updateDisplayName", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdateDisplayNameInput") },
+      async resolve(_root, { input }, { dataSources, prisma, signature }) {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, name, stationId } = input
+          if (!owner || !accountId || !name || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          const account = await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+          if (!account) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const station = await prisma.station.findUnique({
+            where: {
+              id: stationId,
+            },
+          })
+          if (!station) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check ownership of the to-be-updated station
+          if (account?.owner?.toLowerCase() !== station?.owner?.toLowerCase())
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Update display name in the database.
+          await prisma.station.update({
+            where: {
+              id: stationId,
+            },
+            data: {
+              displayName: name,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * @dev Update profile image
+     */
+    t.field("updateProfileImage", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdateProfileImageInput") },
+      async resolve(_root, { input }, { dataSources, prisma, signature }) {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, image, stationId } = input
+          if (!owner || !accountId || !image || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          const account = await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+          if (!account) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const station = await prisma.station.findUnique({
+            where: {
+              id: stationId,
+            },
+          })
+          if (!station) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check ownership of the to-be-updated station
+          if (account?.owner?.toLowerCase() !== station?.owner?.toLowerCase())
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Update display name in the database.
+          await prisma.station.update({
+            where: {
+              id: stationId,
+            },
+            data: {
+              image,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          console.log("error -->", error)
+          throw error
         }
       },
     })

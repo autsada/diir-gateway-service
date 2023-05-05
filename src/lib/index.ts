@@ -80,6 +80,8 @@ export async function validateAuthenticity({
     throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
   if (account2Address !== ownerAddress)
     throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+  return account1
 }
 
 export function recoverAddress(signature: string) {

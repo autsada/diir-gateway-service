@@ -76,6 +76,18 @@ export interface NexusGenInputs {
     receiverId: string; // String!
     senderId: string; // String!
   }
+  UpdateDisplayNameInput: { // input type
+    accountId: string; // String!
+    name: string; // String!
+    owner: string; // String!
+    stationId: string; // String!
+  }
+  UpdateProfileImageInput: { // input type
+    accountId: string; // String!
+    image: string; // String!
+    owner: string; // String!
+    stationId: string; // String!
+  }
   UpdatePublishInput: { // input type
     accountId: string; // String!
     description?: string | null; // String
@@ -306,8 +318,11 @@ export interface NexusGenFieldTypes {
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
+    updateDisplayName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    updateProfileImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePublish: NexusGenRootTypes['Publish'] | null; // Publish
-    validateName: boolean; // Boolean!
+    validateDisplayName: boolean | null; // Boolean
+    validateName: boolean | null; // Boolean
   }
   PageInfo: { // field return type
     endCursor: string | null; // String
@@ -482,7 +497,10 @@ export interface NexusGenFieldTypeNames {
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
     sendTips: 'SendTipsResult'
+    updateDisplayName: 'WriteResult'
+    updateProfileImage: 'WriteResult'
     updatePublish: 'Publish'
+    validateDisplayName: 'Boolean'
     validateName: 'Boolean'
   }
   PageInfo: { // field return type name
@@ -625,8 +643,17 @@ export interface NexusGenArgTypes {
     sendTips: { // args
       input: NexusGenInputs['SendTipsInput']; // SendTipsInput!
     }
+    updateDisplayName: { // args
+      input: NexusGenInputs['UpdateDisplayNameInput']; // UpdateDisplayNameInput!
+    }
+    updateProfileImage: { // args
+      input: NexusGenInputs['UpdateProfileImageInput']; // UpdateProfileImageInput!
+    }
     updatePublish: { // args
       input: NexusGenInputs['UpdatePublishInput']; // UpdatePublishInput!
+    }
+    validateDisplayName: { // args
+      name: string; // String!
     }
     validateName: { // args
       name: string; // String!

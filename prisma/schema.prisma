@@ -32,8 +32,8 @@ model Station {
     createdAt         DateTime         @default(now())
     updatedAt         DateTime?
     owner             String // EOA Address
-    name              String           @unique
-    displayName       String
+    name              String           @unique @db.VarChar(64)
+    displayName       String           @unique @db.VarChar(64)
     image             String? // Image url
     imageRef          String? // Image ref for use to delete the image
     bannerImage       String?
