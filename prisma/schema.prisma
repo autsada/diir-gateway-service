@@ -38,6 +38,7 @@ model Station {
     imageRef          String? // Image ref for use to delete the image
     bannerImage       String?
     bannerImageRef    String?
+    defaultColor      String?
     account           Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
     accountId         String
     primaryInterest   Category?

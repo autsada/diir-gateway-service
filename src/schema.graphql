@@ -261,6 +261,7 @@ type Station {
   bannerImage: String
   bannerImageRef: String
   createdAt: DateTime!
+  defaultColor: String
   displayName: String!
   followers: [Station!]!
   followersCount: Int!

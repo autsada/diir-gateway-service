@@ -92,3 +92,20 @@ export function recoverAddress(signature: string) {
 
   return walletAddress
 }
+
+const colors = [
+  "#be123c",
+  "#15803d",
+  "#a21caf",
+  "#0f766e",
+  "#6d28d9",
+  "#4338ca",
+  "#b45309",
+  "#c2410c",
+  "#0e7490",
+  "#b45309",
+]
+
+export function generateColor() {
+  return colors[Math.floor(Math.random() * 10)]
+}

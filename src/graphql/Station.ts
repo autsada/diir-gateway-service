@@ -14,7 +14,7 @@ import {
   unauthorizedErrMessage,
   notFoundErrMessage,
 } from "./Error"
-import { validateAuthenticity } from "../lib"
+import { generateColor, validateAuthenticity } from "../lib"
 
 /**
  * A Station type that map to the prisma Station model.
@@ -33,6 +33,7 @@ export const Station = objectType({
     t.string("imageRef")
     t.string("bannerImage")
     t.string("bannerImageRef")
+    t.string("defaultColor")
     t.nonNull.string("accountId")
 
     t.field("account", {
@@ -484,12 +485,12 @@ export const StationMutation = extendType({
               name: name.toLowerCase(), // Make sure to lowercase name
               displayName: name,
               accountId,
+              defaultColor: generateColor(),
             },
           })
 
           return station
         } catch (error) {
-          console.log("error: ", error)
           throw error
         }
       },

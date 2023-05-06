@@ -219,6 +219,7 @@ export interface NexusGenObjects {
     bannerImage?: string | null; // String
     bannerImageRef?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    defaultColor?: string | null; // String
     displayName: string; // String!
     id: string; // String!
     image?: string | null; // String
@@ -398,6 +399,7 @@ export interface NexusGenFieldTypes {
     bannerImage: string | null; // String
     bannerImageRef: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    defaultColor: string | null; // String
     displayName: string; // String!
     followers: NexusGenRootTypes['Station'][]; // [Station!]!
     followersCount: number; // Int!
@@ -578,6 +580,7 @@ export interface NexusGenFieldTypeNames {
     bannerImage: 'String'
     bannerImageRef: 'String'
     createdAt: 'DateTime'
+    defaultColor: 'String'
     displayName: 'String'
     followers: 'Station'
     followersCount: 'Int'
