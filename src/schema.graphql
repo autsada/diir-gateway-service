@@ -80,7 +80,13 @@ enum CommentType {
 input CreateDraftPublishInput {
   accountId: String!
   creatorId: String!
+  filename: String!
   owner: String!
+}
+
+type CreateDraftPublishResult {
+  filename: String
+  id: String!
 }
 
 input CreateStationInput {
@@ -113,6 +119,7 @@ scalar DateTime
 type DraftPublish {
   createdAt: DateTime!
   creatorId: String!
+  filename: String!
   id: String!
   public: Boolean!
   transcodeError: Boolean!
@@ -143,7 +150,7 @@ type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   createAccount(input: GetMyAccountInput!): Account
-  createDraftPublish(input: CreateDraftPublishInput!): DraftPublish
+  createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
   createUser(address: String!): AuthUser
@@ -220,6 +227,7 @@ type Query {
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getPublishById(id: String!): Publish
+  getPublishForCreator(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!

@@ -7,17 +7,15 @@ import {
   deleteTranscodeWebhook,
   onTranscodingFinished,
   onUploadFinished,
-  onUploadStarted,
+  // onUploadStarted,
 } from "./controllers"
 import { validateAuthToken, validateSignature } from "./middlewares"
 
 export const router = express.Router()
 
 router.post("/address-updated", onAddressUpdated)
-router.get("/alchemy", getTranscodeWebhook)
-router.post("/alchemy", createTranscodeWebhook)
-router.delete("/alchemy", deleteTranscodeWebhook)
-router.post("/alchemy/finished", validateSignature, onTranscodingFinished)
+router.get("/cloudflare", getTranscodeWebhook)
+router.post("/cloudflare", createTranscodeWebhook)
+router.delete("/cloudflare", deleteTranscodeWebhook)
+router.post("/cloudflare/finished", validateSignature, onTranscodingFinished)
 router.post("/upload/finished", validateAuthToken, onUploadFinished)
-router.post("/upload/started", validateAuthToken, onUploadStarted)
-// router.post("/playback", onPlaybackCreated)

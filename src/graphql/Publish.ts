@@ -71,6 +71,7 @@ export const DraftPublish = objectType({
     t.nonNull.string("id")
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.nonNull.string("creatorId")
+    t.nonNull.string("filename")
     t.nonNull.boolean("public")
     t.nonNull.boolean("uploadError")
     t.nonNull.boolean("transcodeError")
@@ -298,6 +299,25 @@ export const Publish = objectType({
 export const PublishQuery = extendType({
   type: "Query",
   definition(t) {
+    /**
+     * Get a publish for creator, used for upload action in the UI
+     */
+    t.field("getPublishForCreator", {
+      type: "Publish",
+      args: { id: nonNull(stringArg()) },
+      resolve: async (_parent, { id }, { prisma }) => {
+        try {
+          return prisma.publish.findUnique({
+            where: {
+              id,
+            },
+          }) as unknown as NexusGenObjects["Publish"]
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
     t.field("getPublishById", {
       type: "Publish",
       args: { id: nonNull(stringArg()) },
@@ -333,9 +353,18 @@ export const PublishQuery = extendType({
 export const CreateDraftPublishInput = inputObjectType({
   name: "CreateDraftPublishInput",
   definition(t) {
-    t.nonNull.string("creatorId")
+    t.nonNull.string("creatorId") // Creator station id
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
+    t.nonNull.string("filename")
+  },
+})
+
+export const CreateDraftPublishResult = objectType({
+  name: "CreateDraftPublishResult",
+  definition(t) {
+    t.nonNull.string("id") // Publish id
+    t.string("filename") // Uploaded file name
   },
 })
 
@@ -360,7 +389,7 @@ export const PublishMutation = extendType({
   type: "Mutation",
   definition(t) {
     t.field("createDraftPublish", {
-      type: "DraftPublish",
+      type: "CreateDraftPublishResult",
       args: { input: nonNull("CreateDraftPublishInput") },
       resolve: async (
         _parent,
@@ -369,8 +398,8 @@ export const PublishMutation = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { creatorId, owner, accountId } = input
-          if (!creatorId || !owner || !accountId)
+          const { creatorId, owner, accountId, filename } = input
+          if (!creatorId || !owner || !accountId || !filename)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Validate authentication/authorization
@@ -386,10 +415,12 @@ export const PublishMutation = extendType({
           const draft = await prisma.publish.create({
             data: {
               creatorId,
+              filename,
+              uploading: true, // Set uploading to true because file upload will be started right after the draft is created.
             },
           })
 
-          return draft
+          return { id: draft.id, filename }
         } catch (error) {
           throw error
         }
@@ -449,7 +480,6 @@ export const PublishMutation = extendType({
 
           return publish
         } catch (error) {
-          console.log("error: ", error)
           throw error
         }
       },

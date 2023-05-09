@@ -128,8 +128,8 @@ model Publish {
     filename          String?
     thumbnail         String? // A video thumbnail
     thumbSource       ThumbnailSource?
-    title             String?
-    description       String?
+    title             String?          @db.VarChar(100)
+    description       String?          @db.VarChar(5000)
     views             Int?
     primaryCategory   Category?
     secondaryCategory Category?

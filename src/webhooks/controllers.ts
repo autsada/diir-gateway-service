@@ -121,8 +121,8 @@ export async function onTranscodingFinished(req: Request, res: Response) {
 
       // `readyToStream` is a boolean that indicate if the playback urls are ready.
       if (body.readyToStream) {
-        const contentPah = body.meta?.path as string
-        publishId = contentPah.split("/")[2]
+        const contentPath = body.meta?.path as string
+        publishId = contentPath.split("/")[2]
 
         // Create (if not exist) or update (if exists) a playback in the database.
         const playback = await prisma.playbackLink.findUnique({
@@ -177,6 +177,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
               thumbSource: !publish.thumbSource
                 ? "generated"
                 : publish.thumbSource,
+              rawContentURI: body.meta?.uri,
             },
           })
         }
@@ -185,7 +186,6 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       res.status(200).end()
     }
   } catch (error) {
-    console.log("error: ", error)
     // In case of an error occurred, we have to update the publish so the publish owner will know
     const publish = await prisma.publish.findUnique({
       where: {
@@ -204,36 +204,6 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       })
     }
 
-    res.status(500).end()
-  }
-}
-
-export async function onUploadStarted(req: Request, res: Response) {
-  const body = req.body as { publishId: string }
-  const { publishId } = body
-
-  try {
-    // Find the publish
-    const publish = await prisma.publish.findUnique({
-      where: {
-        id: publishId,
-      },
-    })
-
-    if (publish) {
-      // Update the loading status so the UIs can use
-      await prisma.publish.update({
-        where: {
-          id: publishId,
-        },
-        data: {
-          uploading: true,
-        },
-      })
-    }
-
-    res.status(200).end()
-  } catch (error) {
     res.status(500).end()
   }
 }
