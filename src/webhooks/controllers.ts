@@ -4,8 +4,12 @@ import axios from "axios"
 import { prisma } from "../client"
 import { isValidAchemySignature } from "../lib"
 
-const { CLOUDFLAR_BASE_URL, CLOUDFLAR_API_TOKEN, CLOUDFLAR_ACCOUNT_ID } =
-  process.env
+const {
+  CLOUDFLAR_BASE_URL,
+  CLOUDFLAR_API_TOKEN,
+  CLOUDFLAR_ACCOUNT_ID,
+  WALLET_SERVICE_URL,
+} = process.env
 
 /**
  * This route will be called by Alchemy to notify when there is any activity occurred on an address
@@ -183,6 +187,18 @@ export async function onTranscodingFinished(req: Request, res: Response) {
         }
       }
 
+      // Call a route `onUploadFinished` in the Wallet Service
+      const url = WALLET_SERVICE_URL
+        ? `${WALLET_SERVICE_URL}/upload/finished`
+        : "http://localhost:8000/upload/finished"
+      await axios({
+        method: "POST",
+        url: url,
+        data: {
+          publishId,
+        },
+      })
+
       res.status(200).end()
     }
   } catch (error) {
@@ -204,38 +220,6 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       })
     }
 
-    res.status(500).end()
-  }
-}
-
-export async function onUploadFinished(req: Request, res: Response) {
-  const body = req.body as { publishId: string; uri: string }
-  const { publishId, uri } = body
-
-  try {
-    // Find the publish
-    const publish = await prisma.publish.findUnique({
-      where: {
-        id: publishId,
-      },
-    })
-
-    if (publish) {
-      // Update the publish in the database
-      await prisma.publish.update({
-        where: {
-          id: publishId,
-        },
-        data: {
-          rawContentURI: uri,
-          uploading: false,
-          uploadError: false,
-        },
-      })
-    }
-
-    res.status(200).end()
-  } catch (error) {
     res.status(500).end()
   }
 }

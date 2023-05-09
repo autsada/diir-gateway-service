@@ -6,10 +6,9 @@ import {
   createTranscodeWebhook,
   deleteTranscodeWebhook,
   onTranscodingFinished,
-  onUploadFinished,
   // onUploadStarted,
 } from "./controllers"
-import { validateAuthToken, validateSignature } from "./middlewares"
+import { validateSignature } from "./middlewares"
 
 export const router = express.Router()
 
@@ -18,4 +17,3 @@ router.get("/cloudflare", getTranscodeWebhook)
 router.post("/cloudflare", createTranscodeWebhook)
 router.delete("/cloudflare", deleteTranscodeWebhook)
 router.post("/cloudflare/finished", validateSignature, onTranscodingFinished)
-router.post("/upload/finished", validateAuthToken, onUploadFinished)

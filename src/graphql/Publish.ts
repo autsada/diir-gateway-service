@@ -311,6 +311,9 @@ export const PublishQuery = extendType({
             where: {
               id,
             },
+            include: {
+              playback: true,
+            },
           }) as unknown as NexusGenObjects["Publish"]
         } catch (error) {
           throw error
@@ -326,6 +329,10 @@ export const PublishQuery = extendType({
           return prisma.publish.findUnique({
             where: {
               id,
+            },
+            include: {
+              creator: true,
+              playback: true,
             },
           }) as unknown as NexusGenObjects["Publish"]
         } catch (error) {

@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from "express"
 import crypto from "crypto"
 
-import { isWebhookRequestAuthorized } from "../lib"
-
 const { CLOUDFLARE_WEBHOOK_SIGNING_KEY } = process.env
 
 export async function validateSignature(
@@ -34,25 +32,6 @@ export async function validateSignature(
       const digest = hmac.digest("hex")
 
       req.isWebhookSignatureValid = signature === digest
-      next()
-    }
-  } catch (error) {
-    res.status(500).end()
-  }
-}
-
-export async function validateAuthToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const authorization = req.headers["authorization"]
-    const authToken = authorization?.split(" ")[1]
-
-    if (!isWebhookRequestAuthorized(authToken || "")) {
-      res.status(500).end()
-    } else {
       next()
     }
   } catch (error) {

@@ -6,8 +6,7 @@ import { WalletAPI } from "../dataSources/walletAPI"
 import { throwError, unauthorizedErrMessage } from "../graphql/Error"
 import { hashMessage } from "@ethersproject/hash"
 
-const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, WEBHOOK_AUTH_KEY, MESSAGE } =
-  process.env
+const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, MESSAGE } = process.env
 
 export function isAuthorizedRequestor(key: string) {
   return key === API_KEY
@@ -23,9 +22,9 @@ export function isValidAchemySignature(
   return signature === digest
 }
 
-export function isWebhookRequestAuthorized(token: string) {
-  return token === WEBHOOK_AUTH_KEY
-}
+// export function isWebhookRequestAuthorized(token: string) {
+//   return token === WEBHOOK_AUTH_KEY
+// }
 
 export async function validateAuthenticity({
   accountId,
