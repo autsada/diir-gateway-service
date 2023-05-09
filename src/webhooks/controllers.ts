@@ -122,6 +122,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       res.status(403).send("Forbidden")
     } else {
       const body = req.body
+      console.log("body -->", body)
 
       // `readyToStream` is a boolean that indicate if the playback urls are ready.
       if (body.readyToStream) {
@@ -144,6 +145,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
               hls: body.playback?.hls,
               dash: body.playback?.dash,
               publishId,
+              videoId: body.uid,
             },
           })
         } else {

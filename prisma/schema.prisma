@@ -104,6 +104,7 @@ model PlaybackLink {
     id        String    @id @default(cuid())
     createdAt DateTime  @default(now())
     updatedAt DateTime?
+    videoId   String
     thumbnail String // Thumbnail image
     preview   String // Preview url
     duration  Float // Duration

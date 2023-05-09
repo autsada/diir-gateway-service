@@ -188,6 +188,7 @@ export interface NexusGenObjects {
     publishId: string; // String!
     thumbnail: string; // String!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+    videoId: string; // String!
   }
   Publish: { // root type
     createdAt: NexusGenScalars['DateTime']; // DateTime!
@@ -352,6 +353,7 @@ export interface NexusGenFieldTypes {
     publishId: string; // String!
     thumbnail: string; // String!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+    videoId: string; // String!
   }
   Publish: { // field return type
     commentsCount: number; // Int!
@@ -539,6 +541,7 @@ export interface NexusGenFieldTypeNames {
     publishId: 'String'
     thumbnail: 'String'
     updatedAt: 'DateTime'
+    videoId: 'String'
   }
   Publish: { // field return type name
     commentsCount: 'Int'

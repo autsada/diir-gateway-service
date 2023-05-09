@@ -51,6 +51,7 @@ export const PlaybackLink = objectType({
     t.nonNull.string("id")
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
+    t.nonNull.string("videoId")
     t.nonNull.string("thumbnail")
     t.nonNull.string("preview")
     t.nonNull.float("duration")

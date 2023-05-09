@@ -180,6 +180,7 @@ type PlaybackLink {
   publishId: String!
   thumbnail: String!
   updatedAt: DateTime
+  videoId: String!
 }
 
 type Publish {
