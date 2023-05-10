@@ -183,7 +183,8 @@ export async function onTranscodingFinished(req: Request, res: Response) {
               thumbSource: !publish.thumbSource
                 ? "generated"
                 : publish.thumbSource,
-              rawContentURI: body.meta?.uri,
+              contentURI: body.meta?.contentURI,
+              contentRef: body.meta?.contentRef,
             },
           })
         }

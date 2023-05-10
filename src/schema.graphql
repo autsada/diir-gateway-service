@@ -185,6 +185,8 @@ type PlaybackLink {
 
 type Publish {
   commentsCount: Int!
+  contentRef: String
+  contentURI: String
   createdAt: DateTime!
   creator: Station
   creatorId: String!
@@ -200,11 +202,10 @@ type Publish {
   likesCount: Int!
   playback: PlaybackLink
   primaryCategory: Category
-  public: Boolean!
-  rawContentURI: String
   secondaryCategory: Category
   thumbSource: ThumbSource!
   thumbnail: String
+  thumbnailRef: String
   tips: [Tip]!
   tipsCount: Int!
   title: String
@@ -213,6 +214,7 @@ type Publish {
   uploadError: Boolean!
   uploading: Boolean!
   views: Int
+  visibility: Visibility!
 }
 
 enum PublishKind {
@@ -326,16 +328,25 @@ input UpdateImageInput {
 
 input UpdatePublishInput {
   accountId: String!
+  contentRef: String
+  contentURI: String
   description: String
-  isPublic: Boolean
   kind: PublishKind
   owner: String!
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category
+  stationId: String!
   thumbSource: ThumbSource
   thumbnail: String
+  thumbnailRef: String
   title: String
+  visibility: Visibility
+}
+
+enum Visibility {
+  private
+  public
 }
 
 type WriteResult {

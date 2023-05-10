@@ -9,7 +9,12 @@ import {
 } from "nexus"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
-import { badInputErrMessage, throwError, unauthorizedErrMessage } from "./Error"
+import {
+  badInputErrMessage,
+  notFoundErrMessage,
+  throwError,
+  unauthorizedErrMessage,
+} from "./Error"
 import { validateAuthenticity } from "../lib"
 
 /**
@@ -66,6 +71,11 @@ export const ThumbSource = enumType({
   members: ["generated", "custom"],
 })
 
+export const Visibility = enumType({
+  name: "Visibility",
+  members: ["private", "public"],
+})
+
 export const DraftPublish = objectType({
   name: "DraftPublish",
   definition(t) {
@@ -87,9 +97,11 @@ export const Publish = objectType({
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
     t.nonNull.string("creatorId")
-    t.string("rawContentURI")
+    t.string("contentURI")
+    t.string("contentRef")
     t.string("filename")
     t.string("thumbnail")
+    t.string("thumbnailRef")
     t.field("thumbSource", { type: nonNull("ThumbSource") })
     t.string("title")
     t.string("description")
@@ -97,7 +109,7 @@ export const Publish = objectType({
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
-    t.nonNull.boolean("public")
+    t.nonNull.field("visibility", { type: "Visibility" })
     t.nonNull.boolean("uploadError")
     t.nonNull.boolean("transcodeError")
     t.nonNull.boolean("uploading")
@@ -381,15 +393,19 @@ export const UpdatePublishInput = inputObjectType({
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
     t.nonNull.string("publishId")
+    t.string("contentURI")
+    t.string("contentRef")
     t.string("thumbnail")
+    t.string("thumbnailRef")
     t.field("thumbSource", { type: "ThumbSource" })
     t.string("title")
     t.string("description")
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
-    t.boolean("isPublic")
+    t.field("visibility", { type: "Visibility" })
   },
 })
 
@@ -423,6 +439,7 @@ export const PublishMutation = extendType({
           const draft = await prisma.publish.create({
             data: {
               creatorId,
+              title: filename,
               filename,
               uploading: true, // Set uploading to true because file upload will be started right after the draft is created.
             },
@@ -444,19 +461,24 @@ export const PublishMutation = extendType({
         { dataSources, prisma, signature }
       ) => {
         try {
+          console.log("input -->", input)
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
           const {
             owner,
             accountId,
+            stationId,
             publishId,
+            contentURI,
+            contentRef,
             thumbnail,
+            thumbnailRef,
             thumbSource,
             title,
             description,
             primaryCategory,
             secondaryCategory,
             kind,
-            isPublic,
+            visibility,
           } = input
           if (!owner || !accountId || !publishId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
@@ -470,23 +492,37 @@ export const PublishMutation = extendType({
             signature,
           })
 
-          const publish = (await prisma.publish.update({
+          // Check if the given station id owns the publish
+          let publish = await prisma.publish.findUnique({
+            where: {
+              id: stationId,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+          if (publish?.creatorId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Update publish
+          publish = await prisma.publish.update({
             where: {
               id: publishId,
             },
             data: {
+              contentURI,
+              contentRef,
               thumbnail,
+              thumbnailRef,
               thumbSource,
               title,
               description,
               primaryCategory,
               secondaryCategory,
               kind,
-              public: !!isPublic,
+              visibility: visibility || "private",
             },
-          })) as unknown as NexusGenObjects["Publish"]
+          })
 
-          return publish
+          return publish as unknown as NexusGenObjects["Publish"]
         } catch (error) {
           throw error
         }

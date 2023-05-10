@@ -92,16 +92,20 @@ export interface NexusGenInputs {
   }
   UpdatePublishInput: { // input type
     accountId: string; // String!
+    contentRef?: string | null; // String
+    contentURI?: string | null; // String
     description?: string | null; // String
-    isPublic?: boolean | null; // Boolean
     kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
     owner: string; // String!
     primaryCategory?: NexusGenEnums['Category'] | null; // Category
     publishId: string; // String!
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
+    stationId: string; // String!
     thumbSource?: NexusGenEnums['ThumbSource'] | null; // ThumbSource
     thumbnail?: string | null; // String
+    thumbnailRef?: string | null; // String
     title?: string | null; // String
+    visibility?: NexusGenEnums['Visibility'] | null; // Visibility
   }
 }
 
@@ -111,6 +115,7 @@ export interface NexusGenEnums {
   CommentType: "COMMENT" | "PUBLISH"
   PublishKind: "Adds" | "Blog" | "Podcast" | "Short" | "Video"
   ThumbSource: "custom" | "generated"
+  Visibility: "private" | "public"
 }
 
 export interface NexusGenScalars {
@@ -191,6 +196,8 @@ export interface NexusGenObjects {
     videoId: string; // String!
   }
   Publish: { // root type
+    contentRef?: string | null; // String
+    contentURI?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     creatorId: string; // String!
     description?: string | null; // String
@@ -198,17 +205,17 @@ export interface NexusGenObjects {
     id: string; // String!
     kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
     primaryCategory?: NexusGenEnums['Category'] | null; // Category
-    public: boolean; // Boolean!
-    rawContentURI?: string | null; // String
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail?: string | null; // String
+    thumbnailRef?: string | null; // String
     title?: string | null; // String
     transcodeError: boolean; // Boolean!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
     uploadError: boolean; // Boolean!
     uploading: boolean; // Boolean!
     views?: number | null; // Int
+    visibility: NexusGenEnums['Visibility']; // Visibility!
   }
   Query: {};
   Response: { // root type
@@ -357,6 +364,8 @@ export interface NexusGenFieldTypes {
   }
   Publish: { // field return type
     commentsCount: number; // Int!
+    contentRef: string | null; // String
+    contentURI: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     creator: NexusGenRootTypes['Station'] | null; // Station
     creatorId: string; // String!
@@ -372,11 +381,10 @@ export interface NexusGenFieldTypes {
     likesCount: number; // Int!
     playback: NexusGenRootTypes['PlaybackLink'] | null; // PlaybackLink
     primaryCategory: NexusGenEnums['Category'] | null; // Category
-    public: boolean; // Boolean!
-    rawContentURI: string | null; // String
     secondaryCategory: NexusGenEnums['Category'] | null; // Category
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail: string | null; // String
+    thumbnailRef: string | null; // String
     tips: Array<NexusGenRootTypes['Tip'] | null>; // [Tip]!
     tipsCount: number; // Int!
     title: string | null; // String
@@ -385,6 +393,7 @@ export interface NexusGenFieldTypes {
     uploadError: boolean; // Boolean!
     uploading: boolean; // Boolean!
     views: number | null; // Int
+    visibility: NexusGenEnums['Visibility']; // Visibility!
   }
   Query: { // field return type
     fetchPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
@@ -545,6 +554,8 @@ export interface NexusGenFieldTypeNames {
   }
   Publish: { // field return type name
     commentsCount: 'Int'
+    contentRef: 'String'
+    contentURI: 'String'
     createdAt: 'DateTime'
     creator: 'Station'
     creatorId: 'String'
@@ -560,11 +571,10 @@ export interface NexusGenFieldTypeNames {
     likesCount: 'Int'
     playback: 'PlaybackLink'
     primaryCategory: 'Category'
-    public: 'Boolean'
-    rawContentURI: 'String'
     secondaryCategory: 'Category'
     thumbSource: 'ThumbSource'
     thumbnail: 'String'
+    thumbnailRef: 'String'
     tips: 'Tip'
     tipsCount: 'Int'
     title: 'String'
@@ -573,6 +583,7 @@ export interface NexusGenFieldTypeNames {
     uploadError: 'Boolean'
     uploading: 'Boolean'
     views: 'Int'
+    visibility: 'Visibility'
   }
   Query: { // field return type name
     fetchPublishes: 'Publish'
