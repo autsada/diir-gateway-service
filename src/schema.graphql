@@ -203,7 +203,7 @@ type Publish {
   playback: PlaybackLink
   primaryCategory: Category
   secondaryCategory: Category
-  thumbSource: ThumbSource!
+  thumbSource: ThumbSource
   thumbnail: String
   thumbnailRef: String
   tips: [Tip]!

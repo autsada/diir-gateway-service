@@ -102,7 +102,7 @@ export const Publish = objectType({
     t.string("filename")
     t.string("thumbnail")
     t.string("thumbnailRef")
-    t.field("thumbSource", { type: nonNull("ThumbSource") })
+    t.field("thumbSource", { type: "ThumbSource" })
     t.string("title")
     t.string("description")
     t.int("views")
