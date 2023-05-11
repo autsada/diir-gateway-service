@@ -461,7 +461,6 @@ export const PublishMutation = extendType({
         { dataSources, prisma, signature }
       ) => {
         try {
-          console.log("input -->", input)
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
           const {
             owner,
@@ -495,7 +494,7 @@ export const PublishMutation = extendType({
           // Check if the given station id owns the publish
           let publish = await prisma.publish.findUnique({
             where: {
-              id: stationId,
+              id: publishId,
             },
           })
           if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
