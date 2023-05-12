@@ -136,6 +136,12 @@ input GetMyAccountInput {
   accountType: AccountType!
 }
 
+input GetMyPublishesInput {
+  accountId: String!
+  creatorId: String!
+  owner: String!
+}
+
 input MintStationNFTInput {
   accountId: String!
   name: String!
@@ -203,7 +209,7 @@ type Publish {
   playback: PlaybackLink
   primaryCategory: Category
   secondaryCategory: Category
-  thumbSource: ThumbSource
+  thumbSource: ThumbSource!
   thumbnail: String
   thumbnailRef: String
   tips: [Tip]!
@@ -213,7 +219,7 @@ type Publish {
   updatedAt: DateTime
   uploadError: Boolean!
   uploading: Boolean!
-  views: Int
+  views: Int!
   visibility: Visibility!
 }
 
@@ -229,6 +235,7 @@ type Query {
   fetchPublishes: [Publish]!
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
+  getMyPublishes(input: GetMyPublishesInput!): [Publish]!
   getPublishById(id: String!): Publish
   getPublishForCreator(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
@@ -337,7 +344,7 @@ input UpdatePublishInput {
   publishId: String!
   secondaryCategory: Category
   stationId: String!
-  thumbSource: ThumbSource
+  thumbSource: ThumbSource!
   thumbnail: String
   thumbnailRef: String
   title: String
@@ -345,6 +352,7 @@ input UpdatePublishInput {
 }
 
 enum Visibility {
+  draft
   private
   public
 }

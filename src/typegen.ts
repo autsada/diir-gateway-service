@@ -58,6 +58,11 @@ export interface NexusGenInputs {
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
   }
+  GetMyPublishesInput: { // input type
+    accountId: string; // String!
+    creatorId: string; // String!
+    owner: string; // String!
+  }
   MintStationNFTInput: { // input type
     accountId: string; // String!
     name: string; // String!
@@ -101,7 +106,7 @@ export interface NexusGenInputs {
     publishId: string; // String!
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
     stationId: string; // String!
-    thumbSource?: NexusGenEnums['ThumbSource'] | null; // ThumbSource
+    thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail?: string | null; // String
     thumbnailRef?: string | null; // String
     title?: string | null; // String
@@ -115,7 +120,7 @@ export interface NexusGenEnums {
   CommentType: "COMMENT" | "PUBLISH"
   PublishKind: "Adds" | "Blog" | "Podcast" | "Short" | "Video"
   ThumbSource: "custom" | "generated"
-  Visibility: "private" | "public"
+  Visibility: "draft" | "private" | "public"
 }
 
 export interface NexusGenScalars {
@@ -206,7 +211,7 @@ export interface NexusGenObjects {
     kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
     primaryCategory?: NexusGenEnums['Category'] | null; // Category
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
-    thumbSource?: NexusGenEnums['ThumbSource'] | null; // ThumbSource
+    thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail?: string | null; // String
     thumbnailRef?: string | null; // String
     title?: string | null; // String
@@ -214,7 +219,7 @@ export interface NexusGenObjects {
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
     uploadError: boolean; // Boolean!
     uploading: boolean; // Boolean!
-    views?: number | null; // Int
+    views: number; // Int!
     visibility: NexusGenEnums['Visibility']; // Visibility!
   }
   Query: {};
@@ -382,7 +387,7 @@ export interface NexusGenFieldTypes {
     playback: NexusGenRootTypes['PlaybackLink'] | null; // PlaybackLink
     primaryCategory: NexusGenEnums['Category'] | null; // Category
     secondaryCategory: NexusGenEnums['Category'] | null; // Category
-    thumbSource: NexusGenEnums['ThumbSource'] | null; // ThumbSource
+    thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail: string | null; // String
     thumbnailRef: string | null; // String
     tips: Array<NexusGenRootTypes['Tip'] | null>; // [Tip]!
@@ -392,13 +397,14 @@ export interface NexusGenFieldTypes {
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
     uploadError: boolean; // Boolean!
     uploading: boolean; // Boolean!
-    views: number | null; // Int
+    views: number; // Int!
     visibility: NexusGenEnums['Visibility']; // Visibility!
   }
   Query: { // field return type
     fetchPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
     getBalance: string; // String!
     getMyAccount: NexusGenRootTypes['Account'] | null; // Account
+    getMyPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
     getPublishForCreator: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station
@@ -589,6 +595,7 @@ export interface NexusGenFieldTypeNames {
     fetchPublishes: 'Publish'
     getBalance: 'String'
     getMyAccount: 'Account'
+    getMyPublishes: 'Publish'
     getPublishById: 'Publish'
     getPublishForCreator: 'Publish'
     getStationById: 'Station'
@@ -706,6 +713,9 @@ export interface NexusGenArgTypes {
     }
     getMyAccount: { // args
       input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!
+    }
+    getMyPublishes: { // args
+      input: NexusGenInputs['GetMyPublishesInput']; // GetMyPublishesInput!
     }
     getPublishById: { // args
       id: string; // String!

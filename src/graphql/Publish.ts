@@ -73,7 +73,7 @@ export const ThumbSource = enumType({
 
 export const Visibility = enumType({
   name: "Visibility",
-  members: ["private", "public"],
+  members: ["draft", "private", "public"],
 })
 
 export const DraftPublish = objectType({
@@ -102,10 +102,10 @@ export const Publish = objectType({
     t.string("filename")
     t.string("thumbnail")
     t.string("thumbnailRef")
-    t.field("thumbSource", { type: "ThumbSource" })
+    t.nonNull.field("thumbSource", { type: "ThumbSource" })
     t.string("title")
     t.string("description")
-    t.int("views")
+    t.nonNull.int("views")
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
@@ -309,6 +309,15 @@ export const Publish = objectType({
   },
 })
 
+export const GetMyPublishesInput = inputObjectType({
+  name: "GetMyPublishesInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("creatorId") // Creator station id
+  },
+})
+
 export const PublishQuery = extendType({
   type: "Query",
   definition(t) {
@@ -334,6 +343,63 @@ export const PublishQuery = extendType({
       },
     })
 
+    /**
+     * Get all publishes created by the creator
+     * TODO: Add pagination
+     */
+    t.field("getMyPublishes", {
+      type: nonNull(list("Publish")),
+      args: { input: nonNull("GetMyPublishesInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, creatorId } = input
+          if (!owner || !accountId || !creatorId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the requestor owns the given creatorId.
+          const creator = await prisma.station.findUnique({
+            where: {
+              id: creatorId,
+            },
+          })
+          if (!creator || creator.accountId !== accountId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Query publises by creator id
+          return prisma.publish.findMany({
+            where: {
+              creatorId,
+            },
+            include: {
+              playback: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          }) as unknown as NexusGenObjects["Publish"][]
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Get a publish by id
+     */
     t.field("getPublishById", {
       type: "Publish",
       args: { id: nonNull(stringArg()) },
@@ -399,7 +465,7 @@ export const UpdatePublishInput = inputObjectType({
     t.string("contentRef")
     t.string("thumbnail")
     t.string("thumbnailRef")
-    t.field("thumbSource", { type: "ThumbSource" })
+    t.nonNull.field("thumbSource", { type: "ThumbSource" })
     t.string("title")
     t.string("description")
     t.field("primaryCategory", { type: "Category" })

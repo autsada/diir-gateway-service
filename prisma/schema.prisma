@@ -120,37 +120,38 @@ enum ThumbnailSource {
 }
 
 enum Visibility {
+    draft
     private
     public
 }
 
 model Publish {
-    id                String           @id @default(cuid())
-    createdAt         DateTime         @default(now())
+    id                String          @id @default(cuid())
+    createdAt         DateTime        @default(now())
     updatedAt         DateTime?
-    creator           Station          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+    creator           Station         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
     creatorId         String
     contentURI        String?
     contentRef        String? // A reference path in cloud storage
     filename          String?
     thumbnail         String? // A video thumbnail
     thumbnailRef      String? // A reference path in cloud storage
-    thumbSource       ThumbnailSource?
-    title             String?          @db.VarChar(100)
-    description       String?          @db.VarChar(5000)
-    views             Int?
+    thumbSource       ThumbnailSource @default(generated)
+    title             String?         @db.VarChar(100)
+    description       String?         @db.VarChar(5000)
+    views             Int             @default(0)
     primaryCategory   Category?
     secondaryCategory Category?
     kind              PublishKind?
-    visibility        Visibility       @default(private)
-    uploadError       Boolean          @default(false)
-    transcodeError    Boolean          @default(false)
-    uploading         Boolean          @default(false)
+    visibility        Visibility      @default(draft)
+    uploadError       Boolean         @default(false)
+    transcodeError    Boolean         @default(false)
+    uploading         Boolean         @default(false)
     playback          PlaybackLink?
     likes             Like[]
     dislikes          DisLike[]
     tips              Tip[]
-    comments          Comment[]        @relation("MainComment")
+    comments          Comment[]       @relation("MainComment")
 }
 
 // Publish's Like
