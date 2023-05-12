@@ -309,12 +309,18 @@ export const Publish = objectType({
   },
 })
 
+export const QueryPublishKind = enumType({
+  name: "QueryPublishKind",
+  members: ["all", "videos", "podcasts", "blogs", "adds"],
+})
+
 export const GetMyPublishesInput = inputObjectType({
   name: "GetMyPublishesInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("creatorId") // Creator station id
+    t.nonNull.field("kind", { type: "QueryPublishKind" })
   },
 })
 
@@ -357,8 +363,8 @@ export const PublishQuery = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, creatorId } = input
-          if (!owner || !accountId || !creatorId)
+          const { owner, accountId, creatorId, kind } = input
+          if (!owner || !accountId || !creatorId || !kind)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Validate authentication/authorization
@@ -380,17 +386,83 @@ export const PublishQuery = extendType({
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Query publises by creator id
-          return prisma.publish.findMany({
-            where: {
-              creatorId,
-            },
-            include: {
-              playback: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          }) as unknown as NexusGenObjects["Publish"][]
+          let publishes: NexusGenObjects["Publish"][] = []
+
+          if (kind === "all") {
+            publishes = await prisma.publish.findMany({
+              where: {
+                creatorId,
+              },
+              include: {
+                playback: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else if (kind === "videos") {
+            publishes = await prisma.publish.findMany({
+              where: {
+                creatorId,
+                kind: {
+                  in: ["Video", "Short"],
+                },
+              },
+              include: {
+                playback: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else if (kind === "podcasts") {
+            publishes = await prisma.publish.findMany({
+              where: {
+                creatorId,
+                kind: {
+                  equals: "Podcast",
+                },
+              },
+              include: {
+                playback: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else if (kind === "blogs") {
+            publishes = await prisma.publish.findMany({
+              where: {
+                creatorId,
+                kind: {
+                  equals: "Blog",
+                },
+              },
+              include: {
+                playback: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else if (kind === "adds") {
+            publishes = await prisma.publish.findMany({
+              where: {
+                creatorId,
+                kind: {
+                  equals: "Adds",
+                },
+              },
+              include: {
+                playback: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          return publishes
         } catch (error) {
           throw error
         }

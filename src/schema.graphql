@@ -139,6 +139,7 @@ input GetMyAccountInput {
 input GetMyPublishesInput {
   accountId: String!
   creatorId: String!
+  kind: QueryPublishKind!
   owner: String!
 }
 
@@ -252,6 +253,14 @@ input QueryByIdInput {
 input QueryByNameInput {
   name: String!
   requestorId: String
+}
+
+enum QueryPublishKind {
+  adds
+  all
+  blogs
+  podcasts
+  videos
 }
 
 type Response {
