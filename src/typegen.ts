@@ -370,6 +370,7 @@ export interface NexusGenFieldTypes {
     videoId: string; // String!
   }
   Publish: { // field return type
+    comments: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     commentsCount: number; // Int!
     contentRef: string | null; // String
     contentURI: string | null; // String
@@ -561,6 +562,7 @@ export interface NexusGenFieldTypeNames {
     videoId: 'String'
   }
   Publish: { // field return type name
+    comments: 'Comment'
     commentsCount: 'Int'
     contentRef: 'String'
     contentURI: 'String'
@@ -720,7 +722,7 @@ export interface NexusGenArgTypes {
       input: NexusGenInputs['GetMyPublishesInput']; // GetMyPublishesInput!
     }
     getPublishById: { // args
-      id: string; // String!
+      input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!
     }
     getPublishForCreator: { // args
       id: string; // String!

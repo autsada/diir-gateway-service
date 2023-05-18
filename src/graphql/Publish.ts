@@ -306,6 +306,24 @@ export const Publish = objectType({
         })
       },
     })
+
+    /**
+     * First 100 comments.
+     */
+    t.nullable.field("comments", {
+      type: nonNull(list("Comment")),
+      resolve: async (parent, _, { prisma }) => {
+        return prisma.comment.findMany({
+          where: {
+            publishId: parent.id,
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+          take: 100,
+        })
+      },
+    })
   },
 })
 
@@ -474,16 +492,20 @@ export const PublishQuery = extendType({
      */
     t.field("getPublishById", {
       type: "Publish",
-      args: { id: nonNull(stringArg()) },
-      resolve: async (_parent, { id }, { prisma }) => {
+      args: { input: nonNull("QueryByIdInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
         try {
+          const { targetId } = input
+
           return prisma.publish.findUnique({
             where: {
-              id,
+              id: targetId,
             },
             include: {
               creator: true,
               playback: true,
+              comments: true,
+              likes: true,
             },
           }) as unknown as NexusGenObjects["Publish"]
         } catch (error) {

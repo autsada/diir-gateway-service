@@ -191,6 +191,7 @@ type PlaybackLink {
 }
 
 type Publish {
+  comments: [Comment]!
   commentsCount: Int!
   contentRef: String
   contentURI: String
@@ -237,7 +238,7 @@ type Query {
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getMyPublishes(input: GetMyPublishesInput!): [Publish]!
-  getPublishById(id: String!): Publish
+  getPublishById(input: QueryByIdInput!): Publish
   getPublishForCreator(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
