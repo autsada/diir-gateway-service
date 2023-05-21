@@ -342,6 +342,13 @@ export const GetMyPublishesInput = inputObjectType({
   },
 })
 
+export const FetchPublishesByCatInput = inputObjectType({
+  name: "FetchPublishesByCatInput",
+  definition(t) {
+    t.nonNull.field("category", { type: "Category" })
+  },
+})
+
 export const PublishQuery = extendType({
   type: "Query",
   definition(t) {
@@ -515,14 +522,78 @@ export const PublishQuery = extendType({
     })
 
     // TODO: Implement pagination
-    t.field("fetchPublishes", {
+    t.field("fetchAllVideos", {
       type: nonNull(list("Publish")),
       resolve(_parent, _, { prisma }) {
         try {
-          return prisma.publish.findMany(
-            {}
-          ) as unknown as NexusGenObjects["Publish"][]
+          return prisma.publish.findMany({
+            where: {
+              AND: [
+                {
+                  visibility: {
+                    equals: "public",
+                  },
+                },
+                {
+                  kind: {
+                    equals: "Video",
+                  },
+                },
+              ],
+            },
+            include: {
+              creator: true,
+              playback: true,
+            },
+            take: 100,
+          }) as unknown as NexusGenObjects["Publish"][]
         } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    // TODO: Implement pagination
+    t.field("fetchVideosByCategory", {
+      type: nonNull(list("Publish")),
+      args: { input: nonNull("FetchPublishesByCatInput") },
+      resolve(_parent, { input }, { prisma }) {
+        try {
+          return prisma.publish.findMany({
+            where: {
+              AND: [
+                {
+                  visibility: {
+                    equals: "public",
+                  },
+                },
+                {
+                  kind: {
+                    equals: "Video",
+                  },
+                },
+              ],
+              OR: [
+                {
+                  primaryCategory: {
+                    equals: input.category,
+                  },
+                },
+                {
+                  secondaryCategory: {
+                    equals: input.category,
+                  },
+                },
+              ],
+            },
+            include: {
+              creator: true,
+              playback: true,
+            },
+            take: 100,
+          }) as unknown as NexusGenObjects["Publish"][]
+        } catch (error) {
+          console.log("error -->", error)
           throw error
         }
       },
@@ -678,6 +749,7 @@ export const PublishMutation = extendType({
               secondaryCategory,
               kind,
               visibility: visibility || "private",
+              updatedAt: new Date(),
             },
           })
 

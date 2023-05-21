@@ -132,6 +132,10 @@ type Edge {
   node: Station
 }
 
+input FetchPublishesByCatInput {
+  category: Category!
+}
+
 input GetMyAccountInput {
   accountType: AccountType!
 }
@@ -234,7 +238,8 @@ enum PublishKind {
 }
 
 type Query {
-  fetchPublishes: [Publish]!
+  fetchAllVideos: [Publish]!
+  fetchVideosByCategory(input: FetchPublishesByCatInput!): [Publish]!
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getMyPublishes(input: GetMyPublishesInput!): [Publish]!

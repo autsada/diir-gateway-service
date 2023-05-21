@@ -55,6 +55,9 @@ export interface NexusGenInputs {
     senderId: string; // String!
     to: string; // String!
   }
+  FetchPublishesByCatInput: { // input type
+    category: NexusGenEnums['Category']; // Category!
+  }
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
   }
@@ -404,7 +407,8 @@ export interface NexusGenFieldTypes {
     visibility: NexusGenEnums['Visibility']; // Visibility!
   }
   Query: { // field return type
-    fetchPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
+    fetchAllVideos: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
+    fetchVideosByCategory: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
     getBalance: string; // String!
     getMyAccount: NexusGenRootTypes['Account'] | null; // Account
     getMyPublishes: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
@@ -596,7 +600,8 @@ export interface NexusGenFieldTypeNames {
     visibility: 'Visibility'
   }
   Query: { // field return type name
-    fetchPublishes: 'Publish'
+    fetchAllVideos: 'Publish'
+    fetchVideosByCategory: 'Publish'
     getBalance: 'String'
     getMyAccount: 'Account'
     getMyPublishes: 'Publish'
@@ -712,6 +717,9 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
+    fetchVideosByCategory: { // args
+      input: NexusGenInputs['FetchPublishesByCatInput']; // FetchPublishesByCatInput!
+    }
     getBalance: { // args
       address: string; // String!
     }
