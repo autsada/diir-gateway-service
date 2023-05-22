@@ -184,6 +184,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
                 : publish.thumbSource,
               contentURI: body.meta?.contentURI,
               contentRef: body.meta?.contentRef,
+              kind: body.duration <= 60 ? "Short" : publish.kind,
             },
           })
         }

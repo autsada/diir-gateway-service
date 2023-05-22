@@ -320,7 +320,27 @@ export const Publish = objectType({
           orderBy: {
             updatedAt: "desc",
           },
-          take: 100,
+          take: 50,
+        })
+      },
+    })
+  },
+})
+
+export const WatchLater = objectType({
+  name: "WatchLater",
+  definition(t) {
+    t.nonNull.string("id")
+    t.nonNull.field("createdAt", { type: "DateTime" })
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+    t.field("publish", {
+      type: "Publish",
+      resolve(parent, _, { prisma }) {
+        return prisma.publish.findUnique({
+          where: {
+            id: parent.publishId,
+          },
         })
       },
     })
@@ -346,6 +366,15 @@ export const FetchPublishesByCatInput = inputObjectType({
   name: "FetchPublishesByCatInput",
   definition(t) {
     t.nonNull.field("category", { type: "Category" })
+  },
+})
+
+export const GetWatchLaterInput = inputObjectType({
+  name: "GetWatchLaterInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
   },
 })
 
@@ -536,8 +565,11 @@ export const PublishQuery = extendType({
                 },
                 {
                   kind: {
-                    equals: "Video",
+                    in: ["Video", "Short"],
                   },
+                },
+                {
+                  uploading: false,
                 },
               ],
             },
@@ -545,7 +577,7 @@ export const PublishQuery = extendType({
               creator: true,
               playback: true,
             },
-            take: 100,
+            take: 50,
           }) as unknown as NexusGenObjects["Publish"][]
         } catch (error) {
           throw error
@@ -590,10 +622,51 @@ export const PublishQuery = extendType({
               creator: true,
               playback: true,
             },
-            take: 100,
+            take: 50,
           }) as unknown as NexusGenObjects["Publish"][]
         } catch (error) {
-          console.log("error -->", error)
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Get watch later list of a station
+     * TODO: Add pagination
+     */
+    t.field("getWatchLater", {
+      type: nonNull(list("WatchLater")),
+      args: { input: nonNull("GetWatchLaterInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId } = input
+          if (!owner || !accountId || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          return prisma.watchLater.findMany({
+            where: {
+              stationId,
+            },
+            include: {
+              publish: true,
+            },
+            take: 50,
+          })
+        } catch (error) {
           throw error
         }
       },
@@ -637,6 +710,26 @@ export const UpdatePublishInput = inputObjectType({
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
     t.field("visibility", { type: "Visibility" })
+  },
+})
+
+export const SavePublishToPlayListInput = inputObjectType({
+  name: "SavePublishToPlayListInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+  },
+})
+
+export const RemovePublishToPlayListInput = inputObjectType({
+  name: "RemovePublishToPlayListInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("id") // the id of the item to be removed
   },
 })
 
@@ -727,13 +820,16 @@ export const PublishMutation = extendType({
             where: {
               id: publishId,
             },
+            include: {
+              playback: true,
+            },
           })
           if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
           if (publish?.creatorId !== stationId)
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Update publish
-          publish = await prisma.publish.update({
+          await prisma.publish.update({
             where: {
               id: publishId,
             },
@@ -747,13 +843,105 @@ export const PublishMutation = extendType({
               description,
               primaryCategory,
               secondaryCategory,
-              kind,
+              kind:
+                publish?.playback?.duration && publish?.playback?.duration <= 60
+                  ? "Short"
+                  : kind,
               visibility: visibility || "private",
               updatedAt: new Date(),
             },
           })
 
           return publish as unknown as NexusGenObjects["Publish"]
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Add to watch later
+     */
+    t.field("addToWatchLater", {
+      type: "WriteResult",
+      args: { input: nonNull("SavePublishToPlayListInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, publishId } = input
+          if (!owner || !accountId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          await prisma.watchLater.create({
+            data: {
+              stationId,
+              publishId,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Remove from watch later
+     */
+    t.field("removeFromWatchLater", {
+      type: "WriteResult",
+      args: { input: nonNull("RemovePublishToPlayListInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, id } = input
+          if (!owner || !accountId || !stationId || !id)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given station id owns the item
+          let item = await prisma.watchLater.findUnique({
+            where: {
+              id,
+            },
+          })
+          if (!item) throwError(notFoundErrMessage, "NOT_FOUND")
+          if (item?.stationId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.watchLater.delete({
+            where: {
+              id,
+            },
+          })
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }

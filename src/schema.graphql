@@ -147,6 +147,12 @@ input GetMyPublishesInput {
   owner: String!
 }
 
+input GetWatchLaterInput {
+  accountId: String!
+  owner: String!
+  stationId: String!
+}
+
 input MintStationNFTInput {
   accountId: String!
   name: String!
@@ -158,6 +164,7 @@ type MintStationNFTResult {
 }
 
 type Mutation {
+  addToWatchLater(input: SavePublishToPlayListInput!): WriteResult
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   createAccount(input: GetMyAccountInput!): Account
@@ -167,6 +174,7 @@ type Mutation {
   createUser(address: String!): AuthUser
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
+  removeFromWatchLater(input: RemovePublishToPlayListInput!): WriteResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
@@ -247,6 +255,7 @@ type Query {
   getPublishForCreator(id: String!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
+  getWatchLater(input: GetWatchLaterInput!): [WatchLater]!
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
   listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
 }
@@ -269,9 +278,23 @@ enum QueryPublishKind {
   videos
 }
 
+input RemovePublishToPlayListInput {
+  accountId: String!
+  id: String!
+  owner: String!
+  stationId: String!
+}
+
 type Response {
   edges: [Edge]!
   pageInfo: PageInfo!
+}
+
+input SavePublishToPlayListInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
 }
 
 input SendTipsInput {
@@ -370,6 +393,14 @@ enum Visibility {
   draft
   private
   public
+}
+
+type WatchLater {
+  createdAt: DateTime!
+  id: String!
+  publish: Publish
+  publishId: String!
+  stationId: String!
 }
 
 type WriteResult {

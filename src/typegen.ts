@@ -67,6 +67,11 @@ export interface NexusGenInputs {
     kind: NexusGenEnums['QueryPublishKind']; // QueryPublishKind!
     owner: string; // String!
   }
+  GetWatchLaterInput: { // input type
+    accountId: string; // String!
+    owner: string; // String!
+    stationId: string; // String!
+  }
   MintStationNFTInput: { // input type
     accountId: string; // String!
     name: string; // String!
@@ -79,6 +84,18 @@ export interface NexusGenInputs {
   QueryByNameInput: { // input type
     name: string; // String!
     requestorId?: string | null; // String
+  }
+  RemovePublishToPlayListInput: { // input type
+    accountId: string; // String!
+    id: string; // String!
+    owner: string; // String!
+    stationId: string; // String!
+  }
+  SavePublishToPlayListInput: { // input type
+    accountId: string; // String!
+    owner: string; // String!
+    publishId: string; // String!
+    stationId: string; // String!
   }
   SendTipsInput: { // input type
     publishId: string; // String!
@@ -264,6 +281,12 @@ export interface NexusGenObjects {
     senderId: string; // String!
     to: string; // String!
   }
+  WatchLater: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // String!
+    publishId: string; // String!
+    stationId: string; // String!
+  }
   WriteResult: { // root type
     status: string; // String!
   }
@@ -339,6 +362,7 @@ export interface NexusGenFieldTypes {
     tokenId: number; // Int!
   }
   Mutation: { // field return type
+    addToWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
     calculateTips: NexusGenRootTypes['CalculateTipsResult'] | null; // CalculateTipsResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
@@ -348,6 +372,7 @@ export interface NexusGenFieldTypes {
     createUser: NexusGenRootTypes['AuthUser'] | null; // AuthUser
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
+    removeFromWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
     updateBannerImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateDisplayName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -416,6 +441,7 @@ export interface NexusGenFieldTypes {
     getPublishForCreator: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station
     getStationByName: NexusGenRootTypes['Station'] | null; // Station
+    getWatchLater: Array<NexusGenRootTypes['WatchLater'] | null>; // [WatchLater]!
     listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
   }
@@ -466,6 +492,13 @@ export interface NexusGenFieldTypes {
     sender: NexusGenRootTypes['Station'] | null; // Station
     senderId: string; // String!
     to: string; // String!
+  }
+  WatchLater: { // field return type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // String!
+    publish: NexusGenRootTypes['Publish'] | null; // Publish
+    publishId: string; // String!
+    stationId: string; // String!
   }
   WriteResult: { // field return type
     status: string; // String!
@@ -532,6 +565,7 @@ export interface NexusGenFieldTypeNames {
     tokenId: 'Int'
   }
   Mutation: { // field return type name
+    addToWatchLater: 'WriteResult'
     cacheSession: 'WriteResult'
     calculateTips: 'CalculateTipsResult'
     createAccount: 'Account'
@@ -541,6 +575,7 @@ export interface NexusGenFieldTypeNames {
     createUser: 'AuthUser'
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
+    removeFromWatchLater: 'WriteResult'
     sendTips: 'SendTipsResult'
     updateBannerImage: 'WriteResult'
     updateDisplayName: 'WriteResult'
@@ -609,6 +644,7 @@ export interface NexusGenFieldTypeNames {
     getPublishForCreator: 'Publish'
     getStationById: 'Station'
     getStationByName: 'Station'
+    getWatchLater: 'WatchLater'
     listCommentsByCommentId: 'Comment'
     listCommentsByPublishId: 'Comment'
   }
@@ -660,6 +696,13 @@ export interface NexusGenFieldTypeNames {
     senderId: 'String'
     to: 'String'
   }
+  WatchLater: { // field return type name
+    createdAt: 'DateTime'
+    id: 'String'
+    publish: 'Publish'
+    publishId: 'String'
+    stationId: 'String'
+  }
   WriteResult: { // field return type name
     status: 'String'
   }
@@ -667,6 +710,9 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
+    addToWatchLater: { // args
+      input: NexusGenInputs['SavePublishToPlayListInput']; // SavePublishToPlayListInput!
+    }
     cacheSession: { // args
       input: NexusGenInputs['CacheSessionInput']; // CacheSessionInput!
     }
@@ -693,6 +739,9 @@ export interface NexusGenArgTypes {
     }
     mintStationNFT: { // args
       input: NexusGenInputs['MintStationNFTInput']; // MintStationNFTInput!
+    }
+    removeFromWatchLater: { // args
+      input: NexusGenInputs['RemovePublishToPlayListInput']; // RemovePublishToPlayListInput!
     }
     sendTips: { // args
       input: NexusGenInputs['SendTipsInput']; // SendTipsInput!
@@ -740,6 +789,9 @@ export interface NexusGenArgTypes {
     }
     getStationByName: { // args
       input: NexusGenInputs['QueryByNameInput']; // QueryByNameInput!
+    }
+    getWatchLater: { // args
+      input: NexusGenInputs['GetWatchLaterInput']; // GetWatchLaterInput!
     }
     listCommentsByCommentId: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!

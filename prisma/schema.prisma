@@ -54,6 +54,7 @@ model Station {
     comments          Comment[]
     commentLikes      CommentLike[]
     commentDisLikes   CommentDisLike[]
+    WatchLater        WatchLater[]
 }
 
 model Follow {
@@ -152,6 +153,7 @@ model Publish {
     dislikes          DisLike[]
     tips              Tip[]
     comments          Comment[]       @relation("MainComment")
+    WatchLater        WatchLater[]
 }
 
 // Publish's Like
@@ -236,4 +238,14 @@ model CommentDisLike {
     stationId String
 
     @@unique(fields: [commentId, stationId], name: "identifier")
+}
+
+// Watch later table
+model WatchLater {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+    stationId String
+    publish   Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String
 }
