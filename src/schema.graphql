@@ -6,9 +6,9 @@ type Account {
   authUid: String
   createdAt: DateTime!
   defaultStation: Station
-  id: String!
+  id: ID!
   owner: String!
-  stations: [Station]
+  stations: [Station!]!
   type: AccountType!
   updatedAt: DateTime
 }

@@ -11,7 +11,7 @@ declare global {
     /**
      * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
      */
-    date<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "DateTime";
+    dateTime<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "DateTime";
   }
 }
 declare global {
@@ -19,7 +19,7 @@ declare global {
     /**
      * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
      */
-    date<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "DateTime";
+    dateTime<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "DateTime";
   }
 }
 
@@ -158,8 +158,7 @@ export interface NexusGenObjects {
   Account: { // root type
     authUid?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
-    defaultStation?: NexusGenRootTypes['Station'] | null; // Station
-    id: string; // String!
+    id: string; // ID!
     owner: string; // String!
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -307,9 +306,9 @@ export interface NexusGenFieldTypes {
     authUid: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     defaultStation: NexusGenRootTypes['Station'] | null; // Station
-    id: string; // String!
+    id: string; // ID!
     owner: string; // String!
-    stations: Array<NexusGenRootTypes['Station'] | null> | null; // [Station]
+    stations: NexusGenRootTypes['Station'][]; // [Station!]!
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
   }
@@ -510,7 +509,7 @@ export interface NexusGenFieldTypeNames {
     authUid: 'String'
     createdAt: 'DateTime'
     defaultStation: 'Station'
-    id: 'String'
+    id: 'ID'
     owner: 'String'
     stations: 'Station'
     type: 'AccountType'

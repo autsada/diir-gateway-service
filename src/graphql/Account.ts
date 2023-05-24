@@ -1,17 +1,22 @@
-import { Station } from "@prisma/client"
 import {
   extendType,
   objectType,
-  nullable,
   nonNull,
   enumType,
   inputObjectType,
-  list,
 } from "nexus"
-import { cacheLoggedInSession, getStationFromCache } from "../client/redis"
-import { NexusGenObjects } from "../typegen"
 
-import { throwError, badInputErrMessage, unauthorizedErrMessage } from "./Error"
+import {
+  Account as AccountModel,
+  AccountType as AccountTypeEnum,
+} from "nexus-prisma"
+import { cacheLoggedInSession, getStationFromCache } from "../client/redis"
+import {
+  throwError,
+  badInputErrMessage,
+  unauthorizedErrMessage,
+  badRequestErrMessage,
+} from "./Error"
 import { recoverAddress, validateAuthenticity } from "../lib"
 
 export const Edge = objectType({
@@ -38,40 +43,38 @@ export const Response = objectType({
   },
 })
 
-export const AccountType = enumType({
-  name: "AccountType",
-  members: ["TRADITIONAL", "WALLET"],
-})
+export const AccountType = enumType(AccountTypeEnum)
 
 /**
  * A Account type that map to the prisma Account model.
  */
 export const Account = objectType({
-  name: "Account",
+  name: AccountModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.field("updatedAt", { type: "DateTime" })
-    t.nonNull.string("owner")
-    t.string("authUid")
+    t.field(AccountModel.id)
+    t.field(AccountModel.createdAt)
+    t.field(AccountModel.updatedAt)
+    t.field(AccountModel.owner)
+    t.field(AccountModel.authUid)
     t.nonNull.field("type", { type: "AccountType" })
-    t.field("defaultStation", { type: "Station" })
-    t.field("stations", {
-      type: list("Station"),
+    t.field("defaultStation", {
+      type: "Station",
       resolve: async (parent, _, { prisma }) => {
-        return prisma.account
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .stations({
-            orderBy: {
-              createdAt: "desc",
-            },
-          })
+        const account = await prisma.account.findUnique({
+          where: {
+            id: parent.id,
+          },
+          include: {
+            stations: true,
+          },
+        })
+
+        if (!account || account.stations.length === 0) return null
+
+        return getStationFromCache(parent.owner, account.stations)
       },
     })
+    t.field(AccountModel.stations)
   },
 })
 
@@ -98,13 +101,6 @@ export const AccountQuery = extendType({
           // Verify id token first.
           await dataSources.walletAPI.verifyUser()
 
-          let account:
-            | (NexusGenObjects["Account"] & {
-                stations: NexusGenObjects["Station"][]
-              })
-            | null = null
-          let owner: string | null = null
-
           const { accountType } = input
           if (accountType === "TRADITIONAL") {
             // `TRADITIONAL` account
@@ -113,48 +109,29 @@ export const AccountQuery = extendType({
 
             if (address) {
               // Query account from the database
-              owner = address.toLowerCase()
-              const ac = await prisma.account.findUnique({
+              const owner = address.toLowerCase()
+              return prisma.account.findUnique({
                 where: {
                   owner,
                 },
-                include: {
-                  stations: true,
-                },
               })
-
-              account = ac
+            } else {
+              return null
             }
-          }
-
-          if (accountType === "WALLET") {
+          } else if (accountType === "WALLET") {
             // `WALLET` account
             if (!signature) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
             // Query account from the database
-            owner = recoverAddress(signature!).toLowerCase()
-            const ac = await prisma.account.findUnique({
+            const owner = recoverAddress(signature!).toLowerCase()
+            return prisma.account.findUnique({
               where: {
                 owner,
               },
-              include: {
-                stations: true,
-              },
             })
-
-            account = ac
+          } else {
+            return null
           }
-
-          // Return null if no account found or no owner address
-          if (!account || !owner) return null
-
-          // Find the previous logged in station
-          const defaultStation =
-            account.stations.length === 0
-              ? null
-              : await getStationFromCache(owner, account.stations as Station[])
-
-          return { ...account, defaultStation } as NexusGenObjects["Account"]
         } catch (error) {
           throw error
         }
@@ -248,7 +225,7 @@ export const AccountMutation = extendType({
               },
             })
 
-            if (ac) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+            if (ac) throwError(badRequestErrMessage, "BAD_REQUEST")
 
             const ownerAddress = recoverAddress(signature!)
             const owner = ownerAddress.toLowerCase()
