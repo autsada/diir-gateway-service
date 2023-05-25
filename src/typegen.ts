@@ -198,6 +198,10 @@ export interface NexusGenObjects {
     cursor?: string | null; // String
     node?: NexusGenRootTypes['Station'] | null; // Station
   }
+  Follow: { // root type
+    followerId: string; // String!
+    followingId: string; // String!
+  }
   MintStationNFTResult: { // root type
     tokenId: number; // Int!
   }
@@ -258,7 +262,7 @@ export interface NexusGenObjects {
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     defaultColor?: string | null; // String
     displayName: string; // String!
-    id: string; // String!
+    id: string; // ID!
     image?: string | null; // String
     imageRef?: string | null; // String
     name: string; // String!
@@ -350,6 +354,12 @@ export interface NexusGenFieldTypes {
   Edge: { // field return type
     cursor: string | null; // String
     node: NexusGenRootTypes['Station'] | null; // Station
+  }
+  Follow: { // field return type
+    follower: NexusGenRootTypes['Station']; // Station!
+    followerId: string; // String!
+    following: NexusGenRootTypes['Station']; // Station!
+    followingId: string; // String!
   }
   MintStationNFTResult: { // field return type
     tokenId: number; // Int!
@@ -448,25 +458,23 @@ export interface NexusGenFieldTypes {
     to: string; // String!
   }
   Station: { // field return type
-    account: NexusGenRootTypes['Account'] | null; // Account
+    account: NexusGenRootTypes['Account']; // Account!
     accountId: string; // String!
     bannerImage: string | null; // String
     bannerImageRef: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     defaultColor: string | null; // String
     displayName: string; // String!
-    followers: NexusGenRootTypes['Station'][]; // [Station!]!
     followersCount: number; // Int!
-    following: Array<NexusGenRootTypes['Station'] | null>; // [Station]!
     followingCount: number; // Int!
-    id: string; // String!
+    id: string; // ID!
     image: string | null; // String
     imageRef: string | null; // String
     isFollowing: boolean | null; // Boolean
     isOwner: boolean | null; // Boolean
     name: string; // String!
     owner: string; // String!
-    publishes: Array<NexusGenRootTypes['Publish'] | null> | null; // [Publish]
+    publishes: NexusGenRootTypes['Publish'][]; // [Publish!]!
     publishesCount: number; // Int!
     tokenId: number | null; // Int
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
@@ -549,6 +557,12 @@ export interface NexusGenFieldTypeNames {
   Edge: { // field return type name
     cursor: 'String'
     node: 'Station'
+  }
+  Follow: { // field return type name
+    follower: 'Station'
+    followerId: 'String'
+    following: 'Station'
+    followingId: 'String'
   }
   MintStationNFTResult: { // field return type name
     tokenId: 'Int'
@@ -654,11 +668,9 @@ export interface NexusGenFieldTypeNames {
     createdAt: 'DateTime'
     defaultColor: 'String'
     displayName: 'String'
-    followers: 'Station'
     followersCount: 'Int'
-    following: 'Station'
     followingCount: 'Int'
-    id: 'String'
+    id: 'ID'
     image: 'String'
     imageRef: 'String'
     isFollowing: 'Boolean'

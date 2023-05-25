@@ -4,10 +4,10 @@ import {
   extendType,
   nonNull,
   nullable,
-  list,
 } from "nexus"
+import { Station as StationModel, Follow as FollowModel } from "nexus-prisma"
 
-import { NexusGenInputs, NexusGenObjects } from "../typegen"
+import { NexusGenInputs } from "../typegen"
 import {
   throwError,
   badInputErrMessage,
@@ -16,58 +16,37 @@ import {
 } from "./Error"
 import { generateColor, validateAuthenticity } from "../lib"
 
+export const Follow = objectType({
+  name: FollowModel.$name,
+  definition(t) {
+    t.field(FollowModel.followerId)
+    t.field(FollowModel.follower)
+    t.field(FollowModel.followingId)
+    t.field(FollowModel.following)
+  },
+})
+
 /**
  * A Station type that map to the prisma Station model.
  */
 export const Station = objectType({
-  name: "Station",
+  name: StationModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.int("tokenId")
+    t.field(StationModel.id)
+    t.field(StationModel.tokenId)
     t.nonNull.field("createdAt", { type: "DateTime" })
     t.field("updatedAt", { type: "DateTime" })
-    t.nonNull.string("owner")
-    t.nonNull.string("name")
-    t.nonNull.string("displayName")
-    t.string("image")
-    t.string("imageRef")
-    t.string("bannerImage")
-    t.string("bannerImageRef")
-    t.string("defaultColor")
-    t.nonNull.string("accountId")
-
-    t.field("account", {
-      type: "Account",
-      resolve: async (parent, _, { prisma }) => {
-        return prisma.account.findUnique({
-          where: {
-            id: parent.accountId,
-          },
-        })
-      },
-    })
-
-    t.nonNull.list.nonNull.field("followers", {
-      type: "Station",
-      resolve: async (parent, _, { prisma }) => {
-        const data = await prisma.station
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .followers({
-            select: {
-              following: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          })
-
-        return !data ? [] : data.map((d) => d.following)
-      },
-    })
+    t.field(StationModel.owner)
+    t.field(StationModel.name)
+    t.field(StationModel.displayName)
+    t.field(StationModel.image)
+    t.field(StationModel.imageRef)
+    t.field(StationModel.bannerImage)
+    t.field(StationModel.bannerImageRef)
+    t.field(StationModel.defaultColor)
+    t.field(StationModel.accountId)
+    t.field(StationModel.account)
+    // t.field(StationModel.followers)
     t.nonNull.field("followersCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -78,28 +57,7 @@ export const Station = objectType({
         })
       },
     })
-
-    t.nonNull.list.field("following", {
-      type: "Station",
-      resolve: async (parent, _, { prisma }) => {
-        const data = await prisma.station
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .following({
-            select: {
-              follower: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          })
-
-        return !data ? [] : data.map((d) => d.follower)
-      },
-    })
+    // t.field(StationModel.following)
     t.nonNull.field("followingCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -138,6 +96,21 @@ export const Station = objectType({
     })
 
     /**
+     * Query first 30 publishes of the station
+     */
+    t.field({
+      ...StationModel.publishes,
+      async resolve(parent, _, { prisma }) {
+        return prisma.publish.findMany({
+          where: {
+            creatorId: parent.id,
+          },
+          take: 30,
+        })
+      },
+    })
+
+    /**
      * Station's publishes count.
      */
     t.nonNull.field("publishesCount", {
@@ -151,23 +124,20 @@ export const Station = objectType({
       },
     })
 
-    /**
-     * Query first 20 publishes of the station
-     */
-    t.field("publishes", {
-      type: list("Publish"),
-      resolve: (parent, _, { prisma }) => {
-        return prisma.publish.findMany({
-          where: {
-            creatorId: parent.id,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 20,
-        }) as unknown as NexusGenObjects["Publish"][]
-      },
-    })
+    // t.field("publishes", {
+    //   type: list("Publish"),
+    //   resolve: (parent, _, { prisma }) => {
+    //     return prisma.publish.findMany({
+    //       where: {
+    //         creatorId: parent.id,
+    //       },
+    //       orderBy: {
+    //         createdAt: "desc",
+    //       },
+    //       take: 20,
+    //     }) as unknown as NexusGenObjects["Publish"][]
+    //   },
+    // })
 
     /**
      * A boolean to indicate of the querying user is the owner of the station
@@ -238,11 +208,9 @@ export const StationQuery = extendType({
 
           if (!targetId) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          const station = (await prisma.station.findUnique({
+          return prisma.station.findUnique({
             where: { id: targetId },
-          })) as NexusGenObjects["Station"] | null
-
-          return station
+          })
         } catch (error) {
           throw error
         }
@@ -262,11 +230,9 @@ export const StationQuery = extendType({
 
           if (!name) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          const station = (await prisma.station.findUnique({
+          return prisma.station.findUnique({
             where: { name },
-          })) as NexusGenObjects["Station"] | null
-
-          return station
+          })
         } catch (error) {
           throw error
         }
@@ -415,7 +381,7 @@ export const StationMutation = extendType({
     })
 
     /**
-     * For user's first station, mint a Station NFT by admin so user will not have to pay gas
+     * Mint next station NFT, user has to pay gas
      */
     t.field("mintStationNFT", {
       type: "MintStationNFTResult",

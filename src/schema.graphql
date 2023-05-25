@@ -132,6 +132,13 @@ input FetchPublishesByCatInput {
   category: Category!
 }
 
+type Follow {
+  follower: Station!
+  followerId: String!
+  following: Station!
+  followingId: String!
+}
+
 input GetMyAccountInput {
   accountType: AccountType!
 }
@@ -307,25 +314,23 @@ type SendTipsResult {
 }
 
 type Station {
-  account: Account
+  account: Account!
   accountId: String!
   bannerImage: String
   bannerImageRef: String
   createdAt: DateTime!
   defaultColor: String
   displayName: String!
-  followers: [Station!]!
   followersCount: Int!
-  following: [Station]!
   followingCount: Int!
-  id: String!
+  id: ID!
   image: String
   imageRef: String
   isFollowing: Boolean
   isOwner: Boolean
   name: String!
   owner: String!
-  publishes: [Publish]
+  publishes: [Publish!]!
   publishesCount: Int!
   tokenId: Int
   updatedAt: DateTime
