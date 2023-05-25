@@ -163,9 +163,6 @@ export interface NexusGenObjects {
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
   }
-  AuthUser: { // root type
-    uid: string; // String!
-  }
   CalculateTipsResult: { // root type
     tips: number; // Int!
   }
@@ -312,9 +309,6 @@ export interface NexusGenFieldTypes {
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
   }
-  AuthUser: { // field return type
-    uid: string; // String!
-  }
   CalculateTipsResult: { // field return type
     tips: number; // Int!
   }
@@ -368,7 +362,6 @@ export interface NexusGenFieldTypes {
     createDraftPublish: NexusGenRootTypes['CreateDraftPublishResult'] | null; // CreateDraftPublishResult
     createStation: NexusGenRootTypes['Station'] | null; // Station
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
-    createUser: NexusGenRootTypes['AuthUser'] | null; // AuthUser
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     removeFromWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -515,9 +508,6 @@ export interface NexusGenFieldTypeNames {
     type: 'AccountType'
     updatedAt: 'DateTime'
   }
-  AuthUser: { // field return type name
-    uid: 'String'
-  }
   CalculateTipsResult: { // field return type name
     tips: 'Int'
   }
@@ -571,7 +561,6 @@ export interface NexusGenFieldTypeNames {
     createDraftPublish: 'CreateDraftPublishResult'
     createStation: 'Station'
     createTip: 'Tip'
-    createUser: 'AuthUser'
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
     removeFromWatchLater: 'WriteResult'
@@ -729,9 +718,6 @@ export interface NexusGenArgTypes {
     }
     createTip: { // args
       input: NexusGenInputs['CreateTipInput']; // CreateTipInput!
-    }
-    createUser: { // args
-      address: string; // String!
     }
     mintFirstStationNFT: { // args
       input: NexusGenInputs['MintStationNFTInput']; // MintStationNFTInput!

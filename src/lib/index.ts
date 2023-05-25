@@ -6,11 +6,7 @@ import { WalletAPI } from "../dataSources/walletAPI"
 import { throwError, unauthorizedErrMessage } from "../graphql/Error"
 import { hashMessage } from "@ethersproject/hash"
 
-const { API_KEY, ALCHEMY_WEBHOOK_SIGNING_KEY, MESSAGE } = process.env
-
-export function isAuthorizedRequestor(key: string) {
-  return key === API_KEY
-}
+const { ALCHEMY_WEBHOOK_SIGNING_KEY, MESSAGE } = process.env
 
 export function isValidAchemySignature(
   body: string, // must be raw string body, not json transformed version of the body

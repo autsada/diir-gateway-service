@@ -2,7 +2,7 @@ import { WillSendRequestOptions, RESTDataSource } from "@apollo/datasource-rest"
 // KeyValueCache is the type of Apollo server's default cache
 import type { KeyValueCache } from "@apollo/utils.keyvaluecache"
 
-import { NexusGenObjects, NexusGenEnums } from "../typegen"
+import { NexusGenObjects } from "../typegen"
 import type { Environment } from "../types"
 import { authClient } from "../client/authClient"
 
@@ -41,22 +41,6 @@ export class WalletAPI extends RESTDataSource {
    */
   async verifyUser(): Promise<{ uid: string }> {
     return this.get("auth/verify")
-  }
-
-  /**
-   * @dev A route to create Firebase auth user
-   */
-  async createAuthUser(
-    address: string
-  ): Promise<{ user: NexusGenObjects["AuthUser"] }> {
-    return this.post("auth/user/create", { body: { address } })
-  }
-
-  /**
-   * @dev A route to get user's auth provider
-   */
-  async getAuthProvider(): Promise<{ provider: NexusGenEnums["AccountType"] }> {
-    return this.get("auth/provider")
   }
 
   /**

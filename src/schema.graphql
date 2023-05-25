@@ -18,10 +18,6 @@ enum AccountType {
   WALLET
 }
 
-type AuthUser {
-  uid: String!
-}
-
 input CacheSessionInput {
   accountId: String!
   address: String!
@@ -171,7 +167,6 @@ type Mutation {
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
-  createUser(address: String!): AuthUser
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   removeFromWatchLater(input: RemovePublishToPlayListInput!): WriteResult
