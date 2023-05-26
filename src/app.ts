@@ -93,17 +93,17 @@ async function startServer() {
 
 startServer()
 
-process.on("uncaughtException", (err, origin) => {
-  console.log("uncaught: ", err)
-})
+// process.on("uncaughtException", (err, origin) => {
+//   console.log("uncaught: ", err)
+// })
 
-process.once("SIGUSR2", function () {
-  process.kill(process.pid, "SIGUSR2")
-})
+// process.once("SIGUSR2", function () {
+//   process.kill(process.pid, "SIGUSR2")
+// })
 
-process.on("SIGINT", function () {
-  // this is only called on ctrl+c, not restart
-  process.kill(process.pid, "SIGINT")
-})
+// process.on("SIGINT", function () {
+//   // this is only called on ctrl+c, not restart
+//   process.kill(process.pid, "SIGINT")
+// })
 
 // "exec": "ts-node-dev --no-notify --respawn --transpile-only src/app.ts"

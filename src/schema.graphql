@@ -148,6 +148,12 @@ input FetchMyPublishesInput {
 
 input FetchPublishesByCatInput {
   category: Category!
+  cursor: String
+}
+
+input FetchPublishesInput {
+  cursor: String
+  prefer: [Category!]
 }
 
 type FetchPublishesResponse {
@@ -279,9 +285,9 @@ enum PublishKind {
 }
 
 type Query {
-  fetchAllVideos: [Publish]!
+  fetchAllVideos(input: FetchPublishesInput!): FetchPublishesResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
-  fetchVideosByCategory(input: FetchPublishesByCatInput!): [Publish]!
+  fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getPublishById(input: QueryByIdInput!): Publish

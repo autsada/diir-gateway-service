@@ -64,6 +64,11 @@ export interface NexusGenInputs {
   }
   FetchPublishesByCatInput: { // input type
     category: NexusGenEnums['Category']; // Category!
+    cursor?: string | null; // String
+  }
+  FetchPublishesInput: { // input type
+    cursor?: string | null; // String
+    prefer?: NexusGenEnums['Category'][] | null; // [Category!]
   }
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
@@ -470,9 +475,9 @@ export interface NexusGenFieldTypes {
     node: NexusGenRootTypes['Publish'] | null; // Publish
   }
   Query: { // field return type
-    fetchAllVideos: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
+    fetchAllVideos: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchMyPublishes: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
-    fetchVideosByCategory: Array<NexusGenRootTypes['Publish'] | null>; // [Publish]!
+    fetchVideosByCategory: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     getBalance: string; // String!
     getMyAccount: NexusGenRootTypes['Account'] | null; // Account
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
@@ -695,9 +700,9 @@ export interface NexusGenFieldTypeNames {
     node: 'Publish'
   }
   Query: { // field return type name
-    fetchAllVideos: 'Publish'
+    fetchAllVideos: 'FetchPublishesResponse'
     fetchMyPublishes: 'FetchPublishesResponse'
-    fetchVideosByCategory: 'Publish'
+    fetchVideosByCategory: 'FetchPublishesResponse'
     getBalance: 'String'
     getMyAccount: 'Account'
     getPublishById: 'Publish'
@@ -817,6 +822,9 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
+    fetchAllVideos: { // args
+      input: NexusGenInputs['FetchPublishesInput']; // FetchPublishesInput!
+    }
     fetchMyPublishes: { // args
       input: NexusGenInputs['FetchMyPublishesInput']; // FetchMyPublishesInput!
     }
