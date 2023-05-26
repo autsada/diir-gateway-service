@@ -19,30 +19,6 @@ import {
 } from "./Error"
 import { recoverAddress, validateAuthenticity } from "../lib"
 
-export const Edge = objectType({
-  name: "Edge",
-  definition(t) {
-    t.string("cursor")
-    t.field("node", { type: "Station" })
-  },
-})
-
-export const PageInfo = objectType({
-  name: "PageInfo",
-  definition(t) {
-    t.string("endCursor")
-    t.boolean("hasNextPage")
-  },
-})
-
-export const Response = objectType({
-  name: "Response",
-  definition(t) {
-    t.nonNull.field("pageInfo", { type: "PageInfo" })
-    t.nonNull.list.field("edges", { type: "Edge" })
-  },
-})
-
 export const AccountType = enumType(AccountTypeEnum)
 
 /**

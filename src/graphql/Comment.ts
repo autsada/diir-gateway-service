@@ -1,76 +1,60 @@
+import { objectType, enumType, extendType, nonNull, list } from "nexus"
 import {
-  objectType,
-  enumType,
-  extendType,
-  nonNull,
-  list,
-  inputObjectType,
-} from "nexus"
+  Comment as CommentModel,
+  CommentType as CommentTypeEnum,
+  CommentLike as CommentLikeModel,
+  CommentDisLike as CommentDisLikeModel,
+} from "nexus-prisma"
 
-import { NexusGenInputs, NexusGenObjects } from "../typegen"
+import { NexusGenInputs } from "../typegen"
 import { throwError, badInputErrMessage } from "./Error"
 
-export const CommentType = enumType({
-  name: "CommentType",
-  members: ["PUBLISH", "COMMENT"],
+export const CommentType = enumType(CommentTypeEnum)
+
+export const CommentLike = objectType({
+  name: CommentLikeModel.$name,
+  definition(t) {
+    t.field(CommentLikeModel.commentId)
+    t.field(CommentLikeModel.comment)
+    t.field(CommentLikeModel.stationId)
+    t.field(CommentLikeModel.station)
+  },
+})
+
+export const CommentDisLike = objectType({
+  name: CommentDisLikeModel.$name,
+  definition(t) {
+    t.field(CommentDisLikeModel.commentId)
+    t.field(CommentDisLikeModel.comment)
+    t.field(CommentDisLikeModel.stationId)
+    t.field(CommentDisLikeModel.station)
+  },
 })
 
 /**
  * A type for publish's comments.
  */
 export const Comment = objectType({
-  name: "Comment",
+  name: CommentModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.field("updatedAt", { type: "DateTime" })
-    t.nonNull.string("creatorId")
-    t.nonNull.string("publishId")
-    t.string("commentId")
-    t.nonNull.string("content")
-    t.nonNull.field("commentType", { type: "CommentType" })
+    t.field(CommentModel.id)
+    t.field(CommentModel.createdAt)
+    t.field(CommentModel.updatedAt)
+    t.field(CommentModel.creator)
+    t.field(CommentModel.creatorId)
+    t.field(CommentModel.publishId)
+    t.field(CommentModel.publish)
+    t.field(CommentModel.commentId)
+    t.field(CommentModel.comment)
+    t.field(CommentModel.commentType)
+    t.field(CommentModel.content)
+    t.field(CommentModel.comments)
+    t.field(CommentModel.likes)
+    t.field(CommentModel.disLikes)
 
     /**
-     * Comment's creator
+     * Number of likes a comment has
      */
-    t.field("creator", {
-      type: "Station",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.comment
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .creator() as unknown as NexusGenObjects["Station"]
-      },
-    })
-
-    /**
-     * A list of stations that liked the comment.
-     */
-    t.nonNull.list.field("likes", {
-      type: "Station",
-      resolve: async (parent, _, { prisma }) => {
-        const data = await prisma.comment
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .likes({
-            select: {
-              station: true,
-            },
-          })
-
-        return !data
-          ? []
-          : (data.map(
-              (d) => d.station
-            ) as unknown as NexusGenObjects["Station"][])
-      },
-    })
     t.nonNull.field("likesCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -81,6 +65,7 @@ export const Comment = objectType({
         })
       },
     })
+
     /**
      * A boolean to check whether a station (who sends the query) liked the comment or not, if no `requestorId` provided resolve to null.
      */
@@ -107,6 +92,9 @@ export const Comment = objectType({
       },
     })
 
+    /**
+     * Number of dislikes a comment has
+     */
     t.nonNull.field("disLikesCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -117,6 +105,7 @@ export const Comment = objectType({
         })
       },
     })
+
     /**
      * A boolean to check whether a station (who sends the query) disliked the comment or not, if no `requestorId` provided resolve to null.
      */

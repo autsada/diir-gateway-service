@@ -4,9 +4,19 @@ import {
   enumType,
   nonNull,
   inputObjectType,
-  stringArg,
   list,
 } from "nexus"
+import { Publish as PublishType } from "@prisma/client"
+import {
+  Category as CategoryEnum,
+  PublishKind as PublishKindEnum,
+  PlaybackLink as PlaybackLinkModel,
+  ThumbnailSource as ThumbnailSourceEnum,
+  Visibility as VisibilityEnum,
+  Publish as PublishModel,
+  Like as LikeModel,
+  DisLike as DisLikeModel,
+} from "nexus-prisma"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
 import {
@@ -16,162 +26,89 @@ import {
   unauthorizedErrMessage,
 } from "./Error"
 import { validateAuthenticity } from "../lib"
+import { FETCH_QTY } from "../lib/constants"
 
-/**
- * Publish's category.
- */
-export const Category = enumType({
-  name: "Category",
-  members: [
-    "Music",
-    "Movies",
-    "Entertainment",
-    "Sports",
-    "Food",
-    "Travel",
-    "Gaming",
-    "News",
-    "Animals",
-    "Education",
-    "Science",
-    "Technology",
-    "Programming",
-    "LifeStyle",
-    "Vehicles",
-    "Children",
-    "Women",
-    "Men",
-    "Other",
-  ],
-})
-
-export const PublishKind = enumType({
-  name: "PublishKind",
-  members: ["Video", "Adds", "Blog", "Podcast", "Short"],
-})
-
-export const PlaybackLink = objectType({
-  name: "PlaybackLink",
-  definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.field("updatedAt", { type: "DateTime" })
-    t.nonNull.string("videoId")
-    t.nonNull.string("thumbnail")
-    t.nonNull.string("preview")
-    t.nonNull.float("duration")
-    t.nonNull.string("hls")
-    t.nonNull.string("dash")
-    t.nonNull.string("publishId")
-  },
-})
-
+export const Category = enumType(CategoryEnum)
+export const PublishKind = enumType(PublishKindEnum)
 export const ThumbSource = enumType({
   name: "ThumbSource",
   members: ["generated", "custom"],
 })
+export const ThumbnailSource = enumType(ThumbnailSourceEnum)
+export const Visibility = enumType(VisibilityEnum)
 
-export const Visibility = enumType({
-  name: "Visibility",
-  members: ["draft", "private", "public"],
+export const PlaybackLink = objectType({
+  name: PlaybackLinkModel.$name,
+  definition(t) {
+    t.field(PlaybackLinkModel.id)
+    t.field(PlaybackLinkModel.createdAt)
+    t.field(PlaybackLinkModel.updatedAt)
+    t.field(PlaybackLinkModel.videoId)
+    t.field(PlaybackLinkModel.thumbnail)
+    t.field(PlaybackLinkModel.preview)
+    t.field(PlaybackLinkModel.duration)
+    t.field(PlaybackLinkModel.hls)
+    t.field(PlaybackLinkModel.dash)
+    t.field(PlaybackLinkModel.publishId)
+    t.field(PlaybackLinkModel.publish)
+  },
 })
 
-export const DraftPublish = objectType({
-  name: "DraftPublish",
+export const Like = objectType({
+  name: LikeModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.nonNull.string("creatorId")
-    t.nonNull.string("filename")
-    t.nonNull.boolean("public")
-    t.nonNull.boolean("uploadError")
-    t.nonNull.boolean("transcodeError")
-    t.nonNull.boolean("uploading")
+    t.field(LikeModel.createdAt)
+    t.field(LikeModel.stationId)
+    t.field(LikeModel.publishId)
+    t.field(LikeModel.station)
+    t.field(LikeModel.publish)
+  },
+})
+
+export const DisLike = objectType({
+  name: DisLikeModel.$name,
+  definition(t) {
+    t.field(DisLikeModel.createdAt)
+    t.field(DisLikeModel.stationId)
+    t.field(DisLikeModel.publishId)
+    t.field(DisLikeModel.station)
+    t.field(DisLikeModel.publish)
   },
 })
 
 export const Publish = objectType({
-  name: "Publish",
+  name: PublishModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.field("updatedAt", { type: "DateTime" })
-    t.nonNull.string("creatorId")
-    t.string("contentURI")
-    t.string("contentRef")
-    t.string("filename")
-    t.string("thumbnail")
-    t.string("thumbnailRef")
-    t.nonNull.field("thumbSource", { type: "ThumbSource" })
-    t.string("title")
-    t.string("description")
-    t.nonNull.int("views")
-    t.field("primaryCategory", { type: "Category" })
-    t.field("secondaryCategory", { type: "Category" })
-    t.field("kind", { type: "PublishKind" })
-    t.nonNull.field("visibility", { type: "Visibility" })
-    t.nonNull.boolean("uploadError")
-    t.nonNull.boolean("transcodeError")
-    t.nonNull.boolean("uploading")
+    t.field(PublishModel.id)
+    t.field(PublishModel.createdAt)
+    t.field(PublishModel.updatedAt)
+    t.field(PublishModel.creatorId)
+    t.field(PublishModel.contentURI)
+    t.field(PublishModel.contentRef)
+    t.field(PublishModel.filename)
+    t.field(PublishModel.thumbnail)
+    t.field(PublishModel.thumbnailRef)
+    t.field(PublishModel.thumbSource)
+    t.field(PublishModel.title)
+    t.field(PublishModel.description)
+    t.field(PublishModel.views)
+    t.field(PublishModel.primaryCategory)
+    t.field(PublishModel.secondaryCategory)
+    t.field(PublishModel.kind)
+    t.field(PublishModel.visibility)
+    t.field(PublishModel.uploadError)
+    t.field(PublishModel.transcodeError)
+    t.field(PublishModel.uploading)
+    t.field(PublishModel.creator)
+    t.field(PublishModel.playback)
+    t.field(PublishModel.likes)
+    t.field(PublishModel.dislikes)
+    t.field(PublishModel.comments)
+    t.field(PublishModel.tips)
 
     /**
-     * Publish's creator.
+     * Number of likes a publish has
      */
-    t.field("creator", {
-      type: "Station",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.station.findUnique({
-          where: {
-            id: parent.creatorId,
-          },
-        })
-      },
-    })
-
-    /**
-     * Publish's playback
-     */
-    t.field("playback", {
-      type: "PlaybackLink",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.publish
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .playback() as unknown as NexusGenObjects["PlaybackLink"]
-      },
-    })
-
-    /**
-     * A list of stations that liked the publish.
-     */
-    t.nonNull.list.field("likes", {
-      type: "Station",
-      resolve: async (parent, _, { prisma }) => {
-        const data = await prisma.publish
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .likes({
-            select: {
-              station: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          })
-
-        return !data
-          ? []
-          : (data.map(
-              (d) => d.station
-            ) as unknown as NexusGenObjects["Station"][])
-      },
-    })
     t.nonNull.field("likesCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -182,6 +119,7 @@ export const Publish = objectType({
         })
       },
     })
+
     /**
      * A boolean to check whether a station (who sends the query) liked the publish or not, if no `requestorId` provided resolve to null.
      */
@@ -208,6 +146,9 @@ export const Publish = objectType({
       },
     })
 
+    /**
+     * Number of dislikes a publish has
+     */
     t.nonNull.field("disLikesCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -218,6 +159,7 @@ export const Publish = objectType({
         })
       },
     })
+
     /**
      * A boolean to check whether a station (who sends the query) disliked the publish or not, if no `requestorId` provided resolve to null.
      */
@@ -308,7 +250,7 @@ export const Publish = objectType({
     })
 
     /**
-     * First 100 comments.
+     * First 50 comments.
      */
     t.nullable.field("comments", {
       type: nonNull(list("Comment")),
@@ -327,37 +269,18 @@ export const Publish = objectType({
   },
 })
 
-export const WatchLater = objectType({
-  name: "WatchLater",
-  definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.nonNull.string("stationId")
-    t.nonNull.string("publishId")
-    t.field("publish", {
-      type: "Publish",
-      resolve(parent, _, { prisma }) {
-        return prisma.publish.findUnique({
-          where: {
-            id: parent.publishId,
-          },
-        })
-      },
-    })
-  },
-})
-
 export const QueryPublishKind = enumType({
   name: "QueryPublishKind",
   members: ["all", "videos", "podcasts", "blogs", "adds"],
 })
 
-export const GetMyPublishesInput = inputObjectType({
-  name: "GetMyPublishesInput",
+export const FetchMyPublishesInput = inputObjectType({
+  name: "FetchMyPublishesInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("creatorId") // Creator station id
+    t.string("cursor") // A point in the database to start query from --> uses `id` column
     t.nonNull.field("kind", { type: "QueryPublishKind" })
   },
 })
@@ -369,12 +292,21 @@ export const FetchPublishesByCatInput = inputObjectType({
   },
 })
 
-export const GetWatchLaterInput = inputObjectType({
-  name: "GetWatchLaterInput",
+export const PublishEdge = objectType({
+  name: "PublishEdge",
   definition(t) {
-    t.nonNull.string("owner")
-    t.nonNull.string("accountId")
-    t.nonNull.string("stationId")
+    t.string("cursor")
+    t.field("node", {
+      type: "Publish",
+    })
+  },
+})
+
+export const FetchPublishesResponse = objectType({
+  name: "FetchPublishesResponse",
+  definition(t) {
+    t.nonNull.field("pageInfo", { type: "PageInfo" })
+    t.nonNull.list.nonNull.field("edges", { type: "PublishEdge" })
   },
 })
 
@@ -382,21 +314,20 @@ export const PublishQuery = extendType({
   type: "Query",
   definition(t) {
     /**
-     * Get a publish for creator, used for upload action in the UI
+     * Get a publish by id
      */
-    t.field("getPublishForCreator", {
+    t.field("getPublishById", {
       type: "Publish",
-      args: { id: nonNull(stringArg()) },
-      resolve: async (_parent, { id }, { prisma }) => {
+      args: { input: nonNull("QueryByIdInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
         try {
+          const { targetId } = input
+
           return prisma.publish.findUnique({
             where: {
-              id,
+              id: targetId,
             },
-            include: {
-              playback: true,
-            },
-          }) as unknown as NexusGenObjects["Publish"]
+          })
         } catch (error) {
           throw error
         }
@@ -404,12 +335,12 @@ export const PublishQuery = extendType({
     })
 
     /**
-     * Get all publishes created by the creator
-     * TODO: Add pagination
+     * Fetch all publishes created by the creator
+     * $TODO: Add pagination
      */
-    t.field("getMyPublishes", {
-      type: nonNull(list("Publish")),
-      args: { input: nonNull("GetMyPublishesInput") },
+    t.field("fetchMyPublishes", {
+      type: "FetchPublishesResponse",
+      args: { input: nonNull("FetchMyPublishesInput") },
       resolve: async (
         _parent,
         { input },
@@ -417,7 +348,7 @@ export const PublishQuery = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, creatorId, kind } = input
+          const { owner, accountId, creatorId, cursor, kind } = input
           if (!owner || !accountId || !creatorId || !kind)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
@@ -440,110 +371,216 @@ export const PublishQuery = extendType({
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Query publises by creator id
-          let publishes: NexusGenObjects["Publish"][] = []
+          let publishes: PublishType[] = []
 
           if (kind === "all") {
-            publishes = await prisma.publish.findMany({
-              where: {
-                creatorId,
-              },
-              include: {
-                playback: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            })
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                },
+                take: FETCH_QTY,
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            }
           } else if (kind === "videos") {
-            publishes = await prisma.publish.findMany({
-              where: {
-                creatorId,
-                kind: {
-                  in: ["Video", "Short"],
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    in: ["Video", "Short"],
+                  },
                 },
-              },
-              include: {
-                playback: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            })
+                take: FETCH_QTY,
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    in: ["Video", "Short"],
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            }
           } else if (kind === "podcasts") {
-            publishes = await prisma.publish.findMany({
-              where: {
-                creatorId,
-                kind: {
-                  equals: "Podcast",
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Podcast",
+                  },
                 },
-              },
-              include: {
-                playback: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            })
+                take: FETCH_QTY,
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Podcast",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            }
           } else if (kind === "blogs") {
-            publishes = await prisma.publish.findMany({
-              where: {
-                creatorId,
-                kind: {
-                  equals: "Blog",
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Blog",
+                  },
                 },
-              },
-              include: {
-                playback: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            })
+                take: FETCH_QTY,
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Blog",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            }
           } else if (kind === "adds") {
-            publishes = await prisma.publish.findMany({
-              where: {
-                creatorId,
-                kind: {
-                  equals: "Adds",
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Adds",
+                  },
                 },
-              },
-              include: {
-                playback: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            })
+                take: FETCH_QTY,
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Adds",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy: {
+                  createdAt: "desc",
+                },
+              })
+            }
           }
 
-          return publishes
-        } catch (error) {
-          throw error
-        }
-      },
-    })
+          if (publishes.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = publishes[publishes.length - 1].id
 
-    /**
-     * Get a publish by id
-     */
-    t.field("getPublishById", {
-      type: "Publish",
-      args: { input: nonNull("QueryByIdInput") },
-      resolve: async (_parent, { input }, { prisma }) => {
-        try {
-          const { targetId } = input
+            // Check if there is next page
+            const nextQuery = await prisma.publish.findMany({
+              where: {
+                creatorId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
 
-          return prisma.publish.findUnique({
-            where: {
-              id: targetId,
-            },
-            include: {
-              creator: true,
-              playback: true,
-              comments: true,
-              likes: true,
-            },
-          }) as unknown as NexusGenObjects["Publish"]
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: publishes.map((pub) => ({
+                cursor: pub.id,
+                node: pub,
+              })),
+            }
+          } else {
+            // No more items to be fetched
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: publishes.map((pub) => ({
+                cursor: pub.id,
+                node: pub,
+              })),
+            }
+          }
         } catch (error) {
           throw error
         }
@@ -629,48 +666,6 @@ export const PublishQuery = extendType({
         }
       },
     })
-
-    /**
-     * Get watch later list of a station
-     * TODO: Add pagination
-     */
-    t.field("getWatchLater", {
-      type: nonNull(list("WatchLater")),
-      args: { input: nonNull("GetWatchLaterInput") },
-      resolve: async (
-        _parent,
-        { input },
-        { prisma, dataSources, signature }
-      ) => {
-        try {
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId } = input
-          if (!owner || !accountId || !stationId)
-            throwError(badInputErrMessage, "BAD_USER_INPUT")
-
-          // Validate authentication/authorization
-          await validateAuthenticity({
-            accountId,
-            owner,
-            dataSources,
-            prisma,
-            signature,
-          })
-
-          return prisma.watchLater.findMany({
-            where: {
-              stationId,
-            },
-            include: {
-              publish: true,
-            },
-            take: 50,
-          })
-        } catch (error) {
-          throw error
-        }
-      },
-    })
   },
 })
 
@@ -710,26 +705,6 @@ export const UpdatePublishInput = inputObjectType({
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
     t.field("visibility", { type: "Visibility" })
-  },
-})
-
-export const SavePublishToPlayListInput = inputObjectType({
-  name: "SavePublishToPlayListInput",
-  definition(t) {
-    t.nonNull.string("owner")
-    t.nonNull.string("accountId")
-    t.nonNull.string("stationId")
-    t.nonNull.string("publishId")
-  },
-})
-
-export const RemovePublishToPlayListInput = inputObjectType({
-  name: "RemovePublishToPlayListInput",
-  definition(t) {
-    t.nonNull.string("owner")
-    t.nonNull.string("accountId")
-    t.nonNull.string("stationId")
-    t.nonNull.string("id") // the id of the item to be removed
   },
 })
 
@@ -853,95 +828,6 @@ export const PublishMutation = extendType({
           })
 
           return publish as unknown as NexusGenObjects["Publish"]
-        } catch (error) {
-          throw error
-        }
-      },
-    })
-
-    /**
-     * Add to watch later
-     */
-    t.field("addToWatchLater", {
-      type: "WriteResult",
-      args: { input: nonNull("SavePublishToPlayListInput") },
-      resolve: async (
-        _parent,
-        { input },
-        { dataSources, prisma, signature }
-      ) => {
-        try {
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId, publishId } = input
-          if (!owner || !accountId || !publishId)
-            throwError(badInputErrMessage, "BAD_USER_INPUT")
-
-          // Validate authentication/authorization
-          await validateAuthenticity({
-            accountId,
-            owner,
-            dataSources,
-            prisma,
-            signature,
-          })
-
-          await prisma.watchLater.create({
-            data: {
-              stationId,
-              publishId,
-            },
-          })
-
-          return { status: "Ok" }
-        } catch (error) {
-          throw error
-        }
-      },
-    })
-
-    /**
-     * Remove from watch later
-     */
-    t.field("removeFromWatchLater", {
-      type: "WriteResult",
-      args: { input: nonNull("RemovePublishToPlayListInput") },
-      resolve: async (
-        _parent,
-        { input },
-        { dataSources, prisma, signature }
-      ) => {
-        try {
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId, id } = input
-          if (!owner || !accountId || !stationId || !id)
-            throwError(badInputErrMessage, "BAD_USER_INPUT")
-
-          // Validate authentication/authorization
-          await validateAuthenticity({
-            accountId,
-            owner,
-            dataSources,
-            prisma,
-            signature,
-          })
-
-          // Check if the given station id owns the item
-          let item = await prisma.watchLater.findUnique({
-            where: {
-              id,
-            },
-          })
-          if (!item) throwError(notFoundErrMessage, "NOT_FOUND")
-          if (item?.stationId !== stationId)
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
-
-          await prisma.watchLater.delete({
-            where: {
-              id,
-            },
-          })
-
-          return { status: "Ok" }
         } catch (error) {
           throw error
         }

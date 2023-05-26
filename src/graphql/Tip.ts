@@ -1,71 +1,26 @@
 import { objectType, extendType, nonNull, inputObjectType } from "nexus"
+import { Tip as TipModel } from "nexus-prisma"
 
 import { throwError, badInputErrMessage } from "./Error"
-import { NexusGenObjects } from "../typegen"
 
 /**
  * A Fee type that map to the prisma LikeFee model.
  */
 export const Tip = objectType({
-  name: "Tip",
+  name: TipModel.$name,
   definition(t) {
-    t.nonNull.string("id")
-    t.nonNull.field("createdAt", { type: "DateTime" })
-    t.nonNull.string("senderId")
-    t.nonNull.string("from")
-    t.nonNull.string("publishId")
-    t.nonNull.string("receiverId")
-    t.nonNull.string("to")
-    t.nonNull.string("amount")
-    t.nonNull.string("fee")
-
-    /**
-     * A publish that the tip belongs to.
-     */
-    t.nullable.field("publish", {
-      type: "Publish",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.tip
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .publish()
-      },
-    })
-
-    /**
-     * Sender
-     */
-    t.field("sender", {
-      type: "Station",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.tip
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .sender() as unknown as NexusGenObjects["Station"]
-      },
-    })
-
-    /**
-     * Receiver
-     */
-    t.field("receiver", {
-      type: "Station",
-      resolve: (parent, _, { prisma }) => {
-        return prisma.tip
-          .findUnique({
-            where: {
-              id: parent.id,
-            },
-          })
-          .receiver() as unknown as NexusGenObjects["Station"]
-      },
-    })
+    t.field(TipModel.id)
+    t.field(TipModel.createdAt)
+    t.field(TipModel.senderId)
+    t.field(TipModel.sender)
+    t.field(TipModel.from)
+    t.field(TipModel.publishId)
+    t.field(TipModel.publish)
+    t.field(TipModel.receiverId)
+    t.field(TipModel.receiver)
+    t.field(TipModel.to)
+    t.field(TipModel.amount)
+    t.field(TipModel.fee)
   },
 })
 

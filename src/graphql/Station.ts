@@ -46,7 +46,6 @@ export const Station = objectType({
     t.field(StationModel.defaultColor)
     t.field(StationModel.accountId)
     t.field(StationModel.account)
-    // t.field(StationModel.followers)
     t.nonNull.field("followersCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -57,7 +56,6 @@ export const Station = objectType({
         })
       },
     })
-    // t.field(StationModel.following)
     t.nonNull.field("followingCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
@@ -123,21 +121,6 @@ export const Station = objectType({
         })
       },
     })
-
-    // t.field("publishes", {
-    //   type: list("Publish"),
-    //   resolve: (parent, _, { prisma }) => {
-    //     return prisma.publish.findMany({
-    //       where: {
-    //         creatorId: parent.id,
-    //       },
-    //       orderBy: {
-    //         createdAt: "desc",
-    //       },
-    //       take: 20,
-    //     }) as unknown as NexusGenObjects["Publish"][]
-    //   },
-    // })
 
     /**
      * A boolean to indicate of the querying user is the owner of the station
