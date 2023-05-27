@@ -872,7 +872,6 @@ export const PublishQuery = extendType({
       },
     })
 
-    // TODO: Implement pagination
     t.field("fetchVideosByCategory", {
       type: "FetchPublishesResponse",
       args: { input: nonNull("FetchPublishesByCatInput") },

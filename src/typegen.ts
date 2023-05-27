@@ -70,13 +70,14 @@ export interface NexusGenInputs {
     cursor?: string | null; // String
     prefer?: NexusGenEnums['Category'][] | null; // [Category!]
   }
-  GetMyAccountInput: { // input type
-    accountType: NexusGenEnums['AccountType']; // AccountType!
-  }
-  GetWatchLaterInput: { // input type
+  FetchWatchLaterInput: { // input type
     accountId: string; // String!
+    cursor?: string | null; // String
     owner: string; // String!
     stationId: string; // String!
+  }
+  GetMyAccountInput: { // input type
+    accountType: NexusGenEnums['AccountType']; // AccountType!
   }
   MintStationNFTInput: { // input type
     accountId: string; // String!
@@ -208,6 +209,10 @@ export interface NexusGenObjects {
     edges: NexusGenRootTypes['PublishEdge'][]; // [PublishEdge!]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
+  FetchWatchLaterResponse: { // root type
+    edges: NexusGenRootTypes['WatchLaterEdge'][]; // [WatchLaterEdge!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
   Follow: { // root type
     followerId: string; // String!
     followingId: string; // String!
@@ -302,6 +307,10 @@ export interface NexusGenObjects {
     publishId: string; // String!
     stationId: string; // String!
   }
+  WatchLaterEdge: { // root type
+    cursor?: string | null; // String
+    node?: NexusGenRootTypes['WatchLater'] | null; // WatchLater
+  }
   WriteResult: { // root type
     status: string; // String!
   }
@@ -381,6 +390,10 @@ export interface NexusGenFieldTypes {
   }
   FetchPublishesResponse: { // field return type
     edges: NexusGenRootTypes['PublishEdge'][]; // [PublishEdge!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
+  FetchWatchLaterResponse: { // field return type
+    edges: NexusGenRootTypes['WatchLaterEdge'][]; // [WatchLaterEdge!]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
   Follow: { // field return type
@@ -478,12 +491,12 @@ export interface NexusGenFieldTypes {
     fetchAllVideos: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchMyPublishes: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchVideosByCategory: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
+    fetchWatchLater: NexusGenRootTypes['FetchWatchLaterResponse'] | null; // FetchWatchLaterResponse
     getBalance: string; // String!
     getMyAccount: NexusGenRootTypes['Account'] | null; // Account
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station
     getStationByName: NexusGenRootTypes['Station'] | null; // Station
-    getWatchLater: Array<NexusGenRootTypes['WatchLater'] | null>; // [WatchLater]!
     listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
   }
@@ -536,6 +549,10 @@ export interface NexusGenFieldTypes {
     publishId: string; // String!
     station: NexusGenRootTypes['Station']; // Station!
     stationId: string; // String!
+  }
+  WatchLaterEdge: { // field return type
+    cursor: string | null; // String
+    node: NexusGenRootTypes['WatchLater'] | null; // WatchLater
   }
   WriteResult: { // field return type
     status: string; // String!
@@ -606,6 +623,10 @@ export interface NexusGenFieldTypeNames {
   }
   FetchPublishesResponse: { // field return type name
     edges: 'PublishEdge'
+    pageInfo: 'PageInfo'
+  }
+  FetchWatchLaterResponse: { // field return type name
+    edges: 'WatchLaterEdge'
     pageInfo: 'PageInfo'
   }
   Follow: { // field return type name
@@ -703,12 +724,12 @@ export interface NexusGenFieldTypeNames {
     fetchAllVideos: 'FetchPublishesResponse'
     fetchMyPublishes: 'FetchPublishesResponse'
     fetchVideosByCategory: 'FetchPublishesResponse'
+    fetchWatchLater: 'FetchWatchLaterResponse'
     getBalance: 'String'
     getMyAccount: 'Account'
     getPublishById: 'Publish'
     getStationById: 'Station'
     getStationByName: 'Station'
-    getWatchLater: 'WatchLater'
     listCommentsByCommentId: 'Comment'
     listCommentsByPublishId: 'Comment'
   }
@@ -761,6 +782,10 @@ export interface NexusGenFieldTypeNames {
     publishId: 'String'
     station: 'Station'
     stationId: 'String'
+  }
+  WatchLaterEdge: { // field return type name
+    cursor: 'String'
+    node: 'WatchLater'
   }
   WriteResult: { // field return type name
     status: 'String'
@@ -831,6 +856,9 @@ export interface NexusGenArgTypes {
     fetchVideosByCategory: { // args
       input: NexusGenInputs['FetchPublishesByCatInput']; // FetchPublishesByCatInput!
     }
+    fetchWatchLater: { // args
+      input: NexusGenInputs['FetchWatchLaterInput']; // FetchWatchLaterInput!
+    }
     getBalance: { // args
       address: string; // String!
     }
@@ -845,9 +873,6 @@ export interface NexusGenArgTypes {
     }
     getStationByName: { // args
       input: NexusGenInputs['QueryByNameInput']; // QueryByNameInput!
-    }
-    getWatchLater: { // args
-      input: NexusGenInputs['GetWatchLaterInput']; // GetWatchLaterInput!
     }
     listCommentsByCommentId: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!

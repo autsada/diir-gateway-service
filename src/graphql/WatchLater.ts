@@ -1,5 +1,6 @@
 import { extendType, inputObjectType, list, nonNull, objectType } from "nexus"
 import { WatchLater as WatchLaterModel } from "nexus-prisma"
+import { WatchLater as WatchLaterType } from "@prisma/client"
 
 import { validateAuthenticity } from "../lib"
 import {
@@ -8,6 +9,7 @@ import {
   notFoundErrMessage,
   unauthorizedErrMessage,
 } from "./Error"
+import { FETCH_QTY } from "../lib/constants"
 
 /**
  * A Fee type that map to the prisma LikeFee model.
@@ -24,12 +26,31 @@ export const WatchLater = objectType({
   },
 })
 
-export const GetWatchLaterInput = inputObjectType({
-  name: "GetWatchLaterInput",
+export const FetchWatchLaterInput = inputObjectType({
+  name: "FetchWatchLaterInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("stationId")
+    t.string("cursor")
+  },
+})
+
+export const WatchLaterEdge = objectType({
+  name: "WatchLaterEdge",
+  definition(t) {
+    t.string("cursor")
+    t.field("node", {
+      type: "WatchLater",
+    })
+  },
+})
+
+export const FetchWatchLaterResponse = objectType({
+  name: "FetchWatchLaterResponse",
+  definition(t) {
+    t.nonNull.field("pageInfo", { type: "PageInfo" })
+    t.nonNull.list.nonNull.field("edges", { type: "WatchLaterEdge" })
   },
 })
 
@@ -37,12 +58,11 @@ export const WatchLaterQuery = extendType({
   type: "Query",
   definition(t) {
     /**
-     * Get watch later list of a station
-     * TODO: Add pagination
+     * Fetch watch later list of a station
      */
-    t.field("getWatchLater", {
-      type: nonNull(list("WatchLater")),
-      args: { input: nonNull("GetWatchLaterInput") },
+    t.field("fetchWatchLater", {
+      type: "FetchWatchLaterResponse",
+      args: { input: nonNull("FetchWatchLaterInput") },
       resolve: async (
         _parent,
         { input },
@@ -50,7 +70,7 @@ export const WatchLaterQuery = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId } = input
+          const { owner, accountId, stationId, cursor } = input
           if (!owner || !accountId || !stationId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
@@ -63,15 +83,77 @@ export const WatchLaterQuery = extendType({
             signature,
           })
 
-          return prisma.watchLater.findMany({
-            where: {
-              stationId,
-            },
-            include: {
-              publish: true,
-            },
-            take: 50,
-          })
+          let watchLater: WatchLaterType[] = []
+
+          if (!cursor) {
+            // A. First query
+            watchLater = await prisma.watchLater.findMany({
+              where: {
+                stationId,
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else {
+            // B. Consecutive queries
+            watchLater = await prisma.watchLater.findMany({
+              where: {
+                stationId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          if (watchLater.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = watchLater[watchLater.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.watchLater.findMany({
+              where: {
+                stationId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: watchLater.map((wl) => ({
+                cursor: wl.id,
+                node: wl,
+              })),
+            }
+          } else {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: watchLater.map((wl) => ({
+                cursor: wl.id,
+                node: wl,
+              })),
+            }
+          }
         } catch (error) {
           throw error
         }

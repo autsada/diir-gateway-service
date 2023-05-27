@@ -161,6 +161,18 @@ type FetchPublishesResponse {
   pageInfo: PageInfo!
 }
 
+input FetchWatchLaterInput {
+  accountId: String!
+  cursor: String
+  owner: String!
+  stationId: String!
+}
+
+type FetchWatchLaterResponse {
+  edges: [WatchLaterEdge!]!
+  pageInfo: PageInfo!
+}
+
 type Follow {
   follower: Station!
   followerId: String!
@@ -170,12 +182,6 @@ type Follow {
 
 input GetMyAccountInput {
   accountType: AccountType!
-}
-
-input GetWatchLaterInput {
-  accountId: String!
-  owner: String!
-  stationId: String!
 }
 
 type Like {
@@ -288,12 +294,12 @@ type Query {
   fetchAllVideos(input: FetchPublishesInput!): FetchPublishesResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
+  fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getPublishById(input: QueryByIdInput!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
-  getWatchLater(input: GetWatchLaterInput!): [WatchLater]!
   listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
   listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
 }
@@ -438,6 +444,11 @@ type WatchLater {
   publishId: String!
   station: Station!
   stationId: String!
+}
+
+type WatchLaterEdge {
+  cursor: String
+  node: WatchLater
 }
 
 type WriteResult {
