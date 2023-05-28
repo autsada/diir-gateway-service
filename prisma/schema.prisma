@@ -58,7 +58,8 @@ model Station {
     comments          Comment[]
     commentLikes      CommentLike[]
     commentDisLikes   CommentDisLike[]
-    WatchLater        WatchLater[]
+    watchLater        WatchLater[]
+    playlists         Playlist[]
 }
 
 model Follow {
@@ -157,7 +158,8 @@ model Publish {
     dislikes          DisLike[]
     tips              Tip[]
     comments          Comment[]       @relation("MainComment")
-    WatchLater        WatchLater[]
+    watchLater        WatchLater[]
+    playlistItems     PlaylistItem[]
 }
 
 // Publish's Like
@@ -252,4 +254,27 @@ model WatchLater {
     stationId String
     publish   Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
     publishId String
+}
+
+model Playlist {
+    id        String         @id @default(cuid())
+    createdAt DateTime       @default(now())
+    name      String         @db.VarChar(120)
+    ownerId   String // Station id who owns the playlist
+    owner     Station        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    items     PlaylistItem[]
+
+    @@unique(fields: [name, ownerId], name: "identifier")
+}
+
+model PlaylistItem {
+    id         String   @id @default(cuid())
+    createdAt  DateTime @default(now())
+    ownerId    String // A station id who owns the item
+    playlistId String
+    playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+    publishId  String
+    publish    Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+
+    @@unique(fields: [playlistId, publishId], name: "identifier")
 }

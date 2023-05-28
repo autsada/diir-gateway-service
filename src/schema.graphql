@@ -18,6 +18,21 @@ enum AccountType {
   WALLET
 }
 
+input AddToPlaylistInput {
+  accountId: String!
+  owner: String!
+  playlistId: String!
+  publishId: String!
+  stationId: String!
+}
+
+input AddToWatchLaterInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
 input CacheSessionInput {
   accountId: String!
   address: String!
@@ -48,6 +63,19 @@ enum Category {
   Travel
   Vehicles
   Women
+}
+
+input CheckPublishPlaylistsInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
+type CheckPublishPlaylistsResponse {
+  isInWatchLater: Boolean!
+  items: [PlaylistItem!]!
+  publishId: String!
 }
 
 type Comment {
@@ -103,6 +131,14 @@ type CreateDraftPublishResult {
   id: String!
 }
 
+input CreatePlayListInput {
+  accountId: String!
+  name: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
 input CreateStationInput {
   accountId: String!
   name: String!
@@ -138,12 +174,24 @@ type DisLike {
   stationId: String!
 }
 
+input FetchMyPlaylistsInput {
+  accountId: String!
+  cursor: String
+  owner: String!
+  stationId: String!
+}
+
 input FetchMyPublishesInput {
   accountId: String!
   creatorId: String!
   cursor: String
   kind: QueryPublishKind!
   owner: String!
+}
+
+type FetchPlaylistsResponse {
+  edges: [PlaylistEdge!]!
+  pageInfo: PageInfo!
 }
 
 input FetchPublishesByCatInput {
@@ -203,7 +251,9 @@ type MintStationNFTResult {
 }
 
 type Mutation {
-  addToWatchLater(input: SavePublishToPlayListInput!): WriteResult
+  addToNewPlaylist(input: CreatePlayListInput!): WriteResult
+  addToPlaylist(input: AddToPlaylistInput!): WriteResult
+  addToWatchLater(input: AddToWatchLaterInput!): WriteResult
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   createAccount(input: GetMyAccountInput!): Account
@@ -212,10 +262,11 @@ type Mutation {
   createTip(input: CreateTipInput!): Tip
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
-  removeFromWatchLater(input: RemovePublishToPlayListInput!): WriteResult
+  removeFromWatchLater(input: RemoveFromWatchLaterInput!): WriteResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
+  updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
   updatePublish(input: UpdatePublishInput!): Publish
   validateDisplayName(name: String!): Boolean
@@ -239,6 +290,34 @@ type PlaybackLink {
   thumbnail: String!
   updatedAt: DateTime
   videoId: String!
+}
+
+type Playlist {
+  createdAt: DateTime!
+  id: ID!
+  items: [PlaylistItem!]!
+  name: String!
+  owner: Station!
+  ownerId: String!
+}
+
+type PlaylistEdge {
+  cursor: String
+  node: Playlist
+}
+
+type PlaylistItem {
+  createdAt: DateTime!
+  id: ID!
+  playlist: Playlist!
+  playlistId: String!
+  publish: Publish!
+  publishId: String!
+}
+
+input PlaylistItemStatus {
+  isInPlaylist: Boolean!
+  playlistId: String!
 }
 
 type Publish {
@@ -291,7 +370,9 @@ enum PublishKind {
 }
 
 type Query {
+  checkPublishPlaylists(input: CheckPublishPlaylistsInput!): CheckPublishPlaylistsResponse
   fetchAllVideos(input: FetchPublishesInput!): FetchPublishesResponse
+  fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
@@ -322,15 +403,9 @@ enum QueryPublishKind {
   videos
 }
 
-input RemovePublishToPlayListInput {
+input RemoveFromWatchLaterInput {
   accountId: String!
-  id: String!
-  owner: String!
-  stationId: String!
-}
-
-input SavePublishToPlayListInput {
-  accountId: String!
+  id: String
   owner: String!
   publishId: String!
   stationId: String!
@@ -371,6 +446,7 @@ type Station {
   publishesCount: Int!
   tokenId: Int
   updatedAt: DateTime
+  watchLater: [WatchLater!]!
 }
 
 enum ThumbSource {
@@ -410,6 +486,14 @@ input UpdateImageInput {
   image: String!
   imageRef: String!
   owner: String!
+  stationId: String!
+}
+
+input UpdatePlaylistsInput {
+  accountId: String!
+  owner: String!
+  playlists: [PlaylistItemStatus!]!
+  publishId: String!
   stationId: String!
 }
 

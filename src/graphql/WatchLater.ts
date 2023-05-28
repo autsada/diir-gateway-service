@@ -1,4 +1,4 @@
-import { extendType, inputObjectType, list, nonNull, objectType } from "nexus"
+import { extendType, inputObjectType, nonNull, objectType } from "nexus"
 import { WatchLater as WatchLaterModel } from "nexus-prisma"
 import { WatchLater as WatchLaterType } from "@prisma/client"
 
@@ -12,7 +12,7 @@ import {
 import { FETCH_QTY } from "../lib/constants"
 
 /**
- * A Fee type that map to the prisma LikeFee model.
+ * The WathLater type that map to the database model
  */
 export const WatchLater = objectType({
   name: WatchLaterModel.$name,
@@ -162,8 +162,8 @@ export const WatchLaterQuery = extendType({
   },
 })
 
-export const SavePublishToPlayListInput = inputObjectType({
-  name: "SavePublishToPlayListInput",
+export const AddToWatchLaterInput = inputObjectType({
+  name: "AddToWatchLaterInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
@@ -172,13 +172,14 @@ export const SavePublishToPlayListInput = inputObjectType({
   },
 })
 
-export const RemovePublishToPlayListInput = inputObjectType({
-  name: "RemovePublishToPlayListInput",
+export const RemoveFromWatchLaterInput = inputObjectType({
+  name: "RemoveFromWatchLaterInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
     t.nonNull.string("stationId")
-    t.nonNull.string("id") // the id of the item to be removed
+    t.nonNull.string("publishId")
+    t.string("id") // the id of the item to be removed, if null, remove all items of this publish and this station from watch later
   },
 })
 
@@ -190,7 +191,7 @@ export const WatchLaterMutation = extendType({
      */
     t.field("addToWatchLater", {
       type: "WriteResult",
-      args: { input: nonNull("SavePublishToPlayListInput") },
+      args: { input: nonNull("AddToWatchLaterInput") },
       resolve: async (
         _parent,
         { input },
@@ -230,7 +231,7 @@ export const WatchLaterMutation = extendType({
      */
     t.field("removeFromWatchLater", {
       type: "WriteResult",
-      args: { input: nonNull("RemovePublishToPlayListInput") },
+      args: { input: nonNull("RemoveFromWatchLaterInput") },
       resolve: async (
         _parent,
         { input },
@@ -238,8 +239,8 @@ export const WatchLaterMutation = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId, id } = input
-          if (!owner || !accountId || !stationId || !id)
+          const { owner, accountId, stationId, publishId, id } = input
+          if (!owner || !accountId || !stationId || !publishId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Validate authentication/authorization
@@ -251,21 +252,53 @@ export const WatchLaterMutation = extendType({
             signature,
           })
 
-          // Check if the given station id owns the item
-          let item = await prisma.watchLater.findUnique({
-            where: {
-              id,
-            },
-          })
-          if (!item) throwError(notFoundErrMessage, "NOT_FOUND")
-          if (item?.stationId !== stationId)
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          // If the `id` is not null, remove that item
+          if (id) {
+            // Check if the given station id owns the item
+            const item = await prisma.watchLater.findUnique({
+              where: {
+                id,
+              },
+            })
+            if (!item) throwError(notFoundErrMessage, "NOT_FOUND")
+            if (item?.stationId !== stationId)
+              throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
-          await prisma.watchLater.delete({
-            where: {
-              id,
-            },
-          })
+            await prisma.watchLater.delete({
+              where: {
+                id,
+              },
+            })
+          } else {
+            // Remove all items of this (publish + station) from watch later
+            const items = await prisma.watchLater.findMany({
+              where: {
+                AND: [
+                  {
+                    publishId,
+                  },
+                  {
+                    stationId,
+                  },
+                ],
+              },
+            })
+
+            if (items.length > 0) {
+              await prisma.watchLater.deleteMany({
+                where: {
+                  AND: [
+                    {
+                      publishId,
+                    },
+                    {
+                      stationId,
+                    },
+                  ],
+                },
+              })
+            }
+          }
 
           return { status: "Ok" }
         } catch (error) {

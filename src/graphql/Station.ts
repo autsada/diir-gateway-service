@@ -46,6 +46,9 @@ export const Station = objectType({
     t.field(StationModel.defaultColor)
     t.field(StationModel.accountId)
     t.field(StationModel.account)
+    t.field(StationModel.watchLater)
+    // t.field(StationModel.playlists)
+
     t.nonNull.field("followersCount", {
       type: "Int",
       resolve: (parent, _, { prisma }) => {
