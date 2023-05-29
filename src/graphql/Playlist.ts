@@ -422,29 +422,30 @@ export const PlaylistMutation = extendType({
             signature,
           })
 
+          // Separate add and remove
+          const addItems = playlists.filter((pl) => pl.isInPlaylist)
+          const removeItems = playlists.filter((pl) => !pl.isInPlaylist)
+
+          // Add items
+          await prisma.playlistItem.createMany({
+            data: addItems.map((item) => ({
+              ownerId: stationId,
+              playlistId: item.playlistId,
+              publishId,
+            })),
+          })
+
           await Promise.all(
-            playlists.map((playlist) => {
-              if (playlist.isInPlaylist) {
-                // Add to playlist
-                return prisma.playlistItem.create({
-                  data: {
-                    ownerId: stationId,
-                    playlistId: playlist.playlistId,
+            removeItems.map((item) =>
+              prisma.playlistItem.delete({
+                where: {
+                  identifier: {
+                    playlistId: item.playlistId,
                     publishId,
                   },
-                })
-              } else {
-                // Remove from playlist
-                return prisma.playlistItem.delete({
-                  where: {
-                    identifier: {
-                      playlistId: playlist.playlistId,
-                      publishId,
-                    },
-                  },
-                })
-              }
-            })
+                },
+              })
+            )
           )
 
           return { status: "Ok" }
