@@ -483,8 +483,8 @@ export interface NexusGenFieldTypes {
   }
   DontRecommend: { // field return type
     createdAt: NexusGenScalars['DateTime']; // DateTime!
-    requestor: NexusGenRootTypes['Station']; // Station!
     requestorId: string; // String!
+    target: NexusGenRootTypes['Station']; // Station!
     targetId: string; // String!
   }
   DontRecommendEdge: { // field return type
@@ -768,8 +768,8 @@ export interface NexusGenFieldTypeNames {
   }
   DontRecommend: { // field return type name
     createdAt: 'DateTime'
-    requestor: 'Station'
     requestorId: 'String'
+    target: 'Station'
     targetId: 'String'
   }
   DontRecommendEdge: { // field return type name

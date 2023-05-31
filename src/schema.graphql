@@ -176,8 +176,8 @@ type DisLike {
 
 type DontRecommend {
   createdAt: DateTime!
-  requestor: Station!
   requestorId: String!
+  target: Station!
   targetId: String!
 }
 

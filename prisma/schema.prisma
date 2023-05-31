@@ -60,7 +60,7 @@ model Station {
     commentDisLikes   CommentDisLike[]
     watchLater        WatchLater[]
     playlists         Playlist[]
-    dontRecomments    DontRecommend[]
+    dontRecommends    DontRecommend[]
 }
 
 model Follow {
@@ -284,8 +284,8 @@ model DontRecommend {
     id          String   @id @default(cuid())
     createdAt   DateTime @default(now())
     requestorId String
-    requestor   Station  @relation(fields: [requestorId], references: [id])
     targetId    String
+    target      Station  @relation(fields: [targetId], references: [id])
 
     @@unique(fields: [requestorId, targetId], name: "identifier")
 }

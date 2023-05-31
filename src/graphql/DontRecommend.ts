@@ -14,8 +14,8 @@ export const DontRecommend = objectType({
   definition(t) {
     t.field(DontRecommendModel.createdAt)
     t.field(DontRecommendModel.requestorId)
-    t.field(DontRecommendModel.requestor)
     t.field(DontRecommendModel.targetId)
+    t.field(DontRecommendModel.target)
   },
 })
 
