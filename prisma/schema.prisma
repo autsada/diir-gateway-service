@@ -60,6 +60,7 @@ model Station {
     commentDisLikes   CommentDisLike[]
     watchLater        WatchLater[]
     playlists         Playlist[]
+    dontRecomments    DontRecommend[]
 }
 
 model Follow {
@@ -277,4 +278,14 @@ model PlaylistItem {
     publish    Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
 
     @@unique(fields: [playlistId, publishId], name: "identifier")
+}
+
+model DontRecommend {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    requestorId String
+    requestor   Station  @relation(fields: [requestorId], references: [id])
+    targetId    String
+
+    @@unique(fields: [requestorId, targetId], name: "identifier")
 }
