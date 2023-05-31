@@ -6,7 +6,10 @@ import {
   inputObjectType,
   list,
 } from "nexus"
-import { Publish as PublishType } from "@prisma/client"
+import {
+  Publish as PublishType,
+  DontRecommend as DontRecommendType,
+} from "@prisma/client"
 import {
   Category as CategoryEnum,
   PublishKind as PublishKindEnum,
@@ -288,6 +291,7 @@ export const FetchMyPublishesInput = inputObjectType({
 export const FetchPublishesInput = inputObjectType({
   name: "FetchPublishesInput",
   definition(t) {
+    t.string("requestorId") // Station id of the requestor
     t.list.nonNull.field("prefer", { type: "Category" })
     t.string("cursor")
   },
@@ -296,6 +300,7 @@ export const FetchPublishesInput = inputObjectType({
 export const FetchPublishesByCatInput = inputObjectType({
   name: "FetchPublishesByCatInput",
   definition(t) {
+    t.string("requestorId") // Station id of the requestor
     t.nonNull.field("category", { type: "Category" })
     t.string("cursor")
   },
@@ -600,9 +605,26 @@ export const PublishQuery = extendType({
       args: { input: nonNull("FetchPublishesInput") },
       async resolve(_parent, { input }, { prisma }) {
         try {
-          const { cursor, prefer } = input
+          const { cursor, prefer, requestorId } = input
 
           let videos: PublishType[] = []
+
+          let dontRecommends: DontRecommendType[] = []
+          if (requestorId) {
+            // Query dont recommends of the user
+            dontRecommends = await prisma.dontRecommend.findMany({
+              where: {
+                requestorId,
+              },
+              take: 1000, // Take the last 1000 records
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // List of the station ids in user's don't recommend list
+          const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
 
           if (!cursor) {
             // Query preferred categories first
@@ -621,6 +643,11 @@ export const PublishQuery = extendType({
                   },
                   {
                     uploading: false,
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
                   },
                 ],
                 OR:
@@ -645,50 +672,50 @@ export const PublishQuery = extendType({
               },
             })
 
-            // If preferred categories not found or found less, query all
-            if (videos.length < FETCH_QTY) {
-              videos = [
-                ...videos,
-                ...(await prisma.publish.findMany({
-                  where: {
-                    AND: [
-                      {
-                        visibility: {
-                          equals: "public",
-                        },
-                      },
-                      {
-                        kind: {
-                          in: ["Video", "Short"],
-                        },
-                      },
-                      {
-                        uploading: false,
-                      },
-                    ],
-                    OR:
-                      !prefer || prefer.length === 0
-                        ? undefined
-                        : [
-                            {
-                              primaryCategory: {
-                                in: Object.values(Category)[1].members,
-                              },
-                            },
-                            {
-                              secondaryCategory: {
-                                in: Object.values(Category)[1].members,
-                              },
-                            },
-                          ],
-                  },
-                  take: FETCH_QTY - videos.length,
-                  orderBy: {
-                    createdAt: "desc",
-                  },
-                })),
-              ]
-            }
+            // // If preferred categories not found or found less, query all
+            // if (videos.length < FETCH_QTY) {
+            //   videos = [
+            //     ...videos,
+            //     ...(await prisma.publish.findMany({
+            //       where: {
+            //         AND: [
+            //           {
+            //             visibility: {
+            //               equals: "public",
+            //             },
+            //           },
+            //           {
+            //             kind: {
+            //               in: ["Video", "Short"],
+            //             },
+            //           },
+            //           {
+            //             uploading: false,
+            //           },
+            //         ],
+            //         OR:
+            //           !prefer || prefer.length === 0
+            //             ? undefined
+            //             : [
+            //                 {
+            //                   primaryCategory: {
+            //                     in: Object.values(Category)[1].members,
+            //                   },
+            //                 },
+            //                 {
+            //                   secondaryCategory: {
+            //                     in: Object.values(Category)[1].members,
+            //                   },
+            //                 },
+            //               ],
+            //       },
+            //       take: FETCH_QTY - videos.length,
+            //       orderBy: {
+            //         createdAt: "desc",
+            //       },
+            //     })),
+            //   ]
+            // }
           } else {
             // Query preferred categories first
             videos = await prisma.publish.findMany({
@@ -706,6 +733,11 @@ export const PublishQuery = extendType({
                   },
                   {
                     uploading: false,
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
                   },
                 ],
                 OR:
@@ -734,50 +766,50 @@ export const PublishQuery = extendType({
               },
             })
 
-            // If preferred categories not found or found less, query all with no cursor
-            if (videos.length < FETCH_QTY) {
-              videos = [
-                ...videos,
-                ...(await prisma.publish.findMany({
-                  where: {
-                    AND: [
-                      {
-                        visibility: {
-                          equals: "public",
-                        },
-                      },
-                      {
-                        kind: {
-                          in: ["Video", "Short"],
-                        },
-                      },
-                      {
-                        uploading: false,
-                      },
-                    ],
-                    OR:
-                      !prefer || prefer.length === 0
-                        ? undefined
-                        : [
-                            {
-                              primaryCategory: {
-                                in: Object.values(Category)[1].members,
-                              },
-                            },
-                            {
-                              secondaryCategory: {
-                                in: Object.values(Category)[1].members,
-                              },
-                            },
-                          ],
-                  },
-                  take: FETCH_QTY - videos.length,
-                  orderBy: {
-                    createdAt: "desc",
-                  },
-                })),
-              ]
-            }
+            // // If preferred categories not found or found less, query all with no cursor
+            // if (videos.length < FETCH_QTY) {
+            //   videos = [
+            //     ...videos,
+            //     ...(await prisma.publish.findMany({
+            //       where: {
+            //         AND: [
+            //           {
+            //             visibility: {
+            //               equals: "public",
+            //             },
+            //           },
+            //           {
+            //             kind: {
+            //               in: ["Video", "Short"],
+            //             },
+            //           },
+            //           {
+            //             uploading: false,
+            //           },
+            //         ],
+            //         OR:
+            //           !prefer || prefer.length === 0
+            //             ? undefined
+            //             : [
+            //                 {
+            //                   primaryCategory: {
+            //                     in: Object.values(Category)[1].members,
+            //                   },
+            //                 },
+            //                 {
+            //                   secondaryCategory: {
+            //                     in: Object.values(Category)[1].members,
+            //                   },
+            //                 },
+            //               ],
+            //       },
+            //       take: FETCH_QTY - videos.length,
+            //       orderBy: {
+            //         createdAt: "desc",
+            //       },
+            //     })),
+            //   ]
+            // }
           }
 
           if (videos.length === FETCH_QTY) {
@@ -802,6 +834,11 @@ export const PublishQuery = extendType({
                   {
                     uploading: false,
                   },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
                 ],
               },
               take: FETCH_QTY,
@@ -814,35 +851,35 @@ export const PublishQuery = extendType({
               },
             })
 
-            // If not found or found less, query all with no cursor
-            if (nextQuery.length < FETCH_QTY) {
-              nextQuery = [
-                ...nextQuery,
-                ...(await prisma.publish.findMany({
-                  where: {
-                    AND: [
-                      {
-                        visibility: {
-                          equals: "public",
-                        },
-                      },
-                      {
-                        kind: {
-                          in: ["Video", "Short"],
-                        },
-                      },
-                      {
-                        uploading: false,
-                      },
-                    ],
-                  },
-                  take: FETCH_QTY,
-                  orderBy: {
-                    createdAt: "desc",
-                  },
-                })),
-              ]
-            }
+            // // If not found or found less, query all with no cursor
+            // if (nextQuery.length < FETCH_QTY) {
+            //   nextQuery = [
+            //     ...nextQuery,
+            //     ...(await prisma.publish.findMany({
+            //       where: {
+            //         AND: [
+            //           {
+            //             visibility: {
+            //               equals: "public",
+            //             },
+            //           },
+            //           {
+            //             kind: {
+            //               in: ["Video", "Short"],
+            //             },
+            //           },
+            //           {
+            //             uploading: false,
+            //           },
+            //         ],
+            //       },
+            //       take: FETCH_QTY,
+            //       orderBy: {
+            //         createdAt: "desc",
+            //       },
+            //     })),
+            //   ]
+            // }
 
             return {
               pageInfo: {
@@ -877,9 +914,26 @@ export const PublishQuery = extendType({
       args: { input: nonNull("FetchPublishesByCatInput") },
       async resolve(_parent, { input }, { prisma }) {
         try {
-          const { category, cursor } = input
+          const { category, cursor, requestorId } = input
 
           let videos: PublishType[] = []
+
+          let dontRecommends: DontRecommendType[] = []
+          if (requestorId) {
+            // Query dont recommends of the user
+            dontRecommends = await prisma.dontRecommend.findMany({
+              where: {
+                requestorId,
+              },
+              take: 1000, // Take the last 1000 records
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // List of the station ids in user's don't recommend list
+          const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
 
           if (!cursor) {
             videos = await prisma.publish.findMany({
@@ -893,6 +947,11 @@ export const PublishQuery = extendType({
                   {
                     kind: {
                       equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
                     },
                   },
                 ],
@@ -926,6 +985,11 @@ export const PublishQuery = extendType({
                   {
                     kind: {
                       equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
                     },
                   },
                 ],
@@ -969,6 +1033,11 @@ export const PublishQuery = extendType({
                   {
                     kind: {
                       equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
                     },
                   },
                 ],

@@ -228,11 +228,13 @@ type FetchPlaylistsResponse {
 input FetchPublishesByCatInput {
   category: Category!
   cursor: String
+  requestorId: String
 }
 
 input FetchPublishesInput {
   cursor: String
   prefer: [Category!]
+  requestorId: String
 }
 
 type FetchPublishesResponse {

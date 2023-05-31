@@ -109,10 +109,12 @@ export interface NexusGenInputs {
   FetchPublishesByCatInput: { // input type
     category: NexusGenEnums['Category']; // Category!
     cursor?: string | null; // String
+    requestorId?: string | null; // String
   }
   FetchPublishesInput: { // input type
     cursor?: string | null; // String
     prefer?: NexusGenEnums['Category'][] | null; // [Category!]
+    requestorId?: string | null; // String
   }
   FetchWatchLaterInput: { // input type
     accountId: string; // String!
