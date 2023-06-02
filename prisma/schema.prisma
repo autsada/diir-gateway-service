@@ -61,6 +61,7 @@ model Station {
     watchLater        WatchLater[]
     playlists         Playlist[]
     dontRecommends    DontRecommend[]
+    reports           Report[]
 }
 
 model Follow {
@@ -161,6 +162,7 @@ model Publish {
     comments          Comment[]       @relation("MainComment")
     watchLater        WatchLater[]
     playlistItems     PlaylistItem[]
+    reported          Report[]
 }
 
 // Publish's Like
@@ -288,4 +290,28 @@ model DontRecommend {
     target      Station  @relation(fields: [targetId], references: [id])
 
     @@unique(fields: [requestorId, targetId], name: "identifier")
+}
+
+enum ReportReason {
+    adult
+    violent
+    harass
+    hateful
+    harmful
+    abuse
+    terrorism
+    spam
+    mislead
+}
+
+model Report {
+    id            String       @id @default(cuid())
+    createdAt     DateTime     @default(now())
+    submittedById String
+    submittedBy   Station      @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+    publishId     String
+    publish       Publish      @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    reason        ReportReason
+
+    @@unique(fields: [submittedById, publishId, reason], name: "identifier")
 }

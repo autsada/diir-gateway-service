@@ -149,6 +149,13 @@ export interface NexusGenInputs {
     publishId: string; // String!
     stationId: string; // String!
   }
+  ReportPublishInput: { // input type
+    accountId: string; // String!
+    owner: string; // String!
+    publishId: string; // String!
+    reason: NexusGenEnums['ReportReason']; // ReportReason!
+    stationId: string; // String!
+  }
   SendTipsInput: { // input type
     publishId: string; // String!
     qty: number; // Int!
@@ -200,6 +207,7 @@ export interface NexusGenEnums {
   CommentType: "COMMENT" | "PUBLISH"
   PublishKind: "Adds" | "Blog" | "Podcast" | "Short" | "Video"
   QueryPublishKind: "adds" | "all" | "blogs" | "podcasts" | "videos"
+  ReportReason: "abuse" | "adult" | "harass" | "harmful" | "hateful" | "mislead" | "spam" | "terrorism" | "violent"
   ThumbSource: "custom" | "generated"
   ThumbnailSource: "custom" | "generated"
   Visibility: "draft" | "private" | "public"
@@ -359,6 +367,13 @@ export interface NexusGenObjects {
     node?: NexusGenRootTypes['Publish'] | null; // Publish
   }
   Query: {};
+  Report: { // root type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // ID!
+    publishId: string; // String!
+    reason: NexusGenEnums['ReportReason']; // ReportReason!
+    submittedById: string; // String!
+  }
   SendTipsResult: { // root type
     amount: string; // String!
     fee: string; // String!
@@ -540,6 +555,7 @@ export interface NexusGenFieldTypes {
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     removeDontRecommend: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     removeFromWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    reportPublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
     updateBannerImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateDisplayName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -640,6 +656,15 @@ export interface NexusGenFieldTypes {
     getStationByName: NexusGenRootTypes['Station'] | null; // Station
     listCommentsByCommentId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
     listCommentsByPublishId: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
+  }
+  Report: { // field return type
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // ID!
+    publish: NexusGenRootTypes['Publish']; // Publish!
+    publishId: string; // String!
+    reason: NexusGenEnums['ReportReason']; // ReportReason!
+    submittedBy: NexusGenRootTypes['Station']; // Station!
+    submittedById: string; // String!
   }
   SendTipsResult: { // field return type
     amount: string; // String!
@@ -825,6 +850,7 @@ export interface NexusGenFieldTypeNames {
     mintStationNFT: 'MintStationNFTResult'
     removeDontRecommend: 'WriteResult'
     removeFromWatchLater: 'WriteResult'
+    reportPublish: 'WriteResult'
     sendTips: 'SendTipsResult'
     updateBannerImage: 'WriteResult'
     updateDisplayName: 'WriteResult'
@@ -925,6 +951,15 @@ export interface NexusGenFieldTypeNames {
     getStationByName: 'Station'
     listCommentsByCommentId: 'Comment'
     listCommentsByPublishId: 'Comment'
+  }
+  Report: { // field return type name
+    createdAt: 'DateTime'
+    id: 'ID'
+    publish: 'Publish'
+    publishId: 'String'
+    reason: 'ReportReason'
+    submittedBy: 'Station'
+    submittedById: 'String'
   }
   SendTipsResult: { // field return type name
     amount: 'String'
@@ -1029,6 +1064,9 @@ export interface NexusGenArgTypes {
     }
     removeFromWatchLater: { // args
       input: NexusGenInputs['RemoveFromWatchLaterInput']; // RemoveFromWatchLaterInput!
+    }
+    reportPublish: { // args
+      input: NexusGenInputs['ReportPublishInput']; // ReportPublishInput!
     }
     sendTips: { // args
       input: NexusGenInputs['SendTipsInput']; // SendTipsInput!

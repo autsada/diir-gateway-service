@@ -298,6 +298,7 @@ type Mutation {
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   removeDontRecommend(input: DontRecommendInput!): WriteResult
   removeFromWatchLater(input: RemoveFromWatchLaterInput!): WriteResult
+  reportPublish(input: ReportPublishInput!): WriteResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
@@ -445,6 +446,36 @@ input RemoveFromWatchLaterInput {
   owner: String!
   publishId: String!
   stationId: String!
+}
+
+type Report {
+  createdAt: DateTime!
+  id: ID!
+  publish: Publish!
+  publishId: String!
+  reason: ReportReason!
+  submittedBy: Station!
+  submittedById: String!
+}
+
+input ReportPublishInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  reason: ReportReason!
+  stationId: String!
+}
+
+enum ReportReason {
+  abuse
+  adult
+  harass
+  harmful
+  hateful
+  mislead
+  spam
+  terrorism
+  violent
 }
 
 input SendTipsInput {
