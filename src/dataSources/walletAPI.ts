@@ -64,6 +64,13 @@ export class WalletAPI extends RESTDataSource {
     return this.get(`wallet/balance/${encodeURIComponent(address)}`)
   }
 
+  /**
+   * @dev A route to write update status to Firestore in order to inform the UIs
+   */
+  async publishUpdated(publishId: string): Promise<{ status: string }> {
+    return this.post("publishes/update", { body: { publishId } })
+  }
+
   /// ***********************
   /// ***** Station Contract *****
   /// ***********************

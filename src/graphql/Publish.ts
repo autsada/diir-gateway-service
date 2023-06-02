@@ -1134,6 +1134,16 @@ export const UpdatePublishInput = inputObjectType({
   },
 })
 
+export const LikePublishInput = inputObjectType({
+  name: "LikePublishInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+  },
+})
+
 export const PublishMutation = extendType({
   type: "Mutation",
   definition(t) {
@@ -1253,7 +1263,77 @@ export const PublishMutation = extendType({
             },
           })
 
-          return publish as unknown as NexusGenObjects["Publish"]
+          return publish
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("likePublish", {
+      type: "WriteResult",
+      args: { input: nonNull("LikePublishInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, publishId } = input
+          if (!owner || !accountId || !stationId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given publish exists
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Create or delete a like depending to the case
+          const like = await prisma.like.findUnique({
+            where: {
+              identifier: {
+                stationId,
+                publishId,
+              },
+            },
+          })
+          if (!like) {
+            // Like case
+            await prisma.like.create({
+              data: {
+                stationId,
+                publishId,
+              },
+            })
+          } else {
+            // Undo Like case
+            await prisma.like.delete({
+              where: {
+                identifier: {
+                  stationId,
+                  publishId,
+                },
+              },
+            })
+          }
+
+          // Call the wallet service to inform the update
+          dataSources.walletAPI.publishUpdated(publishId)
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }

@@ -273,6 +273,13 @@ type Like {
   stationId: String!
 }
 
+input LikePublishInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
 input MintStationNFTInput {
   accountId: String!
   name: String!
@@ -294,6 +301,7 @@ type Mutation {
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
   dontRecommend(input: DontRecommendInput!): WriteResult
+  likePublish(input: LikePublishInput!): WriteResult
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   removeDontRecommend(input: DontRecommendInput!): WriteResult
