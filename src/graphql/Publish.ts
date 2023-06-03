@@ -1339,5 +1339,75 @@ export const PublishMutation = extendType({
         }
       },
     })
+
+    t.field("disLikePublish", {
+      type: "WriteResult",
+      args: { input: nonNull("LikePublishInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, publishId } = input
+          if (!owner || !accountId || !stationId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given publish exists
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Create or delete a disLike depending to the case
+          const disLike = await prisma.disLike.findUnique({
+            where: {
+              identifier: {
+                stationId,
+                publishId,
+              },
+            },
+          })
+          if (!disLike) {
+            // disLike case
+            await prisma.disLike.create({
+              data: {
+                stationId,
+                publishId,
+              },
+            })
+          } else {
+            // Undo disLike case
+            await prisma.disLike.delete({
+              where: {
+                identifier: {
+                  stationId,
+                  publishId,
+                },
+              },
+            })
+          }
+
+          // Call the wallet service to inform the update
+          dataSources.walletAPI.publishUpdated(publishId)
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
   },
 })

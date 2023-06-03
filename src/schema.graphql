@@ -300,6 +300,7 @@ type Mutation {
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
+  disLikePublish(input: LikePublishInput!): WriteResult
   dontRecommend(input: DontRecommendInput!): WriteResult
   likePublish(input: LikePublishInput!): WriteResult
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
