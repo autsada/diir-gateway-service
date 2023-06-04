@@ -114,6 +114,16 @@ type CommentLike {
   stationId: String!
 }
 
+input CommentPublishInput {
+  accountId: String!
+  commentId: String
+  commentType: CommentType!
+  content: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
 enum CommentType {
   COMMENT
   PUBLISH
@@ -296,6 +306,7 @@ type Mutation {
   addToWatchLater(input: AddToWatchLaterInput!): WriteResult
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
+  comment(input: CommentPublishInput!): WriteResult
   createAccount(input: GetMyAccountInput!): Account
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station

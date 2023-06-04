@@ -53,6 +53,15 @@ export interface NexusGenInputs {
     publishId: string; // String!
     stationId: string; // String!
   }
+  CommentPublishInput: { // input type
+    accountId: string; // String!
+    commentId?: string | null; // String
+    commentType: NexusGenEnums['CommentType']; // CommentType!
+    content: string; // String!
+    owner: string; // String!
+    publishId: string; // String!
+    stationId: string; // String!
+  }
   CreateDraftPublishInput: { // input type
     accountId: string; // String!
     creatorId: string; // String!
@@ -552,6 +561,7 @@ export interface NexusGenFieldTypes {
     addToWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
     calculateTips: NexusGenRootTypes['CalculateTipsResult'] | null; // CalculateTipsResult
+    comment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
     createDraftPublish: NexusGenRootTypes['CreateDraftPublishResult'] | null; // CreateDraftPublishResult
     createStation: NexusGenRootTypes['Station'] | null; // Station
@@ -849,6 +859,7 @@ export interface NexusGenFieldTypeNames {
     addToWatchLater: 'WriteResult'
     cacheSession: 'WriteResult'
     calculateTips: 'CalculateTipsResult'
+    comment: 'WriteResult'
     createAccount: 'Account'
     createDraftPublish: 'CreateDraftPublishResult'
     createStation: 'Station'
@@ -1047,6 +1058,9 @@ export interface NexusGenArgTypes {
     }
     calculateTips: { // args
       qty: number; // Int!
+    }
+    comment: { // args
+      input: NexusGenInputs['CommentPublishInput']; // CommentPublishInput!
     }
     createAccount: { // args
       input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!

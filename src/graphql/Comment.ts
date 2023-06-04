@@ -1,4 +1,11 @@
-import { objectType, enumType, extendType, nonNull, list } from "nexus"
+import {
+  objectType,
+  enumType,
+  extendType,
+  nonNull,
+  list,
+  inputObjectType,
+} from "nexus"
 import {
   Comment as CommentModel,
   CommentType as CommentTypeEnum,
@@ -6,8 +13,9 @@ import {
   CommentDisLike as CommentDisLikeModel,
 } from "nexus-prisma"
 
-import { NexusGenInputs } from "../typegen"
 import { throwError, badInputErrMessage } from "./Error"
+import { validateAuthenticity } from "../lib"
+import type { NexusGenInputs } from "../typegen"
 
 export const CommentType = enumType(CommentTypeEnum)
 
@@ -209,6 +217,83 @@ export const CommentQuery = extendType({
               ],
             },
           })
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+  },
+})
+
+export const CommentPublishInput = inputObjectType({
+  name: "CommentPublishInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+    t.nonNull.string("content")
+    t.nonNull.field("commentType", { type: "CommentType" })
+    t.string("commentId")
+  },
+})
+
+export const CommentMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    /**
+     * Comment on a publish
+     */
+    t.field("comment", {
+      type: "WriteResult",
+      args: { input: nonNull("CommentPublishInput") },
+      resolve: async (
+        parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const {
+            owner,
+            accountId,
+            stationId,
+            publishId,
+            content,
+            commentType,
+            commentId,
+          } = input
+          if (
+            !owner ||
+            !accountId ||
+            !stationId ||
+            !publishId ||
+            !content ||
+            !commentType
+          )
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Create a comment
+          await prisma.comment.create({
+            data: {
+              creatorId: stationId,
+              publishId,
+              content,
+              commentType,
+              commentId,
+            },
+          })
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }
