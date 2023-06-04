@@ -1388,6 +1388,26 @@ export const PublishMutation = extendType({
                 publishId,
               },
             })
+
+            // We also need to check if user liked the publish before, if yes, we need to delete that like before.
+            const like = await prisma.like.findUnique({
+              where: {
+                identifier: {
+                  stationId,
+                  publishId,
+                },
+              },
+            })
+            if (like) {
+              await prisma.like.delete({
+                where: {
+                  identifier: {
+                    stationId,
+                    publishId,
+                  },
+                },
+              })
+            }
           } else {
             // Undo disLike case
             await prisma.disLike.delete({
