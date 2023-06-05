@@ -107,6 +107,11 @@ type CommentDisLike {
   stationId: String!
 }
 
+type CommentEdge {
+  cursor: String
+  node: Comment
+}
+
 type CommentLike {
   comment: Comment!
   commentId: String!
@@ -201,6 +206,17 @@ input DontRecommendInput {
   owner: String!
   stationId: String!
   targetId: String!
+}
+
+input FetchCommentsByPublishIdInput {
+  cursor: String
+  publishId: String!
+  requestorId: String
+}
+
+type FetchCommentsResponse {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
 }
 
 input FetchDontRecommendsInput {
@@ -428,6 +444,7 @@ enum PublishKind {
 type Query {
   checkPublishPlaylists(input: CheckPublishPlaylistsInput!): CheckPublishPlaylistsResponse
   fetchAllVideos(input: FetchPublishesInput!): FetchPublishesResponse
+  fetchCommentsByPublishId(input: FetchCommentsByPublishIdInput!): FetchCommentsResponse
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
@@ -438,8 +455,6 @@ type Query {
   getPublishById(input: QueryByIdInput!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
-  listCommentsByCommentId(input: QueryByIdInput!): [Comment]!
-  listCommentsByPublishId(input: QueryByIdInput!): [Comment]!
 }
 
 input QueryByIdInput {

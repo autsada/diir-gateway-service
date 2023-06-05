@@ -3,7 +3,6 @@ import {
   enumType,
   extendType,
   nonNull,
-  list,
   inputObjectType,
 } from "nexus"
 import {
@@ -12,10 +11,12 @@ import {
   CommentLike as CommentLikeModel,
   CommentDisLike as CommentDisLikeModel,
 } from "nexus-prisma"
+import { Comment as CommentDataType } from "@prisma/client"
 
 import { throwError, badInputErrMessage } from "./Error"
 import { validateAuthenticity } from "../lib"
 import type { NexusGenInputs } from "../typegen"
+import { FETCH_QTY } from "../lib/constants"
 
 export const CommentType = enumType(CommentTypeEnum)
 
@@ -156,67 +157,138 @@ export const Comment = objectType({
   },
 })
 
+export const FetchCommentsByPublishIdInput = inputObjectType({
+  name: "FetchCommentsByPublishIdInput",
+  definition(t) {
+    t.string("requestorId") // Station id of the requestor
+    t.nonNull.string("publishId")
+    t.string("cursor")
+  },
+})
+
+export const CommentEdge = objectType({
+  name: "CommentEdge",
+  definition(t) {
+    t.string("cursor")
+    t.field("node", {
+      type: "Comment",
+    })
+  },
+})
+
+export const FetchCommentsResponse = objectType({
+  name: "FetchCommentsResponse",
+  definition(t) {
+    t.nonNull.field("pageInfo", { type: "PageInfo" })
+    t.nonNull.list.nonNull.field("edges", { type: "CommentEdge" })
+  },
+})
+
 export const CommentQuery = extendType({
   type: "Query",
   definition(t) {
     /**
-     * List comments by publish id.
+     * Fetch comments by publish id.
      */
-    // TODO: Implement pagination
-    t.field("listCommentsByPublishId", {
-      type: nonNull(list("Comment")),
-      args: { input: nonNull("QueryByIdInput") },
+    t.field("fetchCommentsByPublishId", {
+      type: "FetchCommentsResponse",
+      args: { input: nonNull("FetchCommentsByPublishIdInput") },
       async resolve(_parent, { input }, { prisma }) {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { targetId } = input
+          const { cursor, publishId } = input
+          if (!publishId) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
-          if (!targetId) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          let comments: CommentDataType[] = []
 
-          return prisma.comment.findMany({
-            where: {
-              AND: [
-                {
-                  publishId: targetId,
-                },
-                {
-                  commentType: "PUBLISH",
-                },
-              ],
-            },
-          })
-        } catch (error) {
-          throw error
-        }
-      },
-    })
+          if (!cursor) {
+            comments = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    publishId,
+                  },
+                  {
+                    commentType: "PUBLISH",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else {
+            comments = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    publishId,
+                  },
+                  {
+                    commentType: "PUBLISH",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
 
-    /**
-     * List comments by a parent comment id.
-     */
-    // TODO: Implement pagination
-    t.field("listCommentsByCommentId", {
-      type: nonNull(list("Comment")),
-      args: { input: nonNull("QueryByIdInput") },
-      async resolve(_parent, { input }, { prisma }) {
-        try {
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { targetId } = input
+          if (comments.length < FETCH_QTY) {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: comments.map((comment) => ({
+                cursor: comment.id,
+                node: comment,
+              })),
+            }
+          } else {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = comments[comments.length - 1].id
 
-          if (!targetId) throwError(badInputErrMessage, "BAD_USER_INPUT")
+            // Check if there is next page
+            const nextQuery = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    publishId,
+                  },
+                  {
+                    commentType: "PUBLISH",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
 
-          return prisma.comment.findMany({
-            where: {
-              AND: [
-                {
-                  commentId: targetId,
-                },
-                {
-                  commentType: "COMMENT",
-                },
-              ],
-            },
-          })
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: comments.map((comment) => ({
+                cursor: comment.id,
+                node: comment,
+              })),
+            }
+          }
         } catch (error) {
           throw error
         }

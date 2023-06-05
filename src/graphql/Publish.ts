@@ -223,7 +223,14 @@ export const Publish = objectType({
       resolve: (parent, _, { prisma }) => {
         return prisma.comment.count({
           where: {
-            publishId: parent.id,
+            AND: [
+              {
+                publishId: parent.id,
+              },
+              {
+                commentType: "PUBLISH",
+              },
+            ],
           },
         })
       },
