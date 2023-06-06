@@ -287,6 +287,13 @@ type Follow {
   followingId: String!
 }
 
+input FollowInput {
+  accountId: String!
+  followerId: String!
+  owner: String!
+  stationId: String!
+}
+
 input GetMyAccountInput {
   accountType: AccountType!
 }
@@ -338,6 +345,7 @@ type Mutation {
   disLikeComment(input: LikeCommentInput!): WriteResult
   disLikePublish(input: LikePublishInput!): WriteResult
   dontRecommend(input: DontRecommendInput!): WriteResult
+  follow(input: FollowInput!): WriteResult
   likeComment(input: LikeCommentInput!): WriteResult
   likePublish(input: LikePublishInput!): WriteResult
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult

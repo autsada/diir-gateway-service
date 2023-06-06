@@ -220,7 +220,7 @@ export const StationQuery = extendType({
             where: { name },
           })
         } catch (error) {
-          throw error
+          return null
         }
       },
     })
@@ -286,6 +286,19 @@ export const UpdateImageInput = inputObjectType({
     t.nonNull.string("image")
     t.nonNull.string("imageRef")
     t.nonNull.string("stationId")
+  },
+})
+
+/**
+ * An input type for follow/unFollow mutation.
+ */
+export const FollowInput = inputObjectType({
+  name: "FollowInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("followerId")
   },
 })
 
@@ -653,6 +666,86 @@ export const StationMutation = extendType({
               bannerImageRef: imageRef,
             },
           })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * @dev Follow/unFollow
+     */
+    t.field("follow", {
+      type: "WriteResult",
+      args: { input: nonNull("FollowInput") },
+      async resolve(_root, { input }, { dataSources, prisma, signature }) {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, followerId } = input
+          if (!owner || !accountId || !stationId || !followerId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          const account = await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+          if (!account) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Find the following station
+          const following = await prisma.station.findUnique({
+            where: {
+              id: stationId,
+            },
+          })
+          if (!following) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check ownership of the following station
+          if (account?.owner?.toLowerCase() !== following?.owner?.toLowerCase())
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Find the follower station
+          const follower = await prisma.station.findUnique({
+            where: {
+              id: followerId,
+            },
+          })
+          if (!follower) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check if it's a `follow` or `unFollow` case
+          const follow = await prisma.follow.findUnique({
+            where: {
+              followerId_followingId: {
+                followingId: stationId,
+                followerId,
+              },
+            },
+          })
+
+          if (!follow) {
+            // Follow case: create a new follow
+            await prisma.follow.create({
+              data: {
+                followingId: stationId,
+                followerId,
+              },
+            })
+          } else {
+            // UnFollow case: delete the follow
+            await prisma.follow.delete({
+              where: {
+                followerId_followingId: {
+                  followingId: stationId,
+                  followerId,
+                },
+              },
+            })
+          }
 
           return { status: "Ok" }
         } catch (error) {
