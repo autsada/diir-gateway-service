@@ -139,6 +139,13 @@ export interface NexusGenInputs {
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
   }
+  LikeCommentInput: { // input type
+    accountId: string; // String!
+    commentId: string; // String!
+    owner: string; // String!
+    publishId: string; // String!
+    stationId: string; // String!
+  }
   LikePublishInput: { // input type
     accountId: string; // String!
     owner: string; // String!
@@ -589,6 +596,7 @@ export interface NexusGenFieldTypes {
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
     disLikePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     dontRecommend: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    likeComment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     likePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
@@ -894,6 +902,7 @@ export interface NexusGenFieldTypeNames {
     createTip: 'Tip'
     disLikePublish: 'WriteResult'
     dontRecommend: 'WriteResult'
+    likeComment: 'WriteResult'
     likePublish: 'WriteResult'
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
@@ -1106,6 +1115,9 @@ export interface NexusGenArgTypes {
     }
     dontRecommend: { // args
       input: NexusGenInputs['DontRecommendInput']; // DontRecommendInput!
+    }
+    likeComment: { // args
+      input: NexusGenInputs['LikeCommentInput']; // LikeCommentInput!
     }
     likePublish: { // args
       input: NexusGenInputs['LikePublishInput']; // LikePublishInput!

@@ -13,7 +13,7 @@ import {
 } from "nexus-prisma"
 import { Comment as CommentDataType } from "@prisma/client"
 
-import { throwError, badInputErrMessage } from "./Error"
+import { throwError, badInputErrMessage, notFoundErrMessage } from "./Error"
 import { validateAuthenticity } from "../lib"
 import type { NexusGenInputs } from "../typegen"
 import { FETCH_QTY } from "../lib/constants"
@@ -310,11 +310,22 @@ export const CommentPublishInput = inputObjectType({
   },
 })
 
+export const LikeCommentInput = inputObjectType({
+  name: "LikeCommentInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+    t.nonNull.string("commentId")
+  },
+})
+
 export const CommentMutation = extendType({
   type: "Mutation",
   definition(t) {
     /**
-     * Comment on a publish
+     * Comment on a comment
      */
     t.field("comment", {
       type: "WriteResult",
@@ -364,6 +375,96 @@ export const CommentMutation = extendType({
               commentId,
             },
           })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("likeComment", {
+      type: "WriteResult",
+      args: { input: nonNull("LikeCommentInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, publishId, commentId } = input
+          if (!owner || !accountId || !stationId || !publishId || !commentId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given comment exists
+          const comment = await prisma.comment.findUnique({
+            where: {
+              id: commentId,
+            },
+          })
+          if (!comment) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Create or delete a like depending to the case
+          const like = await prisma.commentLike.findUnique({
+            where: {
+              identifier: {
+                stationId,
+                commentId,
+              },
+            },
+          })
+          if (!like) {
+            // Like case
+            await prisma.commentLike.create({
+              data: {
+                stationId,
+                commentId,
+              },
+            })
+
+            // Check if user disliked the comment before, if yes, delete the dislike.
+            const dislike = await prisma.commentDisLike.findUnique({
+              where: {
+                identifier: {
+                  stationId,
+                  commentId,
+                },
+              },
+            })
+            if (dislike) {
+              await prisma.commentDisLike.delete({
+                where: {
+                  identifier: {
+                    stationId,
+                    commentId,
+                  },
+                },
+              })
+            }
+          } else {
+            // Undo Like case
+            await prisma.commentLike.delete({
+              where: {
+                identifier: {
+                  stationId,
+                  commentId,
+                },
+              },
+            })
+          }
+
+          // Call the wallet service to inform the update
+          dataSources.walletAPI.publishUpdated(publishId)
 
           return { status: "Ok" }
         } catch (error) {
