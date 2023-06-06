@@ -472,5 +472,95 @@ export const CommentMutation = extendType({
         }
       },
     })
+
+    t.field("disLikeComment", {
+      type: "WriteResult",
+      args: { input: nonNull("LikeCommentInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, publishId, commentId } = input
+          if (!owner || !accountId || !stationId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given comment exists
+          const comment = await prisma.comment.findUnique({
+            where: {
+              id: commentId,
+            },
+          })
+          if (!comment) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Create or delete a disLike depending to the case
+          const disLike = await prisma.commentDisLike.findUnique({
+            where: {
+              identifier: {
+                stationId,
+                commentId,
+              },
+            },
+          })
+          if (!disLike) {
+            // disLike case
+            await prisma.commentDisLike.create({
+              data: {
+                stationId,
+                commentId,
+              },
+            })
+
+            // We also need to check if user liked the comment before, if yes, we need to delete that like before.
+            const like = await prisma.commentLike.findUnique({
+              where: {
+                identifier: {
+                  stationId,
+                  commentId,
+                },
+              },
+            })
+            if (like) {
+              await prisma.commentLike.delete({
+                where: {
+                  identifier: {
+                    stationId,
+                    commentId,
+                  },
+                },
+              })
+            }
+          } else {
+            // Undo disLike case
+            await prisma.commentDisLike.delete({
+              where: {
+                identifier: {
+                  stationId,
+                  commentId,
+                },
+              },
+            })
+          }
+
+          // Call the wallet service to inform the update
+          dataSources.walletAPI.publishUpdated(publishId)
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
   },
 })

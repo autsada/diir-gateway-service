@@ -594,6 +594,7 @@ export interface NexusGenFieldTypes {
     createDraftPublish: NexusGenRootTypes['CreateDraftPublishResult'] | null; // CreateDraftPublishResult
     createStation: NexusGenRootTypes['Station'] | null; // Station
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
+    disLikeComment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     disLikePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     dontRecommend: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     likeComment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -900,6 +901,7 @@ export interface NexusGenFieldTypeNames {
     createDraftPublish: 'CreateDraftPublishResult'
     createStation: 'Station'
     createTip: 'Tip'
+    disLikeComment: 'WriteResult'
     disLikePublish: 'WriteResult'
     dontRecommend: 'WriteResult'
     likeComment: 'WriteResult'
@@ -1109,6 +1111,9 @@ export interface NexusGenArgTypes {
     }
     createTip: { // args
       input: NexusGenInputs['CreateTipInput']; // CreateTipInput!
+    }
+    disLikeComment: { // args
+      input: NexusGenInputs['LikeCommentInput']; // LikeCommentInput!
     }
     disLikePublish: { // args
       input: NexusGenInputs['LikePublishInput']; // LikePublishInput!

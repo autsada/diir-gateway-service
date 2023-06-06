@@ -335,6 +335,7 @@ type Mutation {
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
+  disLikeComment(input: LikeCommentInput!): WriteResult
   disLikePublish(input: LikePublishInput!): WriteResult
   dontRecommend(input: DontRecommendInput!): WriteResult
   likeComment(input: LikeCommentInput!): WriteResult
