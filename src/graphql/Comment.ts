@@ -157,12 +157,17 @@ export const Comment = objectType({
   },
 })
 
+export const OrderBy = enumType({
+  name: "OrderBy",
+  members: ["counts", "newest"],
+})
 export const FetchCommentsByPublishIdInput = inputObjectType({
   name: "FetchCommentsByPublishIdInput",
   definition(t) {
     t.string("requestorId") // Station id of the requestor
     t.nonNull.string("publishId")
     t.string("cursor")
+    t.field("orderBy", { type: "OrderBy" })
   },
 })
 
@@ -196,7 +201,7 @@ export const CommentQuery = extendType({
       async resolve(_parent, { input }, { prisma }) {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { cursor, publishId } = input
+          const { cursor, publishId, orderBy } = input
           if (!publishId) throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           let comments: CommentDataType[] = []
@@ -214,9 +219,21 @@ export const CommentQuery = extendType({
                 ],
               },
               take: FETCH_QTY,
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy:
+                orderBy === "newest"
+                  ? {
+                      createdAt: "desc",
+                    }
+                  : [
+                      {
+                        comments: {
+                          _count: "desc",
+                        },
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ],
             })
           } else {
             comments = await prisma.comment.findMany({
@@ -235,9 +252,21 @@ export const CommentQuery = extendType({
                 id: cursor,
               },
               skip: 1, // Skip the cursor
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy:
+                orderBy === "newest"
+                  ? {
+                      createdAt: "desc",
+                    }
+                  : [
+                      {
+                        comments: {
+                          _count: "desc",
+                        },
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ],
             })
           }
 
@@ -273,9 +302,21 @@ export const CommentQuery = extendType({
                 id: lastFetchedCursor,
               },
               skip: 1, // Skip the cursor
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy:
+                orderBy === "newest"
+                  ? {
+                      createdAt: "desc",
+                    }
+                  : [
+                      {
+                        comments: {
+                          _count: "desc",
+                        },
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ],
             })
 
             return {

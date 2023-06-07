@@ -210,6 +210,7 @@ input DontRecommendInput {
 
 input FetchCommentsByPublishIdInput {
   cursor: String
+  orderBy: OrderBy
   publishId: String!
   requestorId: String
 }
@@ -361,6 +362,11 @@ type Mutation {
   updatePublish(input: UpdatePublishInput!): Publish
   validateDisplayName(name: String!): Boolean
   validateName(name: String!): Boolean
+}
+
+enum OrderBy {
+  counts
+  newest
 }
 
 type PageInfo {

@@ -98,6 +98,7 @@ export interface NexusGenInputs {
   }
   FetchCommentsByPublishIdInput: { // input type
     cursor?: string | null; // String
+    orderBy?: NexusGenEnums['OrderBy'] | null; // OrderBy
     publishId: string; // String!
     requestorId?: string | null; // String
   }
@@ -238,6 +239,7 @@ export interface NexusGenEnums {
   AccountType: "TRADITIONAL" | "WALLET"
   Category: "Animals" | "Children" | "Education" | "Entertainment" | "Food" | "Gaming" | "LifeStyle" | "Men" | "Movies" | "Music" | "News" | "Other" | "Programming" | "Science" | "Sports" | "Technology" | "Travel" | "Vehicles" | "Women"
   CommentType: "COMMENT" | "PUBLISH"
+  OrderBy: "counts" | "newest"
   PublishKind: "Adds" | "Blog" | "Podcast" | "Short" | "Video"
   QueryPublishKind: "adds" | "all" | "blogs" | "podcasts" | "videos"
   ReportReason: "abuse" | "adult" | "harass" | "harmful" | "hateful" | "mislead" | "spam" | "terrorism" | "violent"
