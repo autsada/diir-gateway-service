@@ -299,7 +299,16 @@ export const FetchPublishesInput = inputObjectType({
   name: "FetchPublishesInput",
   definition(t) {
     t.string("requestorId") // Station id of the requestor
-    t.list.nonNull.field("prefer", { type: "Category" })
+    t.string("cursor")
+  },
+})
+
+// Fetch publishes to display on the watch page
+export const FetchSuggestedPublishesInput = inputObjectType({
+  name: "FetchSuggestedPublishesInput",
+  definition(t) {
+    t.string("requestorId") // Station id of the requestor
+    t.nonNull.string("publishId")
     t.string("cursor")
   },
 })
@@ -612,7 +621,7 @@ export const PublishQuery = extendType({
       args: { input: nonNull("FetchPublishesInput") },
       async resolve(_parent, { input }, { prisma }) {
         try {
-          const { cursor, prefer, requestorId } = input
+          const { cursor, requestorId } = input
 
           let videos: PublishType[] = []
 
@@ -629,6 +638,15 @@ export const PublishQuery = extendType({
               },
             })
           }
+
+          // Get requestor station
+          const requestor = !requestorId
+            ? null
+            : await prisma.station.findUnique({
+                where: {
+                  id: requestorId,
+                },
+              })
 
           // List of the station ids in user's don't recommend list
           const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
@@ -658,17 +676,17 @@ export const PublishQuery = extendType({
                   },
                 ],
                 OR:
-                  !prefer || prefer.length === 0
+                  !requestor || requestor.preferences.length === 0
                     ? undefined
                     : [
                         {
                           primaryCategory: {
-                            in: prefer,
+                            in: requestor.preferences,
                           },
                         },
                         {
                           secondaryCategory: {
-                            in: prefer,
+                            in: requestor.preferences,
                           },
                         },
                       ],
@@ -678,51 +696,6 @@ export const PublishQuery = extendType({
                 createdAt: "desc",
               },
             })
-
-            // // If preferred categories not found or found less, query all
-            // if (videos.length < FETCH_QTY) {
-            //   videos = [
-            //     ...videos,
-            //     ...(await prisma.publish.findMany({
-            //       where: {
-            //         AND: [
-            //           {
-            //             visibility: {
-            //               equals: "public",
-            //             },
-            //           },
-            //           {
-            //             kind: {
-            //               in: ["Video", "Short"],
-            //             },
-            //           },
-            //           {
-            //             uploading: false,
-            //           },
-            //         ],
-            //         OR:
-            //           !prefer || prefer.length === 0
-            //             ? undefined
-            //             : [
-            //                 {
-            //                   primaryCategory: {
-            //                     in: Object.values(Category)[1].members,
-            //                   },
-            //                 },
-            //                 {
-            //                   secondaryCategory: {
-            //                     in: Object.values(Category)[1].members,
-            //                   },
-            //                 },
-            //               ],
-            //       },
-            //       take: FETCH_QTY - videos.length,
-            //       orderBy: {
-            //         createdAt: "desc",
-            //       },
-            //     })),
-            //   ]
-            // }
           } else {
             // Query preferred categories first
             videos = await prisma.publish.findMany({
@@ -748,17 +721,17 @@ export const PublishQuery = extendType({
                   },
                 ],
                 OR:
-                  !prefer || prefer.length === 0
+                  !requestor || requestor.preferences.length === 0
                     ? undefined
                     : [
                         {
                           primaryCategory: {
-                            in: prefer,
+                            in: requestor.preferences,
                           },
                         },
                         {
                           secondaryCategory: {
-                            in: prefer,
+                            in: requestor.preferences,
                           },
                         },
                       ],
@@ -772,51 +745,6 @@ export const PublishQuery = extendType({
                 createdAt: "desc",
               },
             })
-
-            // // If preferred categories not found or found less, query all with no cursor
-            // if (videos.length < FETCH_QTY) {
-            //   videos = [
-            //     ...videos,
-            //     ...(await prisma.publish.findMany({
-            //       where: {
-            //         AND: [
-            //           {
-            //             visibility: {
-            //               equals: "public",
-            //             },
-            //           },
-            //           {
-            //             kind: {
-            //               in: ["Video", "Short"],
-            //             },
-            //           },
-            //           {
-            //             uploading: false,
-            //           },
-            //         ],
-            //         OR:
-            //           !prefer || prefer.length === 0
-            //             ? undefined
-            //             : [
-            //                 {
-            //                   primaryCategory: {
-            //                     in: Object.values(Category)[1].members,
-            //                   },
-            //                 },
-            //                 {
-            //                   secondaryCategory: {
-            //                     in: Object.values(Category)[1].members,
-            //                   },
-            //                 },
-            //               ],
-            //       },
-            //       take: FETCH_QTY - videos.length,
-            //       orderBy: {
-            //         createdAt: "desc",
-            //       },
-            //     })),
-            //   ]
-            // }
           }
 
           if (videos.length === FETCH_QTY) {
@@ -857,36 +785,6 @@ export const PublishQuery = extendType({
                 createdAt: "desc",
               },
             })
-
-            // // If not found or found less, query all with no cursor
-            // if (nextQuery.length < FETCH_QTY) {
-            //   nextQuery = [
-            //     ...nextQuery,
-            //     ...(await prisma.publish.findMany({
-            //       where: {
-            //         AND: [
-            //           {
-            //             visibility: {
-            //               equals: "public",
-            //             },
-            //           },
-            //           {
-            //             kind: {
-            //               in: ["Video", "Short"],
-            //             },
-            //           },
-            //           {
-            //             uploading: false,
-            //           },
-            //         ],
-            //       },
-            //       take: FETCH_QTY,
-            //       orderBy: {
-            //         createdAt: "desc",
-            //       },
-            //     })),
-            //   ]
-            // }
 
             return {
               pageInfo: {
@@ -1060,6 +958,224 @@ export const PublishQuery = extendType({
                     },
                   },
                 ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: videos.map((video) => ({
+                cursor: video.id,
+                node: video,
+              })),
+            }
+          } else {
+            // No more items to be fetched
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: videos.map((video) => ({
+                cursor: video.id,
+                node: video,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("fetchSuggestedVideos", {
+      type: "FetchPublishesResponse",
+      args: { input: nonNull("FetchSuggestedPublishesInput") },
+      async resolve(_parent, { input }, { prisma }) {
+        try {
+          const { cursor, requestorId, publishId } = input
+
+          let videos: PublishType[] = []
+
+          // Get requestor station
+          const requestor = !requestorId
+            ? null
+            : await prisma.station.findUnique({
+                where: {
+                  id: requestorId,
+                },
+              })
+
+          let dontRecommends: DontRecommendType[] = []
+          if (requestor) {
+            // Query dont recommends of the user
+            dontRecommends = await prisma.dontRecommend.findMany({
+              where: {
+                requestorId: requestor.id,
+              },
+              take: 1000, // Take the last 1000 records
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // List of the station ids in user's don't recommend list
+          // Add the publish id in the list so user will not see the publish in the list as they are watching the given publish
+          const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
+
+          if (!cursor) {
+            videos = await prisma.publish.findMany({
+              where: {
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                  {
+                    id: {
+                      not: publishId,
+                    },
+                  },
+                ],
+                OR:
+                  !requestor || requestor.preferences.length === 0
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                      ],
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else {
+            videos = await prisma.publish.findMany({
+              where: {
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                  {
+                    id: {
+                      not: publishId,
+                    },
+                  },
+                ],
+                OR:
+                  !requestor || requestor.preferences.length === 0
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                      ],
+              },
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip cursor
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          if (videos.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = videos[videos.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.publish.findMany({
+              where: {
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Video",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                  {
+                    id: {
+                      not: publishId,
+                    },
+                  },
+                ],
+                OR:
+                  !requestor || requestor.preferences.length === 0
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.preferences,
+                          },
+                        },
+                      ],
               },
               take: FETCH_QTY,
               cursor: {

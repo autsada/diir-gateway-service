@@ -128,7 +128,11 @@ export interface NexusGenInputs {
   }
   FetchPublishesInput: { // input type
     cursor?: string | null; // String
-    prefer?: NexusGenEnums['Category'][] | null; // [Category!]
+    requestorId?: string | null; // String
+  }
+  FetchSuggestedPublishesInput: { // input type
+    cursor?: string | null; // String
+    publishId: string; // String!
     requestorId?: string | null; // String
   }
   FetchWatchLaterInput: { // input type
@@ -435,6 +439,7 @@ export interface NexusGenObjects {
     imageRef?: string | null; // String
     name: string; // String!
     owner: string; // String!
+    preferences: NexusGenEnums['Category'][]; // [Category!]!
     tokenId?: number | null; // Int
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
   }
@@ -705,6 +710,7 @@ export interface NexusGenFieldTypes {
     fetchDontRecommends: NexusGenRootTypes['FetchDontRecommendsResponse'] | null; // FetchDontRecommendsResponse
     fetchMyPlaylists: NexusGenRootTypes['FetchPlaylistsResponse'] | null; // FetchPlaylistsResponse
     fetchMyPublishes: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
+    fetchSuggestedVideos: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchVideosByCategory: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchWatchLater: NexusGenRootTypes['FetchWatchLaterResponse'] | null; // FetchWatchLaterResponse
     getBalance: string; // String!
@@ -745,6 +751,7 @@ export interface NexusGenFieldTypes {
     isOwner: boolean | null; // Boolean
     name: string; // String!
     owner: string; // String!
+    preferences: NexusGenEnums['Category'][]; // [Category!]!
     publishes: NexusGenRootTypes['Publish'][]; // [Publish!]!
     publishesCount: number; // Int!
     tokenId: number | null; // Int
@@ -1013,6 +1020,7 @@ export interface NexusGenFieldTypeNames {
     fetchDontRecommends: 'FetchDontRecommendsResponse'
     fetchMyPlaylists: 'FetchPlaylistsResponse'
     fetchMyPublishes: 'FetchPublishesResponse'
+    fetchSuggestedVideos: 'FetchPublishesResponse'
     fetchVideosByCategory: 'FetchPublishesResponse'
     fetchWatchLater: 'FetchWatchLaterResponse'
     getBalance: 'String'
@@ -1053,6 +1061,7 @@ export interface NexusGenFieldTypeNames {
     isOwner: 'Boolean'
     name: 'String'
     owner: 'String'
+    preferences: 'Category'
     publishes: 'Publish'
     publishesCount: 'Int'
     tokenId: 'Int'
@@ -1198,6 +1207,9 @@ export interface NexusGenArgTypes {
     }
     fetchMyPublishes: { // args
       input: NexusGenInputs['FetchMyPublishesInput']; // FetchMyPublishesInput!
+    }
+    fetchSuggestedVideos: { // args
+      input: NexusGenInputs['FetchSuggestedPublishesInput']; // FetchSuggestedPublishesInput!
     }
     fetchVideosByCategory: { // args
       input: NexusGenInputs['FetchPublishesByCatInput']; // FetchPublishesByCatInput!

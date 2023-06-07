@@ -47,6 +47,7 @@ export const Station = objectType({
     t.field(StationModel.accountId)
     t.field(StationModel.account)
     t.field(StationModel.watchLater)
+    t.field(StationModel.preferences)
     // t.field(StationModel.playlists)
 
     t.nonNull.field("followersCount", {

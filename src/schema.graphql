@@ -260,13 +260,18 @@ input FetchPublishesByCatInput {
 
 input FetchPublishesInput {
   cursor: String
-  prefer: [Category!]
   requestorId: String
 }
 
 type FetchPublishesResponse {
   edges: [PublishEdge!]!
   pageInfo: PageInfo!
+}
+
+input FetchSuggestedPublishesInput {
+  cursor: String
+  publishId: String!
+  requestorId: String
 }
 
 input FetchWatchLaterInput {
@@ -472,6 +477,7 @@ type Query {
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
+  fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   getBalance(address: String!): String!
@@ -568,6 +574,7 @@ type Station {
   isOwner: Boolean
   name: String!
   owner: String!
+  preferences: [Category!]!
   publishes: [Publish!]!
   publishesCount: Int!
   tokenId: Int
