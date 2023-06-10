@@ -134,6 +134,11 @@ enum CommentType {
   PUBLISH
 }
 
+enum CommentsOrderBy {
+  counts
+  newest
+}
+
 input CreateDraftPublishInput {
   accountId: String!
   creatorId: String!
@@ -210,7 +215,7 @@ input DontRecommendInput {
 
 input FetchCommentsByPublishIdInput {
   cursor: String
-  orderBy: OrderBy
+  orderBy: CommentsOrderBy
   publishId: String!
   requestorId: String
 }
@@ -367,11 +372,6 @@ type Mutation {
   updatePublish(input: UpdatePublishInput!): Publish
   validateDisplayName(name: String!): Boolean
   validateName(name: String!): Boolean
-}
-
-enum OrderBy {
-  counts
-  newest
 }
 
 type PageInfo {

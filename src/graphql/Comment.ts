@@ -157,8 +157,8 @@ export const Comment = objectType({
   },
 })
 
-export const OrderBy = enumType({
-  name: "OrderBy",
+export const CommentsOrderBy = enumType({
+  name: "CommentsOrderBy",
   members: ["counts", "newest"],
 })
 export const FetchCommentsByPublishIdInput = inputObjectType({
@@ -167,7 +167,7 @@ export const FetchCommentsByPublishIdInput = inputObjectType({
     t.string("requestorId") // Station id of the requestor
     t.nonNull.string("publishId")
     t.string("cursor")
-    t.field("orderBy", { type: "OrderBy" })
+    t.field("orderBy", { type: "CommentsOrderBy" })
   },
 })
 
