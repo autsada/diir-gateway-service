@@ -356,6 +356,7 @@ export interface NexusGenObjects {
   }
   Mutation: {};
   PageInfo: { // root type
+    count?: number | null; // Int
     endCursor?: string | null; // String
     hasNextPage?: boolean | null; // Boolean
   }
@@ -628,6 +629,7 @@ export interface NexusGenFieldTypes {
     validateName: boolean | null; // Boolean
   }
   PageInfo: { // field return type
+    count: number | null; // Int
     endCursor: string | null; // String
     hasNextPage: boolean | null; // Boolean
   }
@@ -665,7 +667,7 @@ export interface NexusGenFieldTypes {
     publishId: string; // String!
   }
   Publish: { // field return type
-    comments: Array<NexusGenRootTypes['Comment'] | null>; // [Comment]!
+    comments: NexusGenRootTypes['Comment'][]; // [Comment!]!
     commentsCount: number; // Int!
     contentRef: string | null; // String
     contentURI: string | null; // String
@@ -710,6 +712,7 @@ export interface NexusGenFieldTypes {
     fetchDontRecommends: NexusGenRootTypes['FetchDontRecommendsResponse'] | null; // FetchDontRecommendsResponse
     fetchMyPlaylists: NexusGenRootTypes['FetchPlaylistsResponse'] | null; // FetchPlaylistsResponse
     fetchMyPublishes: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
+    fetchPreviewWatchLater: NexusGenRootTypes['FetchWatchLaterResponse'] | null; // FetchWatchLaterResponse
     fetchSuggestedVideos: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchVideosByCategory: NexusGenRootTypes['FetchPublishesResponse'] | null; // FetchPublishesResponse
     fetchWatchLater: NexusGenRootTypes['FetchWatchLaterResponse'] | null; // FetchWatchLaterResponse
@@ -938,6 +941,7 @@ export interface NexusGenFieldTypeNames {
     validateName: 'Boolean'
   }
   PageInfo: { // field return type name
+    count: 'Int'
     endCursor: 'String'
     hasNextPage: 'Boolean'
   }
@@ -1020,6 +1024,7 @@ export interface NexusGenFieldTypeNames {
     fetchDontRecommends: 'FetchDontRecommendsResponse'
     fetchMyPlaylists: 'FetchPlaylistsResponse'
     fetchMyPublishes: 'FetchPublishesResponse'
+    fetchPreviewWatchLater: 'FetchWatchLaterResponse'
     fetchSuggestedVideos: 'FetchPublishesResponse'
     fetchVideosByCategory: 'FetchPublishesResponse'
     fetchWatchLater: 'FetchWatchLaterResponse'
@@ -1207,6 +1212,9 @@ export interface NexusGenArgTypes {
     }
     fetchMyPublishes: { // args
       input: NexusGenInputs['FetchMyPublishesInput']; // FetchMyPublishesInput!
+    }
+    fetchPreviewWatchLater: { // args
+      input: NexusGenInputs['FetchWatchLaterInput']; // FetchWatchLaterInput!
     }
     fetchSuggestedVideos: { // args
       input: NexusGenInputs['FetchSuggestedPublishesInput']; // FetchSuggestedPublishesInput!

@@ -4,7 +4,6 @@ import {
   enumType,
   nonNull,
   inputObjectType,
-  list,
 } from "nexus"
 import {
   Publish as PublishType,
@@ -252,30 +251,37 @@ export const Publish = objectType({
               },
             ],
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+          orderBy: [
+            {
+              comments: {
+                _count: "desc",
+              },
+            },
+            {
+              createdAt: "desc",
+            },
+          ],
         })
       },
     })
 
-    /**
-     * First 50 comments.
-     */
-    t.nullable.field("comments", {
-      type: nonNull(list("Comment")),
-      resolve: async (parent, _, { prisma }) => {
-        return prisma.comment.findMany({
-          where: {
-            publishId: parent.id,
-          },
-          orderBy: {
-            updatedAt: "desc",
-          },
-          take: 50,
-        })
-      },
-    })
+    // /**
+    //  * First 50 comments.
+    //  */
+    // t.nullable.field("comments", {
+    //   type: nonNull(list("Comment")),
+    //   resolve: async (parent, _, { prisma }) => {
+    //     return prisma.comment.findMany({
+    //       where: {
+    //         publishId: parent.id,
+    //       },
+    //       orderBy: {
+    //         updatedAt: "desc",
+    //       },
+    //       take: 50,
+    //     })
+    //   },
+    // })
   },
 })
 

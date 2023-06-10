@@ -5,5 +5,6 @@ export const PageInfo = objectType({
   definition(t) {
     t.string("endCursor")
     t.boolean("hasNextPage")
+    t.int("count")
   },
 })

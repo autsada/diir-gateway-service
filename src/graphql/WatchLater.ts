@@ -58,6 +58,80 @@ export const WatchLaterQuery = extendType({
   type: "Query",
   definition(t) {
     /**
+     * Fetch watch later for preview
+     */
+    t.field("fetchPreviewWatchLater", {
+      type: "FetchWatchLaterResponse",
+      args: { input: nonNull("FetchWatchLaterInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId } = input
+          if (!owner || !accountId || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          const watchLater = await prisma.watchLater.findMany({
+            where: {
+              stationId,
+            },
+            take: 10, // Take only 10 items
+            orderBy: {
+              createdAt: "desc",
+            },
+          })
+
+          // Get total watch later
+          const count = await prisma.watchLater.count({
+            where: {
+              stationId,
+            },
+          })
+
+          if (watchLater.length < count) {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: true,
+                count,
+              },
+              edges: watchLater.map((wl) => ({
+                cursor: wl.id,
+                node: wl,
+              })),
+            }
+          } else {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+                count,
+              },
+              edges: watchLater.map((wl) => ({
+                cursor: wl.id,
+                node: wl,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
      * Fetch watch later list of a station
      */
     t.field("fetchWatchLater", {
@@ -113,6 +187,13 @@ export const WatchLaterQuery = extendType({
             })
           }
 
+          // Get total watch later
+          const count = await prisma.watchLater.count({
+            where: {
+              stationId,
+            },
+          })
+
           if (watchLater.length === FETCH_QTY) {
             // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
             const lastFetchedCursor = watchLater[watchLater.length - 1].id
@@ -136,6 +217,7 @@ export const WatchLaterQuery = extendType({
               pageInfo: {
                 endCursor: lastFetchedCursor,
                 hasNextPage: nextQuery.length > 0,
+                count,
               },
               edges: watchLater.map((wl) => ({
                 cursor: wl.id,
@@ -147,6 +229,7 @@ export const WatchLaterQuery = extendType({
               pageInfo: {
                 endCursor: null,
                 hasNextPage: false,
+                count,
               },
               edges: watchLater.map((wl) => ({
                 cursor: wl.id,

@@ -375,6 +375,7 @@ enum OrderBy {
 }
 
 type PageInfo {
+  count: Int
   endCursor: String
   hasNextPage: Boolean
 }
@@ -422,7 +423,7 @@ input PlaylistItemStatus {
 }
 
 type Publish {
-  comments: [Comment]!
+  comments: [Comment!]!
   commentsCount: Int!
   contentRef: String
   contentURI: String
@@ -477,6 +478,7 @@ type Query {
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
+  fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
