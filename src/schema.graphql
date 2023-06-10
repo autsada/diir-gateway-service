@@ -282,6 +282,7 @@ input FetchSuggestedPublishesInput {
 input FetchWatchLaterInput {
   accountId: String!
   cursor: String
+  orderBy: WatchLaterOrderBy
   owner: String!
   stationId: String!
 }
@@ -668,6 +669,11 @@ type WatchLater {
 type WatchLaterEdge {
   cursor: String
   node: WatchLater
+}
+
+enum WatchLaterOrderBy {
+  newest
+  oldest
 }
 
 type WriteResult {

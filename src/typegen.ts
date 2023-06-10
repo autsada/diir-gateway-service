@@ -138,6 +138,7 @@ export interface NexusGenInputs {
   FetchWatchLaterInput: { // input type
     accountId: string; // String!
     cursor?: string | null; // String
+    orderBy?: NexusGenEnums['WatchLaterOrderBy'] | null; // WatchLaterOrderBy
     owner: string; // String!
     stationId: string; // String!
   }
@@ -250,6 +251,7 @@ export interface NexusGenEnums {
   ThumbSource: "custom" | "generated"
   ThumbnailSource: "custom" | "generated"
   Visibility: "draft" | "private" | "public"
+  WatchLaterOrderBy: "newest" | "oldest"
 }
 
 export interface NexusGenScalars {

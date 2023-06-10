@@ -1,4 +1,10 @@
-import { extendType, inputObjectType, nonNull, objectType } from "nexus"
+import {
+  enumType,
+  extendType,
+  inputObjectType,
+  nonNull,
+  objectType,
+} from "nexus"
 import { WatchLater as WatchLaterModel } from "nexus-prisma"
 import { WatchLater as WatchLaterType } from "@prisma/client"
 
@@ -26,6 +32,11 @@ export const WatchLater = objectType({
   },
 })
 
+export const WatchLaterOrderBy = enumType({
+  name: "WatchLaterOrderBy",
+  members: ["oldest", "newest"],
+})
+
 export const FetchWatchLaterInput = inputObjectType({
   name: "FetchWatchLaterInput",
   definition(t) {
@@ -33,6 +44,7 @@ export const FetchWatchLaterInput = inputObjectType({
     t.nonNull.string("accountId")
     t.nonNull.string("stationId")
     t.string("cursor")
+    t.field("orderBy", { type: "WatchLaterOrderBy" })
   },
 })
 
@@ -144,7 +156,7 @@ export const WatchLaterQuery = extendType({
       ) => {
         try {
           if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const { owner, accountId, stationId, cursor } = input
+          const { owner, accountId, stationId, cursor, orderBy } = input
           if (!owner || !accountId || !stationId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
@@ -167,7 +179,7 @@ export const WatchLaterQuery = extendType({
               },
               take: FETCH_QTY,
               orderBy: {
-                createdAt: "desc",
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
               },
             })
           } else {
@@ -182,7 +194,7 @@ export const WatchLaterQuery = extendType({
               },
               skip: 1, // Skip the cursor
               orderBy: {
-                createdAt: "desc",
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
               },
             })
           }
@@ -209,7 +221,7 @@ export const WatchLaterQuery = extendType({
               },
               skip: 1, // Skip the cusor
               orderBy: {
-                createdAt: "desc",
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
               },
             })
 
