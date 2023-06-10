@@ -362,6 +362,7 @@ type Mutation {
   likePublish(input: LikePublishInput!): WriteResult
   mintFirstStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
+  removeAllWatchLater(input: RemoveAllWatchLaterInput!): WriteResult
   removeDontRecommend(input: DontRecommendInput!): WriteResult
   removeFromWatchLater(input: RemoveFromWatchLaterInput!): WriteResult
   reportPublish(input: ReportPublishInput!): WriteResult
@@ -506,6 +507,12 @@ enum QueryPublishKind {
   blogs
   podcasts
   videos
+}
+
+input RemoveAllWatchLaterInput {
+  accountId: String!
+  owner: String!
+  stationId: String!
 }
 
 input RemoveFromWatchLaterInput {

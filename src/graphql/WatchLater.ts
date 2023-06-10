@@ -278,6 +278,15 @@ export const RemoveFromWatchLaterInput = inputObjectType({
   },
 })
 
+export const RemoveAllWatchLaterInput = inputObjectType({
+  name: "RemoveAllWatchLaterInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+  },
+})
+
 export const WatchLaterMutation = extendType({
   type: "Mutation",
   definition(t) {
@@ -394,6 +403,45 @@ export const WatchLaterMutation = extendType({
               })
             }
           }
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Remove from watch later
+     */
+    t.field("removeAllWatchLater", {
+      type: "WriteResult",
+      args: { input: nonNull("RemoveAllWatchLaterInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId } = input
+          if (!owner || !accountId || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          await prisma.watchLater.deleteMany({
+            where: {
+              stationId,
+            },
+          })
 
           return { status: "Ok" }
         } catch (error) {

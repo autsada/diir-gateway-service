@@ -181,6 +181,11 @@ export interface NexusGenInputs {
     name: string; // String!
     requestorId?: string | null; // String
   }
+  RemoveAllWatchLaterInput: { // input type
+    accountId: string; // String!
+    owner: string; // String!
+    stationId: string; // String!
+  }
   RemoveFromWatchLaterInput: { // input type
     accountId: string; // String!
     id?: string | null; // String
@@ -618,6 +623,7 @@ export interface NexusGenFieldTypes {
     likePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     mintFirstStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
     mintStationNFT: NexusGenRootTypes['MintStationNFTResult'] | null; // MintStationNFTResult
+    removeAllWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     removeDontRecommend: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     removeFromWatchLater: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     reportPublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -930,6 +936,7 @@ export interface NexusGenFieldTypeNames {
     likePublish: 'WriteResult'
     mintFirstStationNFT: 'MintStationNFTResult'
     mintStationNFT: 'MintStationNFTResult'
+    removeAllWatchLater: 'WriteResult'
     removeDontRecommend: 'WriteResult'
     removeFromWatchLater: 'WriteResult'
     reportPublish: 'WriteResult'
@@ -1161,6 +1168,9 @@ export interface NexusGenArgTypes {
     }
     mintStationNFT: { // args
       input: NexusGenInputs['MintStationNFTInput']; // MintStationNFTInput!
+    }
+    removeAllWatchLater: { // args
+      input: NexusGenInputs['RemoveAllWatchLaterInput']; // RemoveAllWatchLaterInput!
     }
     removeDontRecommend: { // args
       input: NexusGenInputs['DontRecommendInput']; // DontRecommendInput!
