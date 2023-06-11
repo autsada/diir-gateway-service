@@ -1,4 +1,4 @@
-import { extendType, inputObjectType, nonNull, objectType } from "nexus"
+import { extendType, inputObjectType, nonNull, objectType, list } from "nexus"
 import {
   Playlist as PlaylistModel,
   PlaylistItem as PlaylistItemModel,
@@ -6,7 +6,14 @@ import {
 import type { Playlist as PlaylistType } from "@prisma/client"
 
 import { validateAuthenticity } from "../lib"
-import { throwError, badInputErrMessage } from "./Error"
+import {
+  throwError,
+  badInputErrMessage,
+  notFoundErrMessage,
+  unauthorizedErrMessage,
+} from "./Error"
+import { NexusGenObjects } from "../typegen"
+import { FETCH_QTY } from "../lib/constants"
 
 /**
  * The PlaylistItem type that map to the database model
@@ -87,6 +94,34 @@ export const CheckPublishPlaylistsResponse = objectType({
   },
 })
 
+export const PreviewPlaylist = objectType({
+  name: "PreviewPlaylist",
+  definition(t) {
+    t.nonNull.string("id")
+    t.nonNull.string("name")
+    t.nonNull.int("count")
+    t.field("lastItem", { type: "Publish" })
+  },
+})
+
+export const PreviewPlaylistEdge = objectType({
+  name: "PreviewPlaylistEdge",
+  definition(t) {
+    t.string("cursor")
+    t.field("node", {
+      type: "PreviewPlaylist",
+    })
+  },
+})
+
+export const FetchPreviewPlaylistsResponse = objectType({
+  name: "FetchPreviewPlaylistsResponse",
+  definition(t) {
+    t.nonNull.field("pageInfo", { type: "PageInfo" })
+    t.nonNull.list.nonNull.field("edges", { type: "PreviewPlaylistEdge" })
+  },
+})
+
 export const PlaylistQuery = extendType({
   type: "Query",
   definition(t) {
@@ -122,9 +157,14 @@ export const PlaylistQuery = extendType({
                 ownerId: stationId,
               },
               take: 100, // Take 100 rows for the first query
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
             })
           } else {
             // B. Consecutive queries
@@ -137,11 +177,23 @@ export const PlaylistQuery = extendType({
                 id: cursor,
               },
               skip: 1, // Skip cursor
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
             })
           }
+
+          // Get playlists count
+          const count = await prisma.playlist.count({
+            where: {
+              ownerId: stationId,
+            },
+          })
 
           if (playlists.length === 100) {
             // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
@@ -157,15 +209,21 @@ export const PlaylistQuery = extendType({
                 id: lastFetchedCursor,
               },
               skip: 1, // Skip cursor
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
             })
 
             return {
               pageInfo: {
                 endCursor: lastFetchedCursor,
                 hasNextPage: nextQuery.length > 0,
+                count,
               },
               edges: playlists.map((playlist) => ({
                 cursor: playlist.id,
@@ -178,6 +236,7 @@ export const PlaylistQuery = extendType({
               pageInfo: {
                 endCursor: null,
                 hasNextPage: false,
+                count,
               },
               edges: playlists.map((playlist) => ({
                 cursor: playlist.id,
@@ -251,6 +310,174 @@ export const PlaylistQuery = extendType({
         }
       },
     })
+
+    /**
+     * Fetch preview playlists
+     * Get the most updated 10 playlists
+     */
+    t.field("fetchPreviewPlaylists", {
+      type: "FetchPreviewPlaylistsResponse",
+      args: { input: nonNull("FetchMyPlaylistsInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, cursor } = input
+          if (!owner || !accountId || !stationId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Query playlists by owner id
+          let playlists: NexusGenObjects["PreviewPlaylist"][] = []
+
+          if (!cursor) {
+            // A. First query
+            const items = await prisma.playlist.findMany({
+              where: {
+                ownerId: stationId,
+              },
+              take: FETCH_QTY,
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
+              include: {
+                items: {
+                  include: {
+                    publish: {
+                      include: {
+                        playback: true,
+                      },
+                    },
+                  },
+                  orderBy: {
+                    createdAt: "desc",
+                  },
+                },
+              },
+            })
+
+            playlists = items.map((item) => ({
+              id: item.id,
+              name: item.name,
+              count: item.items.length,
+              lastItem: item.items[0] ? item.items[0].publish : null,
+            }))
+          } else {
+            // B. Consecutive queries
+            const items = await prisma.playlist.findMany({
+              where: {
+                ownerId: stationId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip cursor
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
+              include: {
+                items: {
+                  include: {
+                    publish: {
+                      include: {
+                        playback: true,
+                      },
+                    },
+                  },
+                  orderBy: {
+                    createdAt: "desc",
+                  },
+                },
+              },
+            })
+
+            playlists = items.map((item) => ({
+              id: item.id,
+              name: item.name,
+              count: item.items.length,
+              lastItem: item.items[0] ? item.items[0].publish : null,
+            }))
+          }
+
+          // Get playlists count
+          const count = await prisma.playlist.count({
+            where: {
+              ownerId: stationId,
+            },
+          })
+
+          if (playlists.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = playlists[playlists.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.playlist.findMany({
+              where: {
+                ownerId: stationId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip cursor
+              orderBy: [
+                {
+                  updatedAt: "desc",
+                },
+                {
+                  createdAt: "desc",
+                },
+              ],
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+                count,
+              },
+              edges: playlists.map((playlist) => ({
+                cursor: playlist.id,
+                node: playlist,
+              })),
+            }
+          } else {
+            // No more items to be fetched
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+                count,
+              },
+              edges: playlists.map((playlist) => ({
+                cursor: playlist.id,
+                node: playlist,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
   },
 })
 
@@ -303,6 +530,33 @@ export const UpdatePlaylistsInput = inputObjectType({
   },
 })
 
+/**
+ * Delete a playlist
+ */
+export const DeletePlaylistInput = inputObjectType({
+  name: "DeletePlaylistInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("playlistId")
+  },
+})
+
+/**
+ * Delete a playlist
+ */
+export const UpdatePlaylistNameInput = inputObjectType({
+  name: "UpdatePlaylistNameInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("playlistId")
+    t.nonNull.string("name")
+  },
+})
+
 export const PlaylistMutation = extendType({
   type: "Mutation",
   definition(t) {
@@ -328,12 +582,20 @@ export const PlaylistMutation = extendType({
             signature,
           })
 
-          // Create new playlist
-          const playlist = await prisma.playlist.create({
-            data: {
+          // Create new playlist if not exist
+          const playlist = await prisma.playlist.upsert({
+            where: {
+              identifier: {
+                ownerId: stationId,
+                name,
+              },
+            },
+            create: {
               name,
               ownerId: stationId,
+              updatedAt: new Date().toISOString(),
             },
+            update: {},
           })
 
           // 2. A add a publish to the created playlist
@@ -374,6 +636,17 @@ export const PlaylistMutation = extendType({
             signature,
           })
 
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
           // Add a publish to the playlist if not exist
           await prisma.playlistItem.upsert({
             where: {
@@ -388,6 +661,16 @@ export const PlaylistMutation = extendType({
               publishId,
             },
             update: {},
+          })
+
+          // Update updatedAt of the playlist
+          await prisma.playlist.update({
+            where: {
+              id: playlistId,
+            },
+            data: {
+              updatedAt: new Date().toISOString(),
+            },
           })
 
           return { status: "Ok" }
@@ -427,26 +710,140 @@ export const PlaylistMutation = extendType({
           const removeItems = playlists.filter((pl) => !pl.isInPlaylist)
 
           // Add items
-          await prisma.playlistItem.createMany({
-            data: addItems.map((item) => ({
-              ownerId: stationId,
-              playlistId: item.playlistId,
-              publishId,
-            })),
+          if (addItems.length > 0) {
+            await prisma.playlistItem.createMany({
+              data: addItems.map((item) => ({
+                ownerId: stationId,
+                playlistId: item.playlistId,
+                publishId,
+              })),
+            })
+
+            // Update playlists
+            await Promise.all(
+              addItems.map((item) =>
+                prisma.playlist.update({
+                  where: {
+                    id: item.playlistId,
+                  },
+                  data: {
+                    updatedAt: new Date().toISOString(),
+                  },
+                })
+              )
+            )
+          }
+
+          if (removeItems.length > 0) {
+            await Promise.all(
+              removeItems.map((item) =>
+                prisma.playlistItem.delete({
+                  where: {
+                    identifier: {
+                      playlistId: item.playlistId,
+                      publishId,
+                    },
+                  },
+                })
+              )
+            )
+          }
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Delete a playlist
+     */
+    t.field("deletePlaylist", {
+      type: "WriteResult",
+      args: { input: nonNull("DeletePlaylistInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId } = input
+          if (!owner || !accountId || !stationId || !playlistId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
           })
 
-          await Promise.all(
-            removeItems.map((item) =>
-              prisma.playlistItem.delete({
-                where: {
-                  identifier: {
-                    playlistId: item.playlistId,
-                    publishId,
-                  },
-                },
-              })
-            )
-          )
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.playlist.delete({
+            where: {
+              id: playlistId,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Update playlist's name
+     */
+    t.field("updatePlaylistName", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdatePlaylistNameInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId, name } = input
+          if (!owner || !accountId || !stationId || !playlistId || !name)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.playlist.update({
+            where: {
+              id: playlistId,
+            },
+            data: {
+              name,
+              updatedAt: new Date().toISOString(),
+            },
+          })
 
           return { status: "Ok" }
         } catch (error) {

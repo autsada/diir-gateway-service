@@ -186,6 +186,13 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+input DeletePlaylistInput {
+  accountId: String!
+  owner: String!
+  playlistId: String!
+  stationId: String!
+}
+
 type DisLike {
   createdAt: DateTime!
   publish: Publish!
@@ -254,6 +261,11 @@ input FetchMyPublishesInput {
 
 type FetchPlaylistsResponse {
   edges: [PlaylistEdge!]!
+  pageInfo: PageInfo!
+}
+
+type FetchPreviewPlaylistsResponse {
+  edges: [PreviewPlaylistEdge!]!
   pageInfo: PageInfo!
 }
 
@@ -354,6 +366,7 @@ type Mutation {
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
+  deletePlaylist(input: DeletePlaylistInput!): WriteResult
   disLikeComment(input: LikeCommentInput!): WriteResult
   disLikePublish(input: LikePublishInput!): WriteResult
   dontRecommend(input: DontRecommendInput!): WriteResult
@@ -369,6 +382,7 @@ type Mutation {
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
+  updatePlaylistName(input: UpdatePlaylistNameInput!): WriteResult
   updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
   updatePublish(input: UpdatePublishInput!): Publish
@@ -422,6 +436,18 @@ type PlaylistItem {
 input PlaylistItemStatus {
   isInPlaylist: Boolean!
   playlistId: String!
+}
+
+type PreviewPlaylist {
+  count: Int!
+  id: String!
+  lastItem: Publish
+  name: String!
+}
+
+type PreviewPlaylistEdge {
+  cursor: String
+  node: PreviewPlaylist
 }
 
 type Publish {
@@ -480,6 +506,7 @@ type Query {
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
+  fetchPreviewPlaylists(input: FetchMyPlaylistsInput!): FetchPreviewPlaylistsResponse
   fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
@@ -629,6 +656,14 @@ input UpdateImageInput {
   image: String!
   imageRef: String!
   owner: String!
+  stationId: String!
+}
+
+input UpdatePlaylistNameInput {
+  accountId: String!
+  name: String!
+  owner: String!
+  playlistId: String!
   stationId: String!
 }
 

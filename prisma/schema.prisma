@@ -260,6 +260,7 @@ model WatchLater {
 model Playlist {
     id        String         @id @default(cuid())
     createdAt DateTime       @default(now())
+    updatedAt DateTime?      @default(now())
     name      String         @db.VarChar(120)
     ownerId   String // Station id who owns the playlist
     owner     Station        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
