@@ -3,7 +3,10 @@ import {
   Playlist as PlaylistModel,
   PlaylistItem as PlaylistItemModel,
 } from "nexus-prisma"
-import type { Playlist as PlaylistType } from "@prisma/client"
+import type {
+  Playlist as PlaylistType,
+  PlaylistItem as PlaylistItemType,
+} from "@prisma/client"
 
 import { validateAuthenticity } from "../lib"
 import {
@@ -39,6 +42,7 @@ export const Playlist = objectType({
     t.field(PlaylistModel.id)
     t.field(PlaylistModel.createdAt)
     t.field(PlaylistModel.name)
+    t.field(PlaylistModel.description)
     t.field(PlaylistModel.ownerId)
     t.field(PlaylistModel.owner)
     t.field(PlaylistModel.items)
@@ -119,6 +123,38 @@ export const FetchPreviewPlaylistsResponse = objectType({
   definition(t) {
     t.nonNull.field("pageInfo", { type: "PageInfo" })
     t.nonNull.list.nonNull.field("edges", { type: "PreviewPlaylistEdge" })
+  },
+})
+
+export const FetchPlaylistItemsInput = inputObjectType({
+  name: "FetchPlaylistItemsInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("playlistId")
+    t.string("cursor")
+    t.field("orderBy", { type: "PlaylistOrderBy" })
+  },
+})
+
+export const PlaylistItemEdge = objectType({
+  name: "PlaylistItemEdge",
+  definition(t) {
+    t.string("cursor")
+    t.field("node", {
+      type: "PlaylistItem",
+    })
+  },
+})
+
+export const FetchPlaylistItemsResponse = objectType({
+  name: "FetchPlaylistItemsResponse",
+  definition(t) {
+    t.nonNull.string("playlistName")
+    t.string("playlistDescription")
+    t.nonNull.field("pageInfo", { type: "PageInfo" })
+    t.nonNull.list.nonNull.field("edges", { type: "PlaylistItemEdge" })
   },
 })
 
@@ -478,6 +514,132 @@ export const PlaylistQuery = extendType({
         }
       },
     })
+
+    /**
+     * Fetch playlist items by playlist id
+     */
+    t.field("fetchPlaylistItems", {
+      type: "FetchPlaylistItemsResponse",
+      args: { input: nonNull("FetchPlaylistItemsInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId, cursor, orderBy } =
+            input
+          if (!owner || !accountId || !stationId || !playlistId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Query playlist items by playlist id
+          let items: PlaylistItemType[] = []
+
+          if (!cursor) {
+            // A. First query
+            items = await prisma.playlistItem.findMany({
+              where: {
+                playlistId,
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
+              },
+            })
+          } else {
+            // B. Consecutive queries
+            items = await prisma.playlistItem.findMany({
+              where: {
+                ownerId: stationId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip cursor
+              orderBy: {
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
+              },
+            })
+          }
+
+          // Get playlists count
+          const count = await prisma.playlistItem.count({
+            where: {
+              playlistId,
+            },
+          })
+
+          if (items.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = items[items.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.playlistItem.findMany({
+              where: {
+                playlistId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip cursor
+              orderBy: {
+                createdAt: orderBy === "oldest" ? "asc" : "desc",
+              },
+            })
+
+            return {
+              playlistName: playlist?.name!,
+              playlistDescription: playlist?.description,
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+                count,
+              },
+              edges: items.map((item) => ({
+                cursor: item.id,
+                node: item,
+              })),
+            }
+          } else {
+            // No more items to be fetched
+            return {
+              playlistName: playlist?.name!,
+              playlistDescription: playlist?.description,
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+                count,
+              },
+              edges: items.map((item) => ({
+                cursor: item.id,
+                node: item,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
   },
 })
 
@@ -544,7 +706,7 @@ export const DeletePlaylistInput = inputObjectType({
 })
 
 /**
- * Delete a playlist
+ * Update a playlist name
  */
 export const UpdatePlaylistNameInput = inputObjectType({
   name: "UpdatePlaylistNameInput",
@@ -554,6 +716,34 @@ export const UpdatePlaylistNameInput = inputObjectType({
     t.nonNull.string("stationId")
     t.nonNull.string("playlistId")
     t.nonNull.string("name")
+  },
+})
+
+/**
+ * Update a playlist name
+ */
+export const UpdatePlaylistDescriptionInput = inputObjectType({
+  name: "UpdatePlaylistDescriptionInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("playlistId")
+    t.nonNull.string("description")
+  },
+})
+
+/**
+ * Remove a publish from playlist
+ */
+export const RemoveFromPlaylistInput = inputObjectType({
+  name: "RemoveFromPlaylistInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("playlistId")
+    t.nonNull.string("publishId")
   },
 })
 
@@ -841,7 +1031,104 @@ export const PlaylistMutation = extendType({
             },
             data: {
               name,
-              updatedAt: new Date().toISOString(),
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Update playlist's name
+     */
+    t.field("updatePlaylistDescription", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdatePlaylistDescriptionInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId, description } = input
+          if (!owner || !accountId || !stationId || !playlistId || !description)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.playlist.update({
+            where: {
+              id: playlistId,
+            },
+            data: {
+              description,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Remove a publish from playlist
+     */
+    t.field("removeFromPlaylist", {
+      type: "WriteResult",
+      args: { input: nonNull("RemoveFromPlaylistInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId, publishId } = input
+          if (!owner || !accountId || !stationId || !playlistId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.playlistItem.delete({
+            where: {
+              identifier: {
+                playlistId,
+                publishId,
+              },
             },
           })
 

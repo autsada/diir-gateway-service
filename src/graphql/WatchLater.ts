@@ -32,8 +32,8 @@ export const WatchLater = objectType({
   },
 })
 
-export const WatchLaterOrderBy = enumType({
-  name: "WatchLaterOrderBy",
+export const PlaylistOrderBy = enumType({
+  name: "PlaylistOrderBy",
   members: ["oldest", "newest"],
 })
 
@@ -44,7 +44,7 @@ export const FetchWatchLaterInput = inputObjectType({
     t.nonNull.string("accountId")
     t.nonNull.string("stationId")
     t.string("cursor")
-    t.field("orderBy", { type: "WatchLaterOrderBy" })
+    t.field("orderBy", { type: "PlaylistOrderBy" })
   },
 })
 

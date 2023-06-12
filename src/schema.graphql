@@ -259,6 +259,22 @@ input FetchMyPublishesInput {
   owner: String!
 }
 
+input FetchPlaylistItemsInput {
+  accountId: String!
+  cursor: String
+  orderBy: PlaylistOrderBy
+  owner: String!
+  playlistId: String!
+  stationId: String!
+}
+
+type FetchPlaylistItemsResponse {
+  edges: [PlaylistItemEdge!]!
+  pageInfo: PageInfo!
+  playlistDescription: String
+  playlistName: String!
+}
+
 type FetchPlaylistsResponse {
   edges: [PlaylistEdge!]!
   pageInfo: PageInfo!
@@ -294,7 +310,7 @@ input FetchSuggestedPublishesInput {
 input FetchWatchLaterInput {
   accountId: String!
   cursor: String
-  orderBy: WatchLaterOrderBy
+  orderBy: PlaylistOrderBy
   owner: String!
   stationId: String!
 }
@@ -377,11 +393,13 @@ type Mutation {
   mintStationNFT(input: MintStationNFTInput!): MintStationNFTResult
   removeAllWatchLater(input: RemoveAllWatchLaterInput!): WriteResult
   removeDontRecommend(input: DontRecommendInput!): WriteResult
+  removeFromPlaylist(input: RemoveFromPlaylistInput!): WriteResult
   removeFromWatchLater(input: RemoveFromWatchLaterInput!): WriteResult
   reportPublish(input: ReportPublishInput!): WriteResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
+  updatePlaylistDescription(input: UpdatePlaylistDescriptionInput!): WriteResult
   updatePlaylistName(input: UpdatePlaylistNameInput!): WriteResult
   updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
@@ -412,6 +430,7 @@ type PlaybackLink {
 
 type Playlist {
   createdAt: DateTime!
+  description: String
   id: ID!
   items: [PlaylistItem!]!
   name: String!
@@ -433,9 +452,19 @@ type PlaylistItem {
   publishId: String!
 }
 
+type PlaylistItemEdge {
+  cursor: String
+  node: PlaylistItem
+}
+
 input PlaylistItemStatus {
   isInPlaylist: Boolean!
   playlistId: String!
+}
+
+enum PlaylistOrderBy {
+  newest
+  oldest
 }
 
 type PreviewPlaylist {
@@ -506,6 +535,7 @@ type Query {
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
   fetchMyPublishes(input: FetchMyPublishesInput!): FetchPublishesResponse
+  fetchPlaylistItems(input: FetchPlaylistItemsInput!): FetchPlaylistItemsResponse
   fetchPreviewPlaylists(input: FetchMyPlaylistsInput!): FetchPreviewPlaylistsResponse
   fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
@@ -539,6 +569,14 @@ enum QueryPublishKind {
 input RemoveAllWatchLaterInput {
   accountId: String!
   owner: String!
+  stationId: String!
+}
+
+input RemoveFromPlaylistInput {
+  accountId: String!
+  owner: String!
+  playlistId: String!
+  publishId: String!
   stationId: String!
 }
 
@@ -659,6 +697,14 @@ input UpdateImageInput {
   stationId: String!
 }
 
+input UpdatePlaylistDescriptionInput {
+  accountId: String!
+  description: String!
+  owner: String!
+  playlistId: String!
+  stationId: String!
+}
+
 input UpdatePlaylistNameInput {
   accountId: String!
   name: String!
@@ -711,11 +757,6 @@ type WatchLater {
 type WatchLaterEdge {
   cursor: String
   node: WatchLater
-}
-
-enum WatchLaterOrderBy {
-  newest
-  oldest
 }
 
 type WriteResult {
