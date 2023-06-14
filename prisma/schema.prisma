@@ -86,6 +86,7 @@ enum Category {
     Science
     Technology
     Programming
+    AI
     LifeStyle
     Vehicles
     Children
