@@ -681,21 +681,21 @@ export const PublishQuery = extendType({
                     },
                   },
                 ],
-                OR:
-                  !requestor || requestor.preferences.length === 0
-                    ? undefined
-                    : [
-                        {
-                          primaryCategory: {
-                            in: requestor.preferences,
-                          },
-                        },
-                        {
-                          secondaryCategory: {
-                            in: requestor.preferences,
-                          },
-                        },
-                      ],
+                // OR:
+                //   !requestor || requestor.preferences.length === 0
+                //     ? undefined
+                //     : [
+                //         {
+                //           primaryCategory: {
+                //             in: requestor.preferences,
+                //           },
+                //         },
+                //         {
+                //           secondaryCategory: {
+                //             in: requestor.preferences,
+                //           },
+                //         },
+                //       ],
               },
               take: FETCH_QTY,
               orderBy: {
@@ -726,21 +726,21 @@ export const PublishQuery = extendType({
                     },
                   },
                 ],
-                OR:
-                  !requestor || requestor.preferences.length === 0
-                    ? undefined
-                    : [
-                        {
-                          primaryCategory: {
-                            in: requestor.preferences,
-                          },
-                        },
-                        {
-                          secondaryCategory: {
-                            in: requestor.preferences,
-                          },
-                        },
-                      ],
+                // OR:
+                //   !requestor || requestor.preferences.length === 0
+                //     ? undefined
+                //     : [
+                //         {
+                //           primaryCategory: {
+                //             in: requestor.preferences,
+                //           },
+                //         },
+                //         {
+                //           secondaryCategory: {
+                //             in: requestor.preferences,
+                //           },
+                //         },
+                //       ],
               },
               take: FETCH_QTY,
               cursor: {

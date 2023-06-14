@@ -403,6 +403,7 @@ type Mutation {
   updatePlaylistDescription(input: UpdatePlaylistDescriptionInput!): WriteResult
   updatePlaylistName(input: UpdatePlaylistNameInput!): WriteResult
   updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
+  updatePreferences(input: UpdatePreferencesInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
   updatePublish(input: UpdatePublishInput!): Publish
   validateDisplayName(name: String!): Boolean
@@ -719,6 +720,13 @@ input UpdatePlaylistsInput {
   owner: String!
   playlists: [PlaylistItemStatus!]!
   publishId: String!
+  stationId: String!
+}
+
+input UpdatePreferencesInput {
+  accountId: String!
+  owner: String!
+  preferences: [Category!]!
   stationId: String!
 }
 

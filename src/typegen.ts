@@ -261,6 +261,12 @@ export interface NexusGenInputs {
     publishId: string; // String!
     stationId: string; // String!
   }
+  UpdatePreferencesInput: { // input type
+    accountId: string; // String!
+    owner: string; // String!
+    preferences: NexusGenEnums['Category'][]; // [Category!]!
+    stationId: string; // String!
+  }
   UpdatePublishInput: { // input type
     accountId: string; // String!
     contentRef?: string | null; // String
@@ -706,6 +712,7 @@ export interface NexusGenFieldTypes {
     updatePlaylistDescription: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePlaylistName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePlaylists: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    updatePreferences: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateProfileImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePublish: NexusGenRootTypes['Publish'] | null; // Publish
     validateDisplayName: boolean | null; // Boolean
@@ -1051,6 +1058,7 @@ export interface NexusGenFieldTypeNames {
     updatePlaylistDescription: 'WriteResult'
     updatePlaylistName: 'WriteResult'
     updatePlaylists: 'WriteResult'
+    updatePreferences: 'WriteResult'
     updateProfileImage: 'WriteResult'
     updatePublish: 'Publish'
     validateDisplayName: 'Boolean'
@@ -1331,6 +1339,9 @@ export interface NexusGenArgTypes {
     }
     updatePlaylists: { // args
       input: NexusGenInputs['UpdatePlaylistsInput']; // UpdatePlaylistsInput!
+    }
+    updatePreferences: { // args
+      input: NexusGenInputs['UpdatePreferencesInput']; // UpdatePreferencesInput!
     }
     updateProfileImage: { // args
       input: NexusGenInputs['UpdateImageInput']; // UpdateImageInput!

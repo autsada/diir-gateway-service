@@ -304,6 +304,19 @@ export const FollowInput = inputObjectType({
 })
 
 /**
+ * An input type to update preferences mutation.
+ */
+export const UpdatePreferencesInput = inputObjectType({
+  name: "UpdatePreferencesInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.list.nonNull.field("preferences", { type: "Category" })
+  },
+})
+
+/**
  * A result for `calculateTips` mutation
  */
 export const CalculateTipsResult = objectType({
@@ -747,6 +760,45 @@ export const StationMutation = extendType({
               },
             })
           }
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("updatePreferences", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdatePreferencesInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, preferences } = input
+          if (!owner || !accountId || !stationId || !preferences)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          await prisma.station.update({
+            where: {
+              id: stationId,
+            },
+            data: {
+              preferences,
+            },
+          })
 
           return { status: "Ok" }
         } catch (error) {
