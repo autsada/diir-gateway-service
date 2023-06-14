@@ -382,6 +382,7 @@ type Mutation {
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
+  deleteAllPlaylistItems(input: DeletePlaylistInput!): WriteResult
   deletePlaylist(input: DeletePlaylistInput!): WriteResult
   disLikeComment(input: LikeCommentInput!): WriteResult
   disLikePublish(input: LikePublishInput!): WriteResult

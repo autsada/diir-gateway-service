@@ -947,7 +947,7 @@ export const PlaylistMutation = extendType({
     })
 
     /**
-     * Delete a playlist
+     * Delete a playlist and its content
      */
     t.field("deletePlaylist", {
       type: "WriteResult",
@@ -1129,6 +1129,52 @@ export const PlaylistMutation = extendType({
                 playlistId,
                 publishId,
               },
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Delete all content in a playlist (not delete the playlist itself)
+     */
+    t.field("deleteAllPlaylistItems", {
+      type: "WriteResult",
+      args: { input: nonNull("DeletePlaylistInput") },
+      resolve: async (_, { input }, { dataSources, prisma, signature }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, playlistId } = input
+          if (!owner || !accountId || !stationId || !playlistId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check ownership of the playlist
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              id: playlistId,
+            },
+          })
+          if (!playlist) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          if (playlist?.ownerId !== stationId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          await prisma.playlistItem.deleteMany({
+            where: {
+              playlistId,
             },
           })
 
