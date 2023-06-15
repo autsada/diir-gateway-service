@@ -287,7 +287,7 @@ export const Publish = objectType({
 
 export const QueryPublishKind = enumType({
   name: "QueryPublishKind",
-  members: ["all", "videos", "podcasts", "blogs", "adds"],
+  members: ["all", "videos", "podcasts", "blogs", "ads"],
 })
 
 export const FetchMyPublishesInput = inputObjectType({
@@ -325,6 +325,22 @@ export const FetchPublishesByCatInput = inputObjectType({
     t.string("requestorId") // Station id of the requestor
     t.nonNull.field("category", { type: "Category" })
     t.string("cursor")
+  },
+})
+
+export const PublishOrderBy = enumType({
+  name: "PublishOrderBy",
+  members: ["latest", "popular"],
+})
+
+export const FetchStationPublishesInput = inputObjectType({
+  name: "FetchStationPublishesInput",
+  definition(t) {
+    t.nonNull.string("creatorId") // Station id of the creator
+    t.string("requestorId") // Station id of the requestor
+    t.string("cursor")
+    t.field("kind", { type: "QueryPublishKind" })
+    t.field("orderBy", { type: "PublishOrderBy" })
   },
 })
 
@@ -538,14 +554,14 @@ export const PublishQuery = extendType({
                 },
               })
             }
-          } else if (kind === "adds") {
+          } else if (kind === "ads") {
             if (!cursor) {
               // A. First query
               publishes = await prisma.publish.findMany({
                 where: {
                   creatorId,
                   kind: {
-                    equals: "Adds",
+                    equals: "Ads",
                   },
                 },
                 take: FETCH_QTY,
@@ -559,7 +575,7 @@ export const PublishQuery = extendType({
                 where: {
                   creatorId,
                   kind: {
-                    equals: "Adds",
+                    equals: "Ads",
                   },
                 },
                 take: FETCH_QTY,
@@ -645,14 +661,14 @@ export const PublishQuery = extendType({
             })
           }
 
-          // Get requestor station
-          const requestor = !requestorId
-            ? null
-            : await prisma.station.findUnique({
-                where: {
-                  id: requestorId,
-                },
-              })
+          // // Get requestor station
+          // const requestor = !requestorId
+          //   ? null
+          //   : await prisma.station.findUnique({
+          //       where: {
+          //         id: requestorId,
+          //       },
+          //     })
 
           // List of the station ids in user's don't recommend list
           const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
@@ -1213,6 +1229,298 @@ export const PublishQuery = extendType({
               edges: videos.map((video) => ({
                 cursor: video.id,
                 node: video,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Fetch publishes uploaded by a station
+     */
+    t.field("fetchStationPublishes", {
+      type: "FetchPublishesResponse",
+      args: { input: nonNull("FetchStationPublishesInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { cursor, kind, creatorId, orderBy } = input
+
+          // Query publises by creator id
+          let publishes: PublishType[] = []
+
+          if (!kind || kind === "all") {
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                },
+                take: FETCH_QTY,
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            }
+          } else if (kind === "videos") {
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    in: ["Video", "Short"],
+                  },
+                },
+                take: FETCH_QTY,
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    in: ["Video", "Short"],
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            }
+          } else if (kind === "podcasts") {
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Podcast",
+                  },
+                },
+                take: FETCH_QTY,
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Podcast",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            }
+          } else if (kind === "blogs") {
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Blog",
+                  },
+                },
+                take: FETCH_QTY,
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Blog",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            }
+          } else if (kind === "ads") {
+            if (!cursor) {
+              // A. First query
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Ads",
+                  },
+                },
+                take: FETCH_QTY,
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            } else {
+              // B. Consecutive queries
+              publishes = await prisma.publish.findMany({
+                where: {
+                  creatorId,
+                  kind: {
+                    equals: "Ads",
+                  },
+                },
+                take: FETCH_QTY,
+                cursor: {
+                  id: cursor,
+                },
+                skip: 1, // Skip the cusor
+                orderBy:
+                  orderBy === "popular"
+                    ? {
+                        views: "desc",
+                      }
+                    : {
+                        createdAt: "desc",
+                      },
+              })
+            }
+          }
+
+          // Get publishes count
+          const count = await prisma.publish.count({
+            where: {
+              creatorId,
+            },
+          })
+
+          if (publishes.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = publishes[publishes.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.publish.findMany({
+              where: {
+                creatorId,
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy:
+                orderBy === "popular"
+                  ? {
+                      views: "desc",
+                    }
+                  : {
+                      createdAt: "desc",
+                    },
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+                count,
+              },
+              edges: publishes.map((pub) => ({
+                cursor: pub.id,
+                node: pub,
+              })),
+            }
+          } else {
+            // No more items to be fetched
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+                count,
+              },
+              edges: publishes.map((pub) => ({
+                cursor: pub.id,
+                node: pub,
               })),
             }
           }

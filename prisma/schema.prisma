@@ -97,7 +97,7 @@ enum Category {
 
 enum PublishKind {
     Video
-    Adds
+    Ads
     Blog
     Podcast
     Short

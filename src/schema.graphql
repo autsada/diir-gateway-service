@@ -302,6 +302,14 @@ type FetchPublishesResponse {
   pageInfo: PageInfo!
 }
 
+input FetchStationPublishesInput {
+  creatorId: String!
+  cursor: String
+  kind: QueryPublishKind
+  orderBy: PublishOrderBy
+  requestorId: String
+}
+
 input FetchSuggestedPublishesInput {
   cursor: String
   publishId: String!
@@ -524,11 +532,16 @@ type PublishEdge {
 }
 
 enum PublishKind {
-  Adds
+  Ads
   Blog
   Podcast
   Short
   Video
+}
+
+enum PublishOrderBy {
+  latest
+  popular
 }
 
 type Query {
@@ -541,6 +554,7 @@ type Query {
   fetchPlaylistItems(input: FetchPlaylistItemsInput!): FetchPlaylistItemsResponse
   fetchPreviewPlaylists(input: FetchMyPlaylistsInput!): FetchPreviewPlaylistsResponse
   fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
+  fetchStationPublishes(input: FetchStationPublishesInput!): FetchPublishesResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
@@ -562,7 +576,7 @@ input QueryByNameInput {
 }
 
 enum QueryPublishKind {
-  adds
+  ads
   all
   blogs
   podcasts
