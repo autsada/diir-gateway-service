@@ -387,6 +387,7 @@ type Mutation {
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   comment(input: CommentPublishInput!): WriteResult
+  countViews(publishId: String!): WriteResult
   createAccount(input: GetMyAccountInput!): Account
   createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
   createStation(input: CreateStationInput!): Station

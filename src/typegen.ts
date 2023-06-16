@@ -695,6 +695,7 @@ export interface NexusGenFieldTypes {
     cacheSession: NexusGenRootTypes['WriteResult']; // WriteResult!
     calculateTips: NexusGenRootTypes['CalculateTipsResult'] | null; // CalculateTipsResult
     comment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    countViews: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
     createDraftPublish: NexusGenRootTypes['CreateDraftPublishResult'] | null; // CreateDraftPublishResult
     createStation: NexusGenRootTypes['Station'] | null; // Station
@@ -1042,6 +1043,7 @@ export interface NexusGenFieldTypeNames {
     cacheSession: 'WriteResult'
     calculateTips: 'CalculateTipsResult'
     comment: 'WriteResult'
+    countViews: 'WriteResult'
     createAccount: 'Account'
     createDraftPublish: 'CreateDraftPublishResult'
     createStation: 'Station'
@@ -1274,6 +1276,9 @@ export interface NexusGenArgTypes {
     }
     comment: { // args
       input: NexusGenInputs['CommentPublishInput']; // CommentPublishInput!
+    }
+    countViews: { // args
+      publishId: string; // String!
     }
     createAccount: { // args
       input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!

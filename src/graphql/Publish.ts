@@ -4,6 +4,7 @@ import {
   enumType,
   nonNull,
   inputObjectType,
+  stringArg,
 } from "nexus"
 import {
   Publish as PublishType,
@@ -1879,6 +1880,40 @@ export const PublishMutation = extendType({
 
           // Call the wallet service to inform the update
           dataSources.walletAPI.publishUpdated(publishId)
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Count view
+     */
+    t.field("countViews", {
+      type: "WriteResult",
+      args: { publishId: nonNull(stringArg()) },
+      resolve: async (_parent, { publishId }, { prisma }) => {
+        try {
+          if (!publishId) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Find the publish
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          await prisma.publish.update({
+            where: {
+              id: publishId,
+            },
+            data: {
+              views: (publish?.views || 0) + 1,
+            },
+          })
 
           return { status: "Ok" }
         } catch (error) {
