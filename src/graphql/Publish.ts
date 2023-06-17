@@ -3,6 +3,7 @@ import {
   objectType,
   enumType,
   nonNull,
+  nullable,
   inputObjectType,
   stringArg,
 } from "nexus"
@@ -342,6 +343,14 @@ export const FetchStationPublishesInput = inputObjectType({
     t.string("cursor")
     t.field("kind", { type: "QueryPublishKind" })
     t.field("orderBy", { type: "PublishOrderBy" })
+  },
+})
+
+export const FetchShortsInput = inputObjectType({
+  name: "FetchShortsInput",
+  definition(t) {
+    t.string("requestorId") // Station id of the requestor
+    t.string("cursor")
   },
 })
 
@@ -1522,6 +1531,108 @@ export const PublishQuery = extendType({
               edges: publishes.map((pub) => ({
                 cursor: pub.id,
                 node: pub,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Fetch short videos
+     */
+    t.field("fetchShorts", {
+      type: "FetchPublishesResponse",
+      args: { input: nonNull("FetchShortsInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
+        try {
+          const { cursor } = input
+
+          let shorts: PublishType[] = []
+
+          if (!cursor) {
+            shorts = await prisma.publish.findMany({
+              where: {
+                kind: {
+                  equals: "Short",
+                },
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else {
+            shorts = await prisma.publish.findMany({
+              where: {
+                kind: {
+                  equals: "Short",
+                },
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // Get publishes count
+          const count = await prisma.publish.count({
+            where: {
+              kind: {
+                equals: "Short",
+              },
+            },
+          })
+
+          if (shorts.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = shorts[shorts.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.publish.findMany({
+              where: {
+                kind: {
+                  equals: "Short",
+                },
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+                count,
+              },
+              edges: shorts.map((short) => ({
+                cursor: short.id,
+                node: short,
+              })),
+            }
+          } else {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+                count,
+              },
+              edges: shorts.map((short) => ({
+                cursor: short.id,
+                node: short,
               })),
             }
           }

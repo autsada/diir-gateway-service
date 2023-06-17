@@ -302,6 +302,11 @@ type FetchPublishesResponse {
   pageInfo: PageInfo!
 }
 
+input FetchShortsInput {
+  cursor: String
+  requestorId: String
+}
+
 input FetchStationPublishesInput {
   creatorId: String!
   cursor: String
@@ -555,6 +560,7 @@ type Query {
   fetchPlaylistItems(input: FetchPlaylistItemsInput!): FetchPlaylistItemsResponse
   fetchPreviewPlaylists(input: FetchMyPlaylistsInput!): FetchPreviewPlaylistsResponse
   fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
+  fetchShorts(input: FetchShortsInput!): FetchPublishesResponse
   fetchStationPublishes(input: FetchStationPublishesInput!): FetchPublishesResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
