@@ -352,6 +352,17 @@ input GetMyAccountInput {
   accountType: AccountType!
 }
 
+input GetShortInput {
+  publishId: String!
+  requestorId: String
+}
+
+type GetShortResponse {
+  current: Publish!
+  next: Publish
+  prev: Publish
+}
+
 type Like {
   createdAt: DateTime!
   publish: Publish!
@@ -568,6 +579,7 @@ type Query {
   getBalance(address: String!): String!
   getMyAccount(input: GetMyAccountInput!): Account
   getPublishById(input: QueryByIdInput!): Publish
+  getShort(input: GetShortInput!): Publish
   getStationById(input: QueryByIdInput!): Station
   getStationByName(input: QueryByNameInput!): Station
 }

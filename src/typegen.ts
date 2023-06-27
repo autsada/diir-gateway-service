@@ -176,6 +176,10 @@ export interface NexusGenInputs {
   GetMyAccountInput: { // input type
     accountType: NexusGenEnums['AccountType']; // AccountType!
   }
+  GetShortInput: { // input type
+    publishId: string; // String!
+    requestorId?: string | null; // String
+  }
   LikeCommentInput: { // input type
     accountId: string; // String!
     commentId: string; // String!
@@ -415,6 +419,11 @@ export interface NexusGenObjects {
   Follow: { // root type
     followerId: string; // String!
     followingId: string; // String!
+  }
+  GetShortResponse: { // root type
+    current: NexusGenRootTypes['Publish']; // Publish!
+    next?: NexusGenRootTypes['Publish'] | null; // Publish
+    prev?: NexusGenRootTypes['Publish'] | null; // Publish
   }
   Like: { // root type
     createdAt: NexusGenScalars['DateTime']; // DateTime!
@@ -682,6 +691,11 @@ export interface NexusGenFieldTypes {
     following: NexusGenRootTypes['Station']; // Station!
     followingId: string; // String!
   }
+  GetShortResponse: { // field return type
+    current: NexusGenRootTypes['Publish']; // Publish!
+    next: NexusGenRootTypes['Publish'] | null; // Publish
+    prev: NexusGenRootTypes['Publish'] | null; // Publish
+  }
   Like: { // field return type
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     publish: NexusGenRootTypes['Publish']; // Publish!
@@ -841,6 +855,7 @@ export interface NexusGenFieldTypes {
     getBalance: string; // String!
     getMyAccount: NexusGenRootTypes['Account'] | null; // Account
     getPublishById: NexusGenRootTypes['Publish'] | null; // Publish
+    getShort: NexusGenRootTypes['Publish'] | null; // Publish
     getStationById: NexusGenRootTypes['Station'] | null; // Station
     getStationByName: NexusGenRootTypes['Station'] | null; // Station
   }
@@ -1031,6 +1046,11 @@ export interface NexusGenFieldTypeNames {
     following: 'Station'
     followingId: 'String'
   }
+  GetShortResponse: { // field return type name
+    current: 'Publish'
+    next: 'Publish'
+    prev: 'Publish'
+  }
   Like: { // field return type name
     createdAt: 'DateTime'
     publish: 'Publish'
@@ -1190,6 +1210,7 @@ export interface NexusGenFieldTypeNames {
     getBalance: 'String'
     getMyAccount: 'Account'
     getPublishById: 'Publish'
+    getShort: 'Publish'
     getStationById: 'Station'
     getStationByName: 'Station'
   }
@@ -1428,6 +1449,9 @@ export interface NexusGenArgTypes {
     }
     getPublishById: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!
+    }
+    getShort: { // args
+      input: NexusGenInputs['GetShortInput']; // GetShortInput!
     }
     getStationById: { // args
       input: NexusGenInputs['QueryByIdInput']; // QueryByIdInput!

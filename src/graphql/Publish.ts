@@ -3,7 +3,6 @@ import {
   objectType,
   enumType,
   nonNull,
-  nullable,
   inputObjectType,
   stringArg,
 } from "nexus"
@@ -354,6 +353,14 @@ export const FetchShortsInput = inputObjectType({
   },
 })
 
+export const GetShortInput = inputObjectType({
+  name: "GetShortInput",
+  definition(t) {
+    t.string("requestorId") // Station id of the requestor
+    t.nonNull.string("publishId") // An id of the short to be fetch
+  },
+})
+
 export const PublishEdge = objectType({
   name: "PublishEdge",
   definition(t) {
@@ -369,6 +376,15 @@ export const FetchPublishesResponse = objectType({
   definition(t) {
     t.nonNull.field("pageInfo", { type: "PageInfo" })
     t.nonNull.list.nonNull.field("edges", { type: "PublishEdge" })
+  },
+})
+
+export const GetShortResponse = objectType({
+  name: "GetShortResponse",
+  definition(t) {
+    t.nonNull.field("current", { type: "Publish" })
+    t.field("prev", { type: "Publish" })
+    t.field("next", { type: "Publish" })
   },
 })
 
@@ -1548,16 +1564,52 @@ export const PublishQuery = extendType({
       args: { input: nonNull("FetchShortsInput") },
       resolve: async (_parent, { input }, { prisma }) => {
         try {
-          const { cursor } = input
+          const { cursor, requestorId } = input
 
           let shorts: PublishType[] = []
+
+          // Get requestor station
+          const requestor = !requestorId
+            ? null
+            : await prisma.station.findUnique({
+                where: {
+                  id: requestorId,
+                },
+              })
+
+          let dontRecommends: DontRecommendType[] = []
+          if (requestor) {
+            // Query dont recommends of the user
+            dontRecommends = await prisma.dontRecommend.findMany({
+              where: {
+                requestorId: requestor.id,
+              },
+              take: 1000, // Take the last 1000 records
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // List of the station ids in user's don't recommend list
+          // Add the publish id in the list so user will not see the publish in the list as they are watching the given publish
+          const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
 
           if (!cursor) {
             shorts = await prisma.publish.findMany({
               where: {
-                kind: {
-                  equals: "Short",
-                },
+                AND: [
+                  {
+                    kind: {
+                      equals: "Short",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
               },
               take: FETCH_QTY,
               orderBy: {
@@ -1567,9 +1619,18 @@ export const PublishQuery = extendType({
           } else {
             shorts = await prisma.publish.findMany({
               where: {
-                kind: {
-                  equals: "Short",
-                },
+                AND: [
+                  {
+                    kind: {
+                      equals: "Short",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
               },
               take: FETCH_QTY,
               cursor: {
@@ -1598,9 +1659,18 @@ export const PublishQuery = extendType({
             // Check if there is next page
             const nextQuery = await prisma.publish.findMany({
               where: {
-                kind: {
-                  equals: "Short",
-                },
+                AND: [
+                  {
+                    kind: {
+                      equals: "Short",
+                    },
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
               },
               take: FETCH_QTY,
               cursor: {
@@ -1636,6 +1706,35 @@ export const PublishQuery = extendType({
               })),
             }
           }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Get a short
+     * Also fetch some shorts for use to easily display on the short page
+     */
+    t.field("getShort", {
+      type: "Publish",
+      args: { input: nonNull("GetShortInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const { publishId } = input
+          if (!publishId) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+          })
+
+          if (!publish) return null
+
+          return publish
         } catch (error) {
           throw error
         }
