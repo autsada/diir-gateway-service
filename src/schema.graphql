@@ -315,6 +315,12 @@ input FetchStationPublishesInput {
   requestorId: String
 }
 
+input FetchSubCommentsInput {
+  commentId: String!
+  cursor: String
+  requestorId: String
+}
+
 input FetchSuggestedPublishesInput {
   cursor: String
   publishId: String!
@@ -573,6 +579,7 @@ type Query {
   fetchPreviewWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse
   fetchShorts(input: FetchShortsInput!): FetchPublishesResponse
   fetchStationPublishes(input: FetchStationPublishesInput!): FetchPublishesResponse
+  fetchSubComments(input: FetchSubCommentsInput!): FetchCommentsResponse
   fetchSuggestedVideos(input: FetchSuggestedPublishesInput!): FetchPublishesResponse
   fetchVideosByCategory(input: FetchPublishesByCatInput!): FetchPublishesResponse
   fetchWatchLater(input: FetchWatchLaterInput!): FetchWatchLaterResponse

@@ -161,6 +161,7 @@ export const CommentsOrderBy = enumType({
   name: "CommentsOrderBy",
   members: ["counts", "newest"],
 })
+
 export const FetchCommentsByPublishIdInput = inputObjectType({
   name: "FetchCommentsByPublishIdInput",
   definition(t) {
@@ -168,6 +169,15 @@ export const FetchCommentsByPublishIdInput = inputObjectType({
     t.nonNull.string("publishId")
     t.string("cursor")
     t.field("orderBy", { type: "CommentsOrderBy" })
+  },
+})
+
+export const FetchSubCommentsInput = inputObjectType({
+  name: "FetchSubCommentsInput",
+  definition(t) {
+    t.string("requestorId") // Station id of the requestor
+    t.nonNull.string("commentId") // The parent comment id
+    t.string("cursor")
   },
 })
 
@@ -270,9 +280,24 @@ export const CommentQuery = extendType({
             })
           }
 
+          // Get comments count
+          const count = await prisma.comment.count({
+            where: {
+              AND: [
+                {
+                  publishId,
+                },
+                {
+                  commentType: "PUBLISH",
+                },
+              ],
+            },
+          })
+
           if (comments.length < FETCH_QTY) {
             return {
               pageInfo: {
+                count,
                 endCursor: null,
                 hasNextPage: false,
               },
@@ -321,6 +346,132 @@ export const CommentQuery = extendType({
 
             return {
               pageInfo: {
+                count,
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: comments.map((comment) => ({
+                cursor: comment.id,
+                node: comment,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Fetch sub-comments
+     */
+    t.field("fetchSubComments", {
+      type: "FetchCommentsResponse",
+      args: { input: nonNull("FetchSubCommentsInput") },
+      resolve: async (_parent, { input }, { prisma }) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { commentId, cursor } = input
+
+          if (!commentId) throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          let comments: CommentDataType[] = []
+
+          if (!cursor) {
+            comments = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    commentId,
+                  },
+                  {
+                    commentType: "COMMENT",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          } else {
+            comments = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    commentId,
+                  },
+                  {
+                    commentType: "COMMENT",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // Get comments count
+          const count = await prisma.comment.count({
+            where: {
+              AND: [
+                {
+                  commentId,
+                },
+                {
+                  commentType: "COMMENT",
+                },
+              ],
+            },
+          })
+
+          if (comments.length < FETCH_QTY) {
+            return {
+              pageInfo: {
+                count,
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: comments.map((comment) => ({
+                cursor: comment.id,
+                node: comment,
+              })),
+            }
+          } else {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = comments[comments.length - 1].id
+
+            // Check if there is next page
+            const nextQuery = await prisma.comment.findMany({
+              where: {
+                AND: [
+                  {
+                    commentId,
+                  },
+                  {
+                    commentType: "COMMENT",
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+
+            return {
+              pageInfo: {
+                count,
                 endCursor: lastFetchedCursor,
                 hasNextPage: nextQuery.length > 0,
               },
