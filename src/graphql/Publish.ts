@@ -19,11 +19,13 @@ import {
   Publish as PublishModel,
   Like as LikeModel,
   DisLike as DisLikeModel,
+  Blog as BlogModel,
 } from "nexus-prisma"
 
 import { NexusGenInputs, NexusGenObjects } from "../typegen"
 import {
   badInputErrMessage,
+  badRequestErrMessage,
   notFoundErrMessage,
   throwError,
   unauthorizedErrMessage,
@@ -54,6 +56,18 @@ export const PlaybackLink = objectType({
     t.field(PlaybackLinkModel.dash)
     t.field(PlaybackLinkModel.publishId)
     t.field(PlaybackLinkModel.publish)
+  },
+})
+
+export const Blog = objectType({
+  name: BlogModel.$name,
+  definition(t) {
+    t.field(BlogModel.createdAt)
+    t.field(BlogModel.updatedAt)
+    t.field(BlogModel.publishId)
+    t.field(BlogModel.publish)
+    t.field(BlogModel.content)
+    t.field(BlogModel.title)
   },
 })
 
@@ -108,6 +122,7 @@ export const Publish = objectType({
     t.field(PublishModel.dislikes)
     t.field(PublishModel.comments)
     t.field(PublishModel.tips)
+    t.field(PublishModel.blog)
 
     /**
      * Number of likes a publish has
@@ -1283,7 +1298,16 @@ export const PublishQuery = extendType({
               // A. First query
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 orderBy:
@@ -1299,7 +1323,16 @@ export const PublishQuery = extendType({
               // B. Consecutive queries
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 cursor: {
@@ -1321,10 +1354,21 @@ export const PublishQuery = extendType({
               // A. First query
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    in: ["Video", "Short"],
-                  },
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        in: ["Video", "Short"],
+                      },
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 orderBy:
@@ -1340,54 +1384,21 @@ export const PublishQuery = extendType({
               // B. Consecutive queries
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    in: ["Video", "Short"],
-                  },
-                },
-                take: FETCH_QTY,
-                cursor: {
-                  id: cursor,
-                },
-                skip: 1, // Skip the cusor
-                orderBy:
-                  orderBy === "popular"
-                    ? {
-                        views: "desc",
-                      }
-                    : {
-                        createdAt: "desc",
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        in: ["Video", "Short"],
                       },
-              })
-            }
-          } else if (kind === "podcasts") {
-            if (!cursor) {
-              // A. First query
-              publishes = await prisma.publish.findMany({
-                where: {
-                  creatorId,
-                  kind: {
-                    equals: "Podcast",
-                  },
-                },
-                take: FETCH_QTY,
-                orderBy:
-                  orderBy === "popular"
-                    ? {
-                        views: "desc",
-                      }
-                    : {
-                        createdAt: "desc",
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
                       },
-              })
-            } else {
-              // B. Consecutive queries
-              publishes = await prisma.publish.findMany({
-                where: {
-                  creatorId,
-                  kind: {
-                    equals: "Podcast",
-                  },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 cursor: {
@@ -1409,10 +1420,21 @@ export const PublishQuery = extendType({
               // A. First query
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    equals: "Blog",
-                  },
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        equals: "Blog",
+                      },
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 orderBy:
@@ -1428,10 +1450,21 @@ export const PublishQuery = extendType({
               // B. Consecutive queries
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    equals: "Blog",
-                  },
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        equals: "Blog",
+                      },
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 cursor: {
@@ -1453,10 +1486,21 @@ export const PublishQuery = extendType({
               // A. First query
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    equals: "Ads",
-                  },
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        equals: "Ads",
+                      },
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 orderBy:
@@ -1472,10 +1516,21 @@ export const PublishQuery = extendType({
               // B. Consecutive queries
               publishes = await prisma.publish.findMany({
                 where: {
-                  creatorId,
-                  kind: {
-                    equals: "Ads",
-                  },
+                  AND: [
+                    {
+                      creatorId,
+                    },
+                    {
+                      kind: {
+                        equals: "Ads",
+                      },
+                    },
+                    {
+                      visibility: {
+                        equals: "public",
+                      },
+                    },
+                  ],
                 },
                 take: FETCH_QTY,
                 cursor: {
@@ -1508,7 +1563,16 @@ export const PublishQuery = extendType({
             // Check if there is next page
             const nextQuery = await prisma.publish.findMany({
               where: {
-                creatorId,
+                AND: [
+                  {
+                    creatorId,
+                  },
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                ],
               },
               take: FETCH_QTY,
               cursor: {
@@ -1605,6 +1669,11 @@ export const PublishQuery = extendType({
                     },
                   },
                   {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
                     creatorId: {
                       notIn: dontRecommendsList,
                     },
@@ -1623,6 +1692,11 @@ export const PublishQuery = extendType({
                   {
                     kind: {
                       equals: "Short",
+                    },
+                  },
+                  {
+                    visibility: {
+                      equals: "public",
                     },
                   },
                   {
@@ -1663,6 +1737,11 @@ export const PublishQuery = extendType({
                   {
                     kind: {
                       equals: "Short",
+                    },
+                  },
+                  {
+                    visibility: {
+                      equals: "public",
                     },
                   },
                   {
@@ -1743,8 +1822,8 @@ export const PublishQuery = extendType({
   },
 })
 
-export const CreateDraftPublishInput = inputObjectType({
-  name: "CreateDraftPublishInput",
+export const CreateDraftVideoInput = inputObjectType({
+  name: "CreateDraftVideoInput",
   definition(t) {
     t.nonNull.string("creatorId") // Creator station id
     t.nonNull.string("owner")
@@ -1753,11 +1832,44 @@ export const CreateDraftPublishInput = inputObjectType({
   },
 })
 
-export const CreateDraftPublishResult = objectType({
-  name: "CreateDraftPublishResult",
+export const CreateDraftVideoResult = objectType({
+  name: "CreateDraftVideoResult",
   definition(t) {
     t.nonNull.string("id") // Publish id
     t.string("filename") // Uploaded file name
+  },
+})
+
+export const CreateDraftBlogInput = inputObjectType({
+  name: "CreateDraftBlogInput",
+  definition(t) {
+    t.nonNull.string("creatorId") // Creator station id
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+  },
+})
+
+export const CreateDraftBlogResult = objectType({
+  name: "CreateDraftBlogResult",
+  definition(t) {
+    t.nonNull.string("id") // Publish id
+  },
+})
+
+export const UpdateBlogInput = inputObjectType({
+  name: "UpdateBlogInput",
+  definition(t) {
+    t.nonNull.string("creatorId") // Creator station id
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("publishId") // A publish id of the blog
+    t.string("title")
+    t.string("imageUrl") // A url of the cover image
+    t.string("imageRef") // A ref to storage of the cover image
+    t.string("filename") // A filename of the cover image
+    t.list.nonNull.field("tags", { type: "String" })
+    t.field("content", { type: "Json" })
+    t.field("visibility", { type: "Visibility" })
   },
 })
 
@@ -1795,9 +1907,9 @@ export const LikePublishInput = inputObjectType({
 export const PublishMutation = extendType({
   type: "Mutation",
   definition(t) {
-    t.field("createDraftPublish", {
-      type: "CreateDraftPublishResult",
-      args: { input: nonNull("CreateDraftPublishInput") },
+    t.field("createDraftVideo", {
+      type: "CreateDraftVideoResult",
+      args: { input: nonNull("CreateDraftVideoInput") },
       resolve: async (
         _parent,
         { input },
@@ -1829,6 +1941,163 @@ export const PublishMutation = extendType({
           })
 
           return { id: draft.id, filename }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("createDraftBlog", {
+      type: "CreateDraftBlogResult",
+      args: { input: nonNull("CreateDraftBlogInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { creatorId, owner, accountId } = input
+          if (!creatorId || !owner || !accountId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Create a draft publish
+          const draft = await prisma.publish.create({
+            data: {
+              creatorId,
+              kind: "Blog",
+              thumbSource: "custom",
+            },
+          })
+
+          return { id: draft.id }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("updateBlog", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdateBlogInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const {
+            creatorId,
+            owner,
+            accountId,
+            imageUrl,
+            imageRef,
+            filename,
+            visibility,
+            title,
+            tags,
+            content,
+            publishId,
+          } = input
+          if (!creatorId || !owner || !accountId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Find the publish
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+            include: {
+              creator: true,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check authorization
+          if (publish?.creator?.owner?.toLowerCase() !== owner.toLowerCase())
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Find the blog
+          const blog = await prisma.blog.findUnique({
+            where: {
+              publishId,
+            },
+          })
+
+          if (!blog) {
+            // If no blog found, create a new blog
+
+            // If it's a published blog, all required data must be completed
+            if (visibility === "public") {
+              if (!title || !content)
+                throwError(badRequestErrMessage, "BAD_REQUEST")
+            }
+
+            await prisma.blog.create({
+              data: {
+                publishId,
+                title: title || "",
+                content: content || "",
+              },
+            })
+          } else {
+            // Update the blog
+
+            // If it's a published blog, all required data must be completed
+            if (visibility === "public") {
+              if ((!title && !blog.title) || (!content && !blog.content))
+                throwError(badRequestErrMessage, "BAD_REQUEST")
+            }
+
+            if (title || content) {
+              await prisma.blog.update({
+                where: {
+                  publishId,
+                },
+                data: {
+                  title: title || blog.title,
+                  content: content || blog?.content,
+                },
+              })
+            }
+          }
+
+          // Update the publish
+          if (imageUrl || imageRef || filename || tags || visibility) {
+            await prisma.publish.update({
+              where: {
+                id: publishId,
+              },
+              data: {
+                thumbnail: imageUrl || publish?.thumbnail,
+                thumbnailRef: imageRef || publish?.thumbnailRef,
+                filename: filename || publish?.filename,
+                tags: tags || publish?.tags,
+                visibility: visibility || publish?.visibility,
+              },
+            })
+          }
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }

@@ -62,7 +62,12 @@ export interface NexusGenInputs {
     publishId: string; // String!
     stationId: string; // String!
   }
-  CreateDraftPublishInput: { // input type
+  CreateDraftBlogInput: { // input type
+    accountId: string; // String!
+    creatorId: string; // String!
+    owner: string; // String!
+  }
+  CreateDraftVideoInput: { // input type
     accountId: string; // String!
     creatorId: string; // String!
     filename: string; // String!
@@ -247,6 +252,19 @@ export interface NexusGenInputs {
     receiverId: string; // String!
     senderId: string; // String!
   }
+  UpdateBlogInput: { // input type
+    accountId: string; // String!
+    content?: NexusGenScalars['Json'] | null; // Json
+    creatorId: string; // String!
+    filename?: string | null; // String
+    imageRef?: string | null; // String
+    imageUrl?: string | null; // String
+    owner: string; // String!
+    publishId: string; // String!
+    tags?: string[] | null; // [String!]
+    title?: string | null; // String
+    visibility?: NexusGenEnums['Visibility'] | null; // Visibility
+  }
   UpdateDisplayNameInput: { // input type
     accountId: string; // String!
     name: string; // String!
@@ -328,6 +346,7 @@ export interface NexusGenScalars {
   Boolean: boolean
   ID: string
   DateTime: any
+  Json: any
 }
 
 export interface NexusGenObjects {
@@ -337,6 +356,13 @@ export interface NexusGenObjects {
     id: string; // ID!
     owner: string; // String!
     type: NexusGenEnums['AccountType']; // AccountType!
+    updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
+  }
+  Blog: { // root type
+    content: NexusGenScalars['Json']; // Json!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    publishId: string; // String!
+    title: string; // String!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
   }
   CalculateTipsResult: { // root type
@@ -369,7 +395,10 @@ export interface NexusGenObjects {
     commentId: string; // String!
     stationId: string; // String!
   }
-  CreateDraftPublishResult: { // root type
+  CreateDraftBlogResult: { // root type
+    id: string; // String!
+  }
+  CreateDraftVideoResult: { // root type
     filename?: string | null; // String
     id: string; // String!
   }
@@ -590,6 +619,14 @@ export interface NexusGenFieldTypes {
     type: NexusGenEnums['AccountType']; // AccountType!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
   }
+  Blog: { // field return type
+    content: NexusGenScalars['Json']; // Json!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    publish: NexusGenRootTypes['Publish'] | null; // Publish
+    publishId: string; // String!
+    title: string; // String!
+    updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
+  }
   CalculateTipsResult: { // field return type
     tips: number; // Int!
   }
@@ -635,7 +672,10 @@ export interface NexusGenFieldTypes {
     station: NexusGenRootTypes['Station']; // Station!
     stationId: string; // String!
   }
-  CreateDraftPublishResult: { // field return type
+  CreateDraftBlogResult: { // field return type
+    id: string; // String!
+  }
+  CreateDraftVideoResult: { // field return type
     filename: string | null; // String
     id: string; // String!
   }
@@ -720,7 +760,8 @@ export interface NexusGenFieldTypes {
     comment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     countViews: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     createAccount: NexusGenRootTypes['Account'] | null; // Account
-    createDraftPublish: NexusGenRootTypes['CreateDraftPublishResult'] | null; // CreateDraftPublishResult
+    createDraftBlog: NexusGenRootTypes['CreateDraftBlogResult'] | null; // CreateDraftBlogResult
+    createDraftVideo: NexusGenRootTypes['CreateDraftVideoResult'] | null; // CreateDraftVideoResult
     createStation: NexusGenRootTypes['Station'] | null; // Station
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
     deleteAllPlaylistItems: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -740,6 +781,7 @@ export interface NexusGenFieldTypes {
     reportPublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     sendTips: NexusGenRootTypes['SendTipsResult'] | null; // SendTipsResult
     updateBannerImage: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    updateBlog: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updateDisplayName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePlaylistDescription: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     updatePlaylistName: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -804,6 +846,7 @@ export interface NexusGenFieldTypes {
     node: NexusGenRootTypes['PreviewPlaylist'] | null; // PreviewPlaylist
   }
   Publish: { // field return type
+    blog: NexusGenRootTypes['Blog'] | null; // Blog
     comments: NexusGenRootTypes['Comment'][]; // [Comment!]!
     commentsCount: number; // Int!
     contentRef: string | null; // String
@@ -946,6 +989,14 @@ export interface NexusGenFieldTypeNames {
     type: 'AccountType'
     updatedAt: 'DateTime'
   }
+  Blog: { // field return type name
+    content: 'Json'
+    createdAt: 'DateTime'
+    publish: 'Publish'
+    publishId: 'String'
+    title: 'String'
+    updatedAt: 'DateTime'
+  }
   CalculateTipsResult: { // field return type name
     tips: 'Int'
   }
@@ -991,7 +1042,10 @@ export interface NexusGenFieldTypeNames {
     station: 'Station'
     stationId: 'String'
   }
-  CreateDraftPublishResult: { // field return type name
+  CreateDraftBlogResult: { // field return type name
+    id: 'String'
+  }
+  CreateDraftVideoResult: { // field return type name
     filename: 'String'
     id: 'String'
   }
@@ -1076,7 +1130,8 @@ export interface NexusGenFieldTypeNames {
     comment: 'WriteResult'
     countViews: 'WriteResult'
     createAccount: 'Account'
-    createDraftPublish: 'CreateDraftPublishResult'
+    createDraftBlog: 'CreateDraftBlogResult'
+    createDraftVideo: 'CreateDraftVideoResult'
     createStation: 'Station'
     createTip: 'Tip'
     deleteAllPlaylistItems: 'WriteResult'
@@ -1096,6 +1151,7 @@ export interface NexusGenFieldTypeNames {
     reportPublish: 'WriteResult'
     sendTips: 'SendTipsResult'
     updateBannerImage: 'WriteResult'
+    updateBlog: 'WriteResult'
     updateDisplayName: 'WriteResult'
     updatePlaylistDescription: 'WriteResult'
     updatePlaylistName: 'WriteResult'
@@ -1160,6 +1216,7 @@ export interface NexusGenFieldTypeNames {
     node: 'PreviewPlaylist'
   }
   Publish: { // field return type name
+    blog: 'Blog'
     comments: 'Comment'
     commentsCount: 'Int'
     contentRef: 'String'
@@ -1317,8 +1374,11 @@ export interface NexusGenArgTypes {
     createAccount: { // args
       input: NexusGenInputs['GetMyAccountInput']; // GetMyAccountInput!
     }
-    createDraftPublish: { // args
-      input: NexusGenInputs['CreateDraftPublishInput']; // CreateDraftPublishInput!
+    createDraftBlog: { // args
+      input: NexusGenInputs['CreateDraftBlogInput']; // CreateDraftBlogInput!
+    }
+    createDraftVideo: { // args
+      input: NexusGenInputs['CreateDraftVideoInput']; // CreateDraftVideoInput!
     }
     createStation: { // args
       input: NexusGenInputs['CreateStationInput']; // CreateStationInput!
@@ -1376,6 +1436,9 @@ export interface NexusGenArgTypes {
     }
     updateBannerImage: { // args
       input: NexusGenInputs['UpdateImageInput']; // UpdateImageInput!
+    }
+    updateBlog: { // args
+      input: NexusGenInputs['UpdateBlogInput']; // UpdateBlogInput!
     }
     updateDisplayName: { // args
       input: NexusGenInputs['UpdateDisplayNameInput']; // UpdateDisplayNameInput!

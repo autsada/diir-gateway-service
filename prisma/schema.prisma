@@ -101,9 +101,6 @@ enum PublishKind {
     Blog
     Podcast
     Short
-    // Audio
-    // Course
-    // Art
 }
 
 // A model for the link to playback a publish typed video
@@ -119,6 +116,16 @@ model PlaybackLink {
     dash      String // Playback url - dash
     publish   Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
     publishId String    @unique
+}
+
+// A model for the blog of a publish typed blog
+model Blog {
+    createdAt DateTime  @default(now())
+    updatedAt DateTime?
+    publish   Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String    @unique
+    title     String    @db.VarChar(128)
+    content   Json
 }
 
 enum ThumbnailSource {
@@ -138,8 +145,8 @@ model Publish {
     updatedAt         DateTime?
     creator           Station         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
     creatorId         String
-    contentURI        String?
-    contentRef        String? // A reference path in cloud storage
+    contentURI        String? // A url of the raw file in cloud storage
+    contentRef        String? // A reference path to the raw file in cloud storage
     filename          String?
     thumbnail         String? // A video thumbnail
     thumbnailRef      String? // A reference path in cloud storage
@@ -151,6 +158,7 @@ model Publish {
     secondaryCategory Category?
     kind              PublishKind?
     visibility        Visibility      @default(draft)
+    tags              String[]        @default([])
     uploadError       Boolean         @default(false)
     transcodeError    Boolean         @default(false)
     uploading         Boolean         @default(false)
@@ -162,6 +170,7 @@ model Publish {
     watchLater        WatchLater[]
     playlistItems     PlaylistItem[]
     reported          Report[]
+    blog              Blog?
 }
 
 // Publish's Like

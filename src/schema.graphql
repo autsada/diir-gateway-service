@@ -33,6 +33,15 @@ input AddToWatchLaterInput {
   stationId: String!
 }
 
+type Blog {
+  content: Json!
+  createdAt: DateTime!
+  publish: Publish
+  publishId: String!
+  title: String!
+  updatedAt: DateTime
+}
+
 input CacheSessionInput {
   accountId: String!
   address: String!
@@ -140,14 +149,24 @@ enum CommentsOrderBy {
   newest
 }
 
-input CreateDraftPublishInput {
+input CreateDraftBlogInput {
+  accountId: String!
+  creatorId: String!
+  owner: String!
+}
+
+type CreateDraftBlogResult {
+  id: String!
+}
+
+input CreateDraftVideoInput {
   accountId: String!
   creatorId: String!
   filename: String!
   owner: String!
 }
 
-type CreateDraftPublishResult {
+type CreateDraftVideoResult {
   filename: String
   id: String!
 }
@@ -369,6 +388,8 @@ type GetShortResponse {
   prev: Publish
 }
 
+scalar Json
+
 type Like {
   createdAt: DateTime!
   publish: Publish!
@@ -411,7 +432,8 @@ type Mutation {
   comment(input: CommentPublishInput!): WriteResult
   countViews(publishId: String!): WriteResult
   createAccount(input: GetMyAccountInput!): Account
-  createDraftPublish(input: CreateDraftPublishInput!): CreateDraftPublishResult
+  createDraftBlog(input: CreateDraftBlogInput!): CreateDraftBlogResult
+  createDraftVideo(input: CreateDraftVideoInput!): CreateDraftVideoResult
   createStation(input: CreateStationInput!): Station
   createTip(input: CreateTipInput!): Tip
   deleteAllPlaylistItems(input: DeletePlaylistInput!): WriteResult
@@ -431,6 +453,7 @@ type Mutation {
   reportPublish(input: ReportPublishInput!): WriteResult
   sendTips(input: SendTipsInput!): SendTipsResult
   updateBannerImage(input: UpdateImageInput!): WriteResult
+  updateBlog(input: UpdateBlogInput!): WriteResult
   updateDisplayName(input: UpdateDisplayNameInput!): WriteResult
   updatePlaylistDescription(input: UpdatePlaylistDescriptionInput!): WriteResult
   updatePlaylistName(input: UpdatePlaylistNameInput!): WriteResult
@@ -514,6 +537,7 @@ type PreviewPlaylistEdge {
 }
 
 type Publish {
+  blog: Blog
   comments: [Comment!]!
   commentsCount: Int!
   contentRef: String
@@ -723,6 +747,20 @@ type Tip {
   sender: Station!
   senderId: String!
   to: String!
+}
+
+input UpdateBlogInput {
+  accountId: String!
+  content: Json
+  creatorId: String!
+  filename: String
+  imageRef: String
+  imageUrl: String
+  owner: String!
+  publishId: String!
+  tags: [String!]
+  title: String
+  visibility: Visibility
 }
 
 input UpdateDisplayNameInput {
