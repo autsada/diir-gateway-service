@@ -558,6 +558,7 @@ type Publish {
   playback: PlaybackLink
   primaryCategory: Category
   secondaryCategory: Category
+  tags: [String!]!
   thumbSource: ThumbnailSource!
   thumbnail: String
   thumbnailRef: String

@@ -526,6 +526,7 @@ export interface NexusGenObjects {
     kind?: NexusGenEnums['PublishKind'] | null; // PublishKind
     primaryCategory?: NexusGenEnums['Category'] | null; // Category
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
+    tags: string[]; // [String!]!
     thumbSource: NexusGenEnums['ThumbnailSource']; // ThumbnailSource!
     thumbnail?: string | null; // String
     thumbnailRef?: string | null; // String
@@ -866,6 +867,7 @@ export interface NexusGenFieldTypes {
     playback: NexusGenRootTypes['PlaybackLink'] | null; // PlaybackLink
     primaryCategory: NexusGenEnums['Category'] | null; // Category
     secondaryCategory: NexusGenEnums['Category'] | null; // Category
+    tags: string[]; // [String!]!
     thumbSource: NexusGenEnums['ThumbnailSource']; // ThumbnailSource!
     thumbnail: string | null; // String
     thumbnailRef: string | null; // String
@@ -1235,6 +1237,7 @@ export interface NexusGenFieldTypeNames {
     playback: 'PlaybackLink'
     primaryCategory: 'Category'
     secondaryCategory: 'Category'
+    tags: 'String'
     thumbSource: 'ThumbnailSource'
     thumbnail: 'String'
     thumbnailRef: 'String'

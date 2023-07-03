@@ -112,6 +112,7 @@ export const Publish = objectType({
     t.field(PublishModel.secondaryCategory)
     t.field(PublishModel.kind)
     t.field(PublishModel.visibility)
+    t.field(PublishModel.tags)
     t.field(PublishModel.uploadError)
     t.field(PublishModel.transcodeError)
     t.field(PublishModel.uploading)
