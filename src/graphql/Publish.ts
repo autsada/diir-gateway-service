@@ -67,7 +67,6 @@ export const Blog = objectType({
     t.field(BlogModel.publishId)
     t.field(BlogModel.publish)
     t.field(BlogModel.content)
-    t.field(BlogModel.title)
   },
 })
 
@@ -2048,14 +2047,13 @@ export const PublishMutation = extendType({
 
             // If it's a published blog, all required data must be completed
             if (visibility === "public") {
-              if (!title || !content)
+              if ((!title && !publish?.title) || !content)
                 throwError(badRequestErrMessage, "BAD_REQUEST")
             }
 
             await prisma.blog.create({
               data: {
                 publishId,
-                title: title || "",
                 content: content || "",
               },
             })
@@ -2064,30 +2062,30 @@ export const PublishMutation = extendType({
 
             // If it's a published blog, all required data must be completed
             if (visibility === "public") {
-              if ((!title && !blog.title) || (!content && !blog.content))
+              if ((!title && !publish?.title) || (!content && !blog.content))
                 throwError(badRequestErrMessage, "BAD_REQUEST")
             }
 
-            if (title || content) {
+            if (content) {
               await prisma.blog.update({
                 where: {
                   publishId,
                 },
                 data: {
-                  title: title || blog.title,
-                  content: content || blog?.content,
+                  content,
                 },
               })
             }
           }
 
           // Update the publish
-          if (imageUrl || imageRef || filename || tags || visibility) {
+          if (title || imageUrl || imageRef || filename || tags || visibility) {
             await prisma.publish.update({
               where: {
                 id: publishId,
               },
               data: {
+                title: title || publish?.title,
                 thumbnail: imageUrl || publish?.thumbnail,
                 thumbnailRef: imageRef || publish?.thumbnailRef,
                 filename: filename || publish?.filename,

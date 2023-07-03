@@ -124,7 +124,6 @@ model Blog {
     updatedAt DateTime?
     publish   Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
     publishId String    @unique
-    title     String    @db.VarChar(128)
     content   Json
 }
 
@@ -151,7 +150,7 @@ model Publish {
     thumbnail         String? // A video thumbnail
     thumbnailRef      String? // A reference path in cloud storage
     thumbSource       ThumbnailSource @default(generated)
-    title             String?         @db.VarChar(100)
+    title             String?         @db.VarChar(128)
     description       String?         @db.VarChar(5000)
     views             Int             @default(0)
     primaryCategory   Category?

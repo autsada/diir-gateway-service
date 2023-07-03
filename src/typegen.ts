@@ -362,7 +362,6 @@ export interface NexusGenObjects {
     content: NexusGenScalars['Json']; // Json!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     publishId: string; // String!
-    title: string; // String!
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
   }
   CalculateTipsResult: { // root type
@@ -624,7 +623,6 @@ export interface NexusGenFieldTypes {
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     publish: NexusGenRootTypes['Publish'] | null; // Publish
     publishId: string; // String!
-    title: string; // String!
     updatedAt: NexusGenScalars['DateTime'] | null; // DateTime
   }
   CalculateTipsResult: { // field return type
@@ -994,7 +992,6 @@ export interface NexusGenFieldTypeNames {
     createdAt: 'DateTime'
     publish: 'Publish'
     publishId: 'String'
-    title: 'String'
     updatedAt: 'DateTime'
   }
   CalculateTipsResult: { // field return type name
