@@ -212,6 +212,13 @@ input DeletePlaylistInput {
   stationId: String!
 }
 
+input DeletePublishInput {
+  accountId: String!
+  owner: String!
+  publishId: String!
+  stationId: String!
+}
+
 type DisLike {
   createdAt: DateTime!
   publish: Publish!
@@ -459,7 +466,7 @@ type Mutation {
   updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
   updatePreferences(input: UpdatePreferencesInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
-  updatePublish(input: UpdatePublishInput!): Publish
+  updateVideo(input: UpdateVideoInput!): Publish
   validateDisplayName(name: String!): Boolean
   validateName(name: String!): Boolean
 }
@@ -809,17 +816,17 @@ input UpdatePreferencesInput {
   stationId: String!
 }
 
-input UpdatePublishInput {
+input UpdateVideoInput {
   accountId: String!
   contentRef: String
   contentURI: String
+  creatorId: String!
   description: String
   kind: PublishKind
   owner: String!
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category
-  stationId: String!
   thumbSource: ThumbSource!
   thumbnail: String
   thumbnailRef: String

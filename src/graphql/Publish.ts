@@ -1873,12 +1873,12 @@ export const UpdateBlogInput = inputObjectType({
   },
 })
 
-export const UpdatePublishInput = inputObjectType({
-  name: "UpdatePublishInput",
+export const UpdateVideoInput = inputObjectType({
+  name: "UpdateVideoInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
-    t.nonNull.string("stationId")
+    t.nonNull.string("creatorId")
     t.nonNull.string("publishId")
     t.string("contentURI")
     t.string("contentRef")
@@ -1896,6 +1896,16 @@ export const UpdatePublishInput = inputObjectType({
 
 export const LikePublishInput = inputObjectType({
   name: "LikePublishInput",
+  definition(t) {
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("stationId")
+    t.nonNull.string("publishId")
+  },
+})
+
+export const DeletePublishInput = inputObjectType({
+  name: "DeletePublishInput",
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
@@ -2033,7 +2043,7 @@ export const PublishMutation = extendType({
           if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
 
           // Check authorization
-          if (publish?.creator?.owner?.toLowerCase() !== owner.toLowerCase())
+          if (publish?.creatorId !== creatorId)
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Find the blog
@@ -2103,9 +2113,9 @@ export const PublishMutation = extendType({
       },
     })
 
-    t.field("updatePublish", {
+    t.field("updateVideo", {
       type: "Publish",
-      args: { input: nonNull("UpdatePublishInput") },
+      args: { input: nonNull("UpdateVideoInput") },
       resolve: async (
         _parent,
         { input },
@@ -2116,7 +2126,7 @@ export const PublishMutation = extendType({
           const {
             owner,
             accountId,
-            stationId,
+            creatorId,
             publishId,
             contentURI,
             contentRef,
@@ -2130,7 +2140,7 @@ export const PublishMutation = extendType({
             kind,
             visibility,
           } = input
-          if (!owner || !accountId || !publishId)
+          if (!owner || !accountId || !creatorId || !publishId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
           // Validate authentication/authorization
@@ -2152,7 +2162,7 @@ export const PublishMutation = extendType({
             },
           })
           if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
-          if (publish?.creatorId !== stationId)
+          if (publish?.creatorId !== creatorId)
             throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
 
           // Update publish
