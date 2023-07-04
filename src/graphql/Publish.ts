@@ -2087,9 +2087,9 @@ export const PublishMutation = extendType({
               },
               data: {
                 title: title || publish?.title,
-                thumbnail: imageUrl || publish?.thumbnail,
-                thumbnailRef: imageRef || publish?.thumbnailRef,
-                filename: filename || publish?.filename,
+                thumbnail: imageUrl ?? publish?.thumbnail,
+                thumbnailRef: imageRef ?? publish?.thumbnailRef,
+                filename: filename ?? publish?.filename,
                 tags: tags || publish?.tags,
                 visibility: visibility || publish?.visibility,
               },

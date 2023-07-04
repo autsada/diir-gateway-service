@@ -29,9 +29,10 @@ async function startServer() {
       verify: (req, res, buf) => {
         req.rawBody = buf.toString("utf-8")
       },
+      limit: "25mb",
     })
   )
-  app.use(express.urlencoded({ extended: true }))
+  app.use(express.urlencoded({ extended: true, limit: "25mb" }))
   app.use(cors<cors.CorsRequest>())
 
   // Webhooks route for listening to activity occurred to user's blockchain address
