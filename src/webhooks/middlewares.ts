@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from "express"
 import crypto from "crypto"
 
-const { CLOUDFLARE_WEBHOOK_SIGNING_KEY } = process.env
+const { CLOUDFLARE_WEBHOOK_SIGNING_KEY, UPLOAD_SIGNATURE } = process.env
 
-export async function validateSignature(
+export async function validateCloudflareSignature(
   req: Request,
   res: Response,
   next: NextFunction
@@ -32,6 +32,24 @@ export async function validateSignature(
       const digest = hmac.digest("hex")
 
       req.isWebhookSignatureValid = signature === digest
+      next()
+    }
+  } catch (error) {
+    res.status(500).end()
+  }
+}
+
+export async function validateUploadSignature(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const headers = req.headers
+    const signatureHeader = headers["upload-signature"] as string
+    if (signatureHeader !== UPLOAD_SIGNATURE) {
+      res.status(403).send("Signature invalid")
+    } else {
       next()
     }
   } catch (error) {

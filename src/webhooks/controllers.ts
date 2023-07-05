@@ -191,6 +191,7 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       }
 
       // Call a route `onUploadFinished` in the Wallet Service
+      // This will let the frontends know the process is done so they can update their UIs
       const url = WALLET_SERVICE_URL
         ? `${WALLET_SERVICE_URL}/upload/finished`
         : "http://localhost:8000/upload/finished"
@@ -223,6 +224,41 @@ export async function onTranscodingFinished(req: Request, res: Response) {
       })
     }
 
+    res.status(500).end()
+  }
+}
+
+/**
+ * This route will be called from the Upload Service when a publish's files were deleted from cloud storage
+ */
+export async function onFilesDeleted(req: Request, res: Response) {
+  try {
+    const { publishId } = req.params as { publishId: string }
+    if (!publishId) {
+      res.status(500).end()
+    } else {
+      await prisma.publish.delete({
+        where: {
+          id: publishId,
+        },
+      })
+
+      // Call a route `onUploadFinished` in the Wallet Service
+      // This will let the frontends know the process is done so they can update their UIs
+      const url = WALLET_SERVICE_URL
+        ? `${WALLET_SERVICE_URL}/upload/finished`
+        : "http://localhost:8000/upload/finished"
+      await axios({
+        method: "POST",
+        url: url,
+        data: {
+          publishId,
+        },
+      })
+
+      res.status(200).end()
+    }
+  } catch (error) {
     res.status(500).end()
   }
 }

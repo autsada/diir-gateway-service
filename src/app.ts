@@ -14,6 +14,7 @@ import { InMemoryLRUCache } from "@apollo/utils.keyvaluecache"
 import { schema } from "./schema"
 import { prisma } from "./client"
 import { WalletAPI } from "./dataSources/walletAPI"
+import { UploadAPI } from "./dataSources/uploadAPI"
 import { router } from "./webhooks/routes"
 import type { Context } from "./context"
 import type { Environment } from "./types"
@@ -78,6 +79,7 @@ async function startServer() {
           signature,
           dataSources: {
             walletAPI: new WalletAPI({ idToken, cache }),
+            uploadAPI: new UploadAPI({ idToken, cache }),
           },
         }
       },

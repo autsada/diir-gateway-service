@@ -161,6 +161,7 @@ model Publish {
     uploadError       Boolean         @default(false)
     transcodeError    Boolean         @default(false)
     uploading         Boolean         @default(false)
+    deleting          Boolean         @default(false)
     playback          PlaybackLink?
     likes             Like[]
     dislikes          DisLike[]

@@ -103,9 +103,9 @@ export interface NexusGenInputs {
   }
   DeletePublishInput: { // input type
     accountId: string; // String!
+    creatorId: string; // String!
     owner: string; // String!
     publishId: string; // String!
-    stationId: string; // String!
   }
   DontRecommendInput: { // input type
     accountId: string; // String!
@@ -526,6 +526,7 @@ export interface NexusGenObjects {
     contentURI?: string | null; // String
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     creatorId: string; // String!
+    deleting: boolean; // Boolean!
     description?: string | null; // String
     filename?: string | null; // String
     id: string; // ID!
@@ -771,6 +772,7 @@ export interface NexusGenFieldTypes {
     createTip: NexusGenRootTypes['Tip'] | null; // Tip
     deleteAllPlaylistItems: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     deletePlaylist: NexusGenRootTypes['WriteResult'] | null; // WriteResult
+    deletePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     disLikeComment: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     disLikePublish: NexusGenRootTypes['WriteResult'] | null; // WriteResult
     dontRecommend: NexusGenRootTypes['WriteResult'] | null; // WriteResult
@@ -859,6 +861,7 @@ export interface NexusGenFieldTypes {
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     creator: NexusGenRootTypes['Station']; // Station!
     creatorId: string; // String!
+    deleting: boolean; // Boolean!
     description: string | null; // String
     disLiked: boolean | null; // Boolean
     disLikesCount: number; // Int!
@@ -1141,6 +1144,7 @@ export interface NexusGenFieldTypeNames {
     createTip: 'Tip'
     deleteAllPlaylistItems: 'WriteResult'
     deletePlaylist: 'WriteResult'
+    deletePublish: 'WriteResult'
     disLikeComment: 'WriteResult'
     disLikePublish: 'WriteResult'
     dontRecommend: 'WriteResult'
@@ -1229,6 +1233,7 @@ export interface NexusGenFieldTypeNames {
     createdAt: 'DateTime'
     creator: 'Station'
     creatorId: 'String'
+    deleting: 'Boolean'
     description: 'String'
     disLiked: 'Boolean'
     disLikesCount: 'Int'
@@ -1397,6 +1402,9 @@ export interface NexusGenArgTypes {
     }
     deletePlaylist: { // args
       input: NexusGenInputs['DeletePlaylistInput']; // DeletePlaylistInput!
+    }
+    deletePublish: { // args
+      input: NexusGenInputs['DeletePublishInput']; // DeletePublishInput!
     }
     disLikeComment: { // args
       input: NexusGenInputs['LikeCommentInput']; // LikeCommentInput!

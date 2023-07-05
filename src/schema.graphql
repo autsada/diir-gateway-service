@@ -214,9 +214,9 @@ input DeletePlaylistInput {
 
 input DeletePublishInput {
   accountId: String!
+  creatorId: String!
   owner: String!
   publishId: String!
-  stationId: String!
 }
 
 type DisLike {
@@ -444,6 +444,7 @@ type Mutation {
   createTip(input: CreateTipInput!): Tip
   deleteAllPlaylistItems(input: DeletePlaylistInput!): WriteResult
   deletePlaylist(input: DeletePlaylistInput!): WriteResult
+  deletePublish(input: DeletePublishInput!): WriteResult
   disLikeComment(input: LikeCommentInput!): WriteResult
   disLikePublish(input: LikePublishInput!): WriteResult
   dontRecommend(input: DontRecommendInput!): WriteResult
@@ -551,6 +552,7 @@ type Publish {
   createdAt: DateTime!
   creator: Station!
   creatorId: String!
+  deleting: Boolean!
   description: String
   disLiked: Boolean
   disLikesCount: Int!

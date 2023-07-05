@@ -25,7 +25,7 @@ export class WalletAPI extends RESTDataSource {
   ): Promise<void> {
     // The token for use to authenticate between services in GCP
     if (env !== "development") {
-      const token = await authClient.getIdToken()
+      const token = await authClient.getIdToken(this.baseURL)
       req.headers["authorization"] = token || ""
     }
     // The id token that to be sent from the UI for use to verify user.

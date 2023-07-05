@@ -116,6 +116,7 @@ export const Publish = objectType({
     t.field(PublishModel.uploadError)
     t.field(PublishModel.transcodeError)
     t.field(PublishModel.uploading)
+    t.field(PublishModel.deleting)
     t.field(PublishModel.creator)
     t.field(PublishModel.playback)
     t.field(PublishModel.likes)
@@ -1909,7 +1910,7 @@ export const DeletePublishInput = inputObjectType({
   definition(t) {
     t.nonNull.string("owner")
     t.nonNull.string("accountId")
-    t.nonNull.string("stationId")
+    t.nonNull.string("creatorId")
     t.nonNull.string("publishId")
   },
 })
@@ -1996,123 +1997,6 @@ export const PublishMutation = extendType({
       },
     })
 
-    t.field("updateBlog", {
-      type: "WriteResult",
-      args: { input: nonNull("UpdateBlogInput") },
-      resolve: async (
-        _parent,
-        { input },
-        { prisma, dataSources, signature }
-      ) => {
-        try {
-          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
-          const {
-            creatorId,
-            owner,
-            accountId,
-            imageUrl,
-            imageRef,
-            filename,
-            visibility,
-            title,
-            tags,
-            content,
-            publishId,
-          } = input
-          if (!creatorId || !owner || !accountId || !publishId)
-            throwError(badInputErrMessage, "BAD_USER_INPUT")
-
-          // Validate authentication/authorization
-          await validateAuthenticity({
-            accountId,
-            owner,
-            dataSources,
-            prisma,
-            signature,
-          })
-
-          // Find the publish
-          const publish = await prisma.publish.findUnique({
-            where: {
-              id: publishId,
-            },
-            include: {
-              creator: true,
-            },
-          })
-          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
-
-          // Check authorization
-          if (publish?.creatorId !== creatorId)
-            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
-
-          // Find the blog
-          const blog = await prisma.blog.findUnique({
-            where: {
-              publishId,
-            },
-          })
-
-          if (!blog) {
-            // If no blog found, create a new blog
-
-            // If it's a published blog, all required data must be completed
-            if (visibility === "public") {
-              if ((!title && !publish?.title) || !content)
-                throwError(badRequestErrMessage, "BAD_REQUEST")
-            }
-
-            await prisma.blog.create({
-              data: {
-                publishId,
-                content: content || "",
-              },
-            })
-          } else {
-            // Update the blog
-
-            // If it's a published blog, all required data must be completed
-            if (visibility === "public") {
-              if ((!title && !publish?.title) || (!content && !blog.content))
-                throwError(badRequestErrMessage, "BAD_REQUEST")
-            }
-
-            if (content) {
-              await prisma.blog.update({
-                where: {
-                  publishId,
-                },
-                data: {
-                  content,
-                },
-              })
-            }
-          }
-
-          // Update the publish
-          if (title || imageUrl || imageRef || filename || tags || visibility) {
-            await prisma.publish.update({
-              where: {
-                id: publishId,
-              },
-              data: {
-                title: title || publish?.title,
-                thumbnail: imageUrl ?? publish?.thumbnail,
-                thumbnailRef: imageRef ?? publish?.thumbnailRef,
-                filename: filename ?? publish?.filename,
-                tags: tags || publish?.tags,
-                visibility: visibility || publish?.visibility,
-              },
-            })
-          }
-
-          return { status: "Ok" }
-        } catch (error) {
-          throw error
-        }
-      },
-    })
-
     t.field("updateVideo", {
       type: "Publish",
       args: { input: nonNull("UpdateVideoInput") },
@@ -2190,6 +2074,123 @@ export const PublishMutation = extendType({
           })
 
           return publish
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("updateBlog", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdateBlogInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { prisma, dataSources, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const {
+            creatorId,
+            owner,
+            accountId,
+            imageUrl,
+            imageRef,
+            filename,
+            visibility,
+            title,
+            tags,
+            content,
+            publishId,
+          } = input
+          if (!creatorId || !owner || !accountId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Find the publish
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+            include: {
+              creator: true,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check authorization
+          if (publish?.creatorId !== creatorId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Find the blog
+          const blog = await prisma.blog.findUnique({
+            where: {
+              publishId,
+            },
+          })
+
+          if (!blog) {
+            // If no blog found, create a new blog
+
+            // If it's a published blog, all required data must be completed
+            if (visibility === "public") {
+              if ((!title && !publish?.title) || !content)
+                throwError(badRequestErrMessage, "BAD_REQUEST")
+            }
+
+            await prisma.blog.create({
+              data: {
+                publishId,
+                content: content || {},
+              },
+            })
+          } else {
+            // Update the blog
+
+            // If it's a published blog, all required data must be completed
+            if (visibility === "public") {
+              if ((!title && !publish?.title) || (!content && !blog.content))
+                throwError(badRequestErrMessage, "BAD_REQUEST")
+            }
+
+            if (content) {
+              await prisma.blog.update({
+                where: {
+                  publishId,
+                },
+                data: {
+                  content,
+                },
+              })
+            }
+          }
+
+          // Update the publish
+          if (title || imageUrl || imageRef || filename || tags || visibility) {
+            await prisma.publish.update({
+              where: {
+                id: publishId,
+              },
+              data: {
+                title: title || publish?.title,
+                thumbnail: imageUrl ?? publish?.thumbnail,
+                thumbnailRef: imageRef ?? publish?.thumbnailRef,
+                filename: filename ?? publish?.filename,
+                tags: tags || publish?.tags,
+                visibility: visibility || publish?.visibility,
+              },
+            })
+          }
+
+          return { status: "Ok" }
         } catch (error) {
           throw error
         }
@@ -2400,6 +2401,72 @@ export const PublishMutation = extendType({
             },
             data: {
               views: (publish?.views || 0) + 1,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    /**
+     * Delete a video
+     */
+    t.field("deletePublish", {
+      type: "WriteResult",
+      args: { input: nonNull("DeletePublishInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, creatorId, publishId } = input
+          if (!owner || !accountId || !creatorId || !publishId)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          // Check if the given publish exists
+          const publish = await prisma.publish.findUnique({
+            where: {
+              id: publishId,
+            },
+          })
+          if (!publish) throwError(notFoundErrMessage, "NOT_FOUND")
+
+          // Check authorization
+          const creator = await prisma.station.findUnique({
+            where: {
+              id: creatorId,
+            },
+          })
+          if (!creator) throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+          if (publish?.creatorId !== creatorId)
+            throwError(unauthorizedErrMessage, "UN_AUTHORIZED")
+
+          // Call the Upload Service to delete the publish's files without waiting.
+          dataSources.uploadAPI.deleteFiles(
+            `publishes/${creator?.name}/${publishId}/`
+          )
+
+          // Update the publish in the database so frontends can update their UIs
+          await prisma.publish.update({
+            where: {
+              id: publishId,
+            },
+            data: {
+              deleting: true,
             },
           })
 

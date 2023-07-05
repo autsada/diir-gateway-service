@@ -6,9 +6,12 @@ import {
   createTranscodeWebhook,
   deleteTranscodeWebhook,
   onTranscodingFinished,
-  // onUploadStarted,
+  onFilesDeleted,
 } from "./controllers"
-import { validateSignature } from "./middlewares"
+import {
+  validateCloudflareSignature,
+  validateUploadSignature,
+} from "./middlewares"
 
 export const router = express.Router()
 
@@ -16,4 +19,10 @@ router.post("/address-updated", onAddressUpdated)
 router.get("/cloudflare", getTranscodeWebhook)
 router.post("/cloudflare", createTranscodeWebhook)
 router.delete("/cloudflare", deleteTranscodeWebhook)
-router.post("/cloudflare/finished", validateSignature, onTranscodingFinished)
+router.post(
+  "/cloudflare/finished",
+  validateCloudflareSignature,
+  onTranscodingFinished
+)
+// A route to delete a publish when its video/image is deleted from cloud storage
+router.delete("/publishes/:publishId", validateUploadSignature, onFilesDeleted)
