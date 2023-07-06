@@ -54,6 +54,7 @@ type CalculateTipsResult {
 enum Category {
   AI
   Animals
+  Blockchain
   Children
   Education
   Entertainment
@@ -465,9 +466,10 @@ type Mutation {
   updatePlaylistDescription(input: UpdatePlaylistDescriptionInput!): WriteResult
   updatePlaylistName(input: UpdatePlaylistNameInput!): WriteResult
   updatePlaylists(input: UpdatePlaylistsInput!): WriteResult
-  updatePreferences(input: UpdatePreferencesInput!): WriteResult
   updateProfileImage(input: UpdateImageInput!): WriteResult
+  updateReadPreferences(input: UpdatePreferencesInput!): WriteResult
   updateVideo(input: UpdateVideoInput!): Publish
+  updateWatchPreferences(input: UpdatePreferencesInput!): WriteResult
   validateDisplayName(name: String!): Boolean
   validateName(name: String!): Boolean
 }
@@ -725,12 +727,13 @@ type Station {
   isOwner: Boolean
   name: String!
   owner: String!
-  preferences: [Category!]!
   publishes: [Publish!]!
   publishesCount: Int!
+  readPreferences: [Category!]!
   tokenId: Int
   updatedAt: DateTime
   watchLater: [WatchLater!]!
+  watchPreferences: [Category!]!
 }
 
 enum ThumbSource {

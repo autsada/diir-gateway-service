@@ -47,7 +47,8 @@ export const Station = objectType({
     t.field(StationModel.accountId)
     t.field(StationModel.account)
     t.field(StationModel.watchLater)
-    t.field(StationModel.preferences)
+    t.field(StationModel.watchPreferences)
+    t.field(StationModel.readPreferences)
     // t.field(StationModel.playlists)
 
     t.nonNull.field("followersCount", {
@@ -768,7 +769,7 @@ export const StationMutation = extendType({
       },
     })
 
-    t.field("updatePreferences", {
+    t.field("updateWatchPreferences", {
       type: "WriteResult",
       args: { input: nonNull("UpdatePreferencesInput") },
       resolve: async (
@@ -796,7 +797,46 @@ export const StationMutation = extendType({
               id: stationId,
             },
             data: {
-              preferences,
+              watchPreferences: preferences,
+            },
+          })
+
+          return { status: "Ok" }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
+
+    t.field("updateReadPreferences", {
+      type: "WriteResult",
+      args: { input: nonNull("UpdatePreferencesInput") },
+      resolve: async (
+        _parent,
+        { input },
+        { dataSources, prisma, signature }
+      ) => {
+        try {
+          if (!input) throwError(badInputErrMessage, "BAD_USER_INPUT")
+          const { owner, accountId, stationId, preferences } = input
+          if (!owner || !accountId || !stationId || !preferences)
+            throwError(badInputErrMessage, "BAD_USER_INPUT")
+
+          // Validate authentication/authorization
+          await validateAuthenticity({
+            accountId,
+            owner,
+            dataSources,
+            prisma,
+            signature,
+          })
+
+          await prisma.station.update({
+            where: {
+              id: stationId,
+            },
+            data: {
+              readPreferences: preferences,
             },
           })
 
