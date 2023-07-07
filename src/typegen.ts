@@ -324,6 +324,7 @@ export interface NexusGenInputs {
     primaryCategory?: NexusGenEnums['Category'] | null; // Category
     publishId: string; // String!
     secondaryCategory?: NexusGenEnums['Category'] | null; // Category
+    tags?: string[] | null; // [String!]
     thumbSource: NexusGenEnums['ThumbSource']; // ThumbSource!
     thumbnail?: string | null; // String
     thumbnailRef?: string | null; // String

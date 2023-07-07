@@ -1873,6 +1873,7 @@ export const UpdateVideoInput = inputObjectType({
     t.string("description")
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
+    t.list.nonNull.field("tags", { type: "String" })
     t.field("kind", { type: "PublishKind" })
     t.field("visibility", { type: "Visibility" })
   },
@@ -2023,6 +2024,7 @@ export const PublishMutation = extendType({
             description,
             primaryCategory,
             secondaryCategory,
+            tags,
             kind,
             visibility,
           } = input
@@ -2066,6 +2068,7 @@ export const PublishMutation = extendType({
               description,
               primaryCategory,
               secondaryCategory,
+              tags: tags || publish?.tags || [],
               kind:
                 publish?.playback?.duration && publish?.playback?.duration <= 60
                   ? "Short"

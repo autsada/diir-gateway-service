@@ -834,6 +834,7 @@ input UpdateVideoInput {
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category
+  tags: [String!]
   thumbSource: ThumbSource!
   thumbnail: String
   thumbnailRef: String
