@@ -769,7 +769,9 @@ input UpdateBlogInput {
   imageRef: String
   imageUrl: String
   owner: String!
+  primaryCategory: Category
   publishId: String!
+  secondaryCategory: Category
   tags: [String!]
   title: String
   visibility: Visibility

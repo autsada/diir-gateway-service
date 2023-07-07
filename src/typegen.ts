@@ -266,7 +266,9 @@ export interface NexusGenInputs {
     imageRef?: string | null; // String
     imageUrl?: string | null; // String
     owner: string; // String!
+    primaryCategory?: NexusGenEnums['Category'] | null; // Category
     publishId: string; // String!
+    secondaryCategory?: NexusGenEnums['Category'] | null; // Category
     tags?: string[] | null; // [String!]
     title?: string | null; // String
     visibility?: NexusGenEnums['Visibility'] | null; // Visibility

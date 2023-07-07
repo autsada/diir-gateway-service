@@ -1124,17 +1124,17 @@ export const PublishQuery = extendType({
                   },
                 ],
                 OR:
-                  !requestor || requestor.preferences.length === 0
+                  !requestor || requestor.watchPreferences.length === 0
                     ? undefined
                     : [
                         {
                           primaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                         {
                           secondaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                       ],
@@ -1170,17 +1170,17 @@ export const PublishQuery = extendType({
                   },
                 ],
                 OR:
-                  !requestor || requestor.preferences.length === 0
+                  !requestor || requestor.watchPreferences.length === 0
                     ? undefined
                     : [
                         {
                           primaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                         {
                           secondaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                       ],
@@ -1226,17 +1226,17 @@ export const PublishQuery = extendType({
                   },
                 ],
                 OR:
-                  !requestor || requestor.preferences.length === 0
+                  !requestor || requestor.watchPreferences.length === 0
                     ? undefined
                     : [
                         {
                           primaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                         {
                           secondaryCategory: {
-                            in: requestor.preferences,
+                            in: requestor.watchPreferences,
                           },
                         },
                       ],
@@ -1857,23 +1857,6 @@ export const CreateDraftBlogResult = objectType({
   },
 })
 
-export const UpdateBlogInput = inputObjectType({
-  name: "UpdateBlogInput",
-  definition(t) {
-    t.nonNull.string("creatorId") // Creator station id
-    t.nonNull.string("owner")
-    t.nonNull.string("accountId")
-    t.nonNull.string("publishId") // A publish id of the blog
-    t.string("title")
-    t.string("imageUrl") // A url of the cover image
-    t.string("imageRef") // A ref to storage of the cover image
-    t.string("filename") // A filename of the cover image
-    t.list.nonNull.field("tags", { type: "String" })
-    t.field("content", { type: "Json" })
-    t.field("visibility", { type: "Visibility" })
-  },
-})
-
 export const UpdateVideoInput = inputObjectType({
   name: "UpdateVideoInput",
   definition(t) {
@@ -1891,6 +1874,25 @@ export const UpdateVideoInput = inputObjectType({
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
     t.field("kind", { type: "PublishKind" })
+    t.field("visibility", { type: "Visibility" })
+  },
+})
+
+export const UpdateBlogInput = inputObjectType({
+  name: "UpdateBlogInput",
+  definition(t) {
+    t.nonNull.string("creatorId") // Creator station id
+    t.nonNull.string("owner")
+    t.nonNull.string("accountId")
+    t.nonNull.string("publishId") // A publish id of the blog
+    t.string("title")
+    t.string("imageUrl") // A url of the cover image
+    t.string("imageRef") // A ref to storage of the cover image
+    t.string("filename") // A filename of the cover image
+    t.field("primaryCategory", { type: "Category" })
+    t.field("secondaryCategory", { type: "Category" })
+    t.list.nonNull.field("tags", { type: "String" })
+    t.field("content", { type: "Json" })
     t.field("visibility", { type: "Visibility" })
   },
 })
@@ -2097,6 +2099,8 @@ export const PublishMutation = extendType({
             imageUrl,
             imageRef,
             filename,
+            primaryCategory,
+            secondaryCategory,
             visibility,
             title,
             tags,
@@ -2139,7 +2143,6 @@ export const PublishMutation = extendType({
 
           if (!blog) {
             // If no blog found, create a new blog
-
             // If it's a published blog, all required data must be completed
             if (visibility === "public") {
               if ((!title && !publish?.title) || !content)
@@ -2174,7 +2177,16 @@ export const PublishMutation = extendType({
           }
 
           // Update the publish
-          if (title || imageUrl || imageRef || filename || tags || visibility) {
+          if (
+            title ||
+            imageUrl ||
+            imageRef ||
+            filename ||
+            primaryCategory ||
+            secondaryCategory ||
+            tags ||
+            visibility
+          ) {
             await prisma.publish.update({
               where: {
                 id: publishId,
@@ -2186,6 +2198,9 @@ export const PublishMutation = extendType({
                 filename: filename ?? publish?.filename,
                 tags: tags || publish?.tags,
                 visibility: visibility || publish?.visibility,
+                primaryCategory: primaryCategory || publish?.primaryCategory,
+                secondaryCategory:
+                  secondaryCategory || publish?.secondaryCategory,
               },
             })
           }
