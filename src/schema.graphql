@@ -41,6 +41,13 @@ type Blog {
   updatedAt: DateTime
 }
 
+input BookmarkPostInput {
+  accountId: String!
+  owner: String!
+  profileId: String!
+  publishId: String!
+}
+
 input CacheSessionInput {
   accountId: String!
   address: String!
@@ -320,6 +327,7 @@ input FetchPublishesByCatInput {
 
 input FetchPublishesInput {
   cursor: String
+  orderBy: PublishOrderBy
   requestorId: String
 }
 
@@ -434,6 +442,7 @@ type Mutation {
   addToNewPlaylist(input: CreatePlayListInput!): WriteResult
   addToPlaylist(input: AddToPlaylistInput!): WriteResult
   addToWatchLater(input: AddToWatchLaterInput!): WriteResult
+  bookmarkPost(input: BookmarkPostInput!): WriteResult
   cacheSession(input: CacheSessionInput!): WriteResult!
   calculateTips(qty: Int!): CalculateTipsResult
   comment(input: CommentPublishInput!): WriteResult
@@ -547,6 +556,7 @@ type PreviewPlaylistEdge {
 
 type Publish {
   blog: Blog
+  bookmarked: Boolean
   comments: [Comment!]!
   commentsCount: Int!
   contentRef: String
@@ -569,7 +579,7 @@ type Publish {
   playback: PlaybackLink
   primaryCategory: Category
   secondaryCategory: Category
-  tags: [String!]!
+  tags: String
   thumbSource: ThumbnailSource!
   thumbnail: String
   thumbnailRef: String
@@ -605,6 +615,7 @@ enum PublishOrderBy {
 type Query {
   checkPublishPlaylists(input: CheckPublishPlaylistsInput!): CheckPublishPlaylistsResponse
   fetchAllVideos(input: FetchPublishesInput!): FetchPublishesResponse
+  fetchBlogs(input: FetchPublishesInput!): FetchPublishesResponse
   fetchCommentsByPublishId(input: FetchCommentsByPublishIdInput!): FetchCommentsResponse
   fetchDontRecommends(input: FetchDontRecommendsInput!): FetchDontRecommendsResponse
   fetchMyPlaylists(input: FetchMyPlaylistsInput!): FetchPlaylistsResponse
@@ -642,6 +653,14 @@ enum QueryPublishKind {
   blogs
   podcasts
   videos
+}
+
+type ReadBookmark {
+  createdAt: DateTime!
+  profileId: String!
+  publish: Publish!
+  publishId: String!
+  station: Station!
 }
 
 input RemoveAllWatchLaterInput {
@@ -772,7 +791,7 @@ input UpdateBlogInput {
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category
-  tags: [String!]
+  tags: String
   title: String
   visibility: Visibility
 }
@@ -834,7 +853,7 @@ input UpdateVideoInput {
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category
-  tags: [String!]
+  tags: String
   thumbSource: ThumbSource!
   thumbnail: String
   thumbnailRef: String

@@ -282,6 +282,32 @@ export const Publish = objectType({
       },
     })
 
+    /**
+     * A boolean to check whether a station (who sends the query) bookmarked the publish or not, if no `requestorId` provided resolve to null.
+     */
+    t.nullable.field("bookmarked", {
+      type: "Boolean",
+      resolve: async (parent, _, { prisma }, info) => {
+        const { input } = info.variableValues as {
+          input: NexusGenInputs["QueryByIdInput"]
+        }
+
+        if (!input || !input.requestorId) return null
+        const { requestorId } = input
+
+        const bookmark = await prisma.readBookmark.findUnique({
+          where: {
+            identifier: {
+              publishId: parent.id,
+              profileId: requestorId,
+            },
+          },
+        })
+
+        return !!bookmark
+      },
+    })
+
     // /**
     //  * First 50 comments.
     //  */
@@ -323,6 +349,7 @@ export const FetchPublishesInput = inputObjectType({
   definition(t) {
     t.string("requestorId") // Station id of the requestor
     t.string("cursor")
+    t.field("orderBy", { type: "PublishOrderBy" })
   },
 })
 
@@ -1820,6 +1847,240 @@ export const PublishQuery = extendType({
         }
       },
     })
+
+    /**
+     * Fetch blog posts
+     */
+    t.field("fetchBlogs", {
+      type: "FetchPublishesResponse",
+      args: { input: nonNull("FetchPublishesInput") },
+      async resolve(_parent, { input }, { prisma }) {
+        try {
+          const { cursor, requestorId, orderBy } = input
+
+          let blogs: PublishType[] = []
+
+          let dontRecommends: DontRecommendType[] = []
+          if (requestorId) {
+            // Query dont recommends of the user
+            dontRecommends = await prisma.dontRecommend.findMany({
+              where: {
+                requestorId,
+              },
+              take: 1000, // Take the last 1000 records
+              orderBy: {
+                createdAt: "desc",
+              },
+            })
+          }
+
+          // List of the station ids in user's don't recommend list
+          const dontRecommendsList = dontRecommends.map((drc) => drc.targetId)
+
+          const requestor = requestorId
+            ? await prisma.station.findUnique({
+                where: {
+                  id: requestorId,
+                },
+              })
+            : null
+
+          if (!cursor) {
+            blogs = await prisma.publish.findMany({
+              where: {
+                OR:
+                  orderBy || !requestor
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                      ],
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Blog",
+                    },
+                  },
+                  {
+                    uploading: false,
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              orderBy:
+                orderBy === "popular"
+                  ? {
+                      views: "desc",
+                    }
+                  : {
+                      createdAt: "desc",
+                    },
+            })
+          } else {
+            // Query preferred categories first
+            blogs = await prisma.publish.findMany({
+              where: {
+                OR:
+                  orderBy || !requestor
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                      ],
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Blog",
+                    },
+                  },
+                  {
+                    uploading: false,
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip the cursor
+              orderBy:
+                orderBy === "popular"
+                  ? {
+                      views: "desc",
+                    }
+                  : {
+                      createdAt: "desc",
+                    },
+            })
+          }
+
+          if (blogs.length === FETCH_QTY) {
+            // Fetch result is equal to take quantity, so it has posibility that there are more to be fetched.
+            const lastFetchedCursor = blogs[blogs.length - 1].id
+
+            // Check if there is next page
+            // Query all
+            let nextQuery = await prisma.publish.findMany({
+              where: {
+                OR:
+                  orderBy || !requestor
+                    ? undefined
+                    : [
+                        {
+                          primaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                        {
+                          secondaryCategory: {
+                            in: requestor.readPreferences,
+                          },
+                        },
+                        {
+                          kind: {
+                            equals: "Blog",
+                          },
+                        },
+                      ],
+                AND: [
+                  {
+                    visibility: {
+                      equals: "public",
+                    },
+                  },
+                  {
+                    kind: {
+                      equals: "Blog",
+                    },
+                  },
+                  {
+                    uploading: false,
+                  },
+                  {
+                    creatorId: {
+                      notIn: dontRecommendsList,
+                    },
+                  },
+                ],
+              },
+              take: FETCH_QTY,
+              cursor: {
+                id: lastFetchedCursor,
+              },
+              skip: 1, // Skip the cusor
+              orderBy:
+                orderBy === "popular"
+                  ? {
+                      views: "desc",
+                    }
+                  : {
+                      createdAt: "desc",
+                    },
+            })
+
+            return {
+              pageInfo: {
+                endCursor: lastFetchedCursor,
+                hasNextPage: nextQuery.length > 0,
+              },
+              edges: blogs.map((pub) => ({
+                cursor: pub.id,
+                node: pub,
+              })),
+            }
+          } else {
+            return {
+              pageInfo: {
+                endCursor: null,
+                hasNextPage: false,
+              },
+              edges: blogs.map((blog) => ({
+                cursor: blog.id,
+                node: blog,
+              })),
+            }
+          }
+        } catch (error) {
+          throw error
+        }
+      },
+    })
   },
 })
 
@@ -1873,7 +2134,7 @@ export const UpdateVideoInput = inputObjectType({
     t.string("description")
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
-    t.list.nonNull.field("tags", { type: "String" })
+    t.string("tags")
     t.field("kind", { type: "PublishKind" })
     t.field("visibility", { type: "Visibility" })
   },
@@ -1892,7 +2153,7 @@ export const UpdateBlogInput = inputObjectType({
     t.string("filename") // A filename of the cover image
     t.field("primaryCategory", { type: "Category" })
     t.field("secondaryCategory", { type: "Category" })
-    t.list.nonNull.field("tags", { type: "String" })
+    t.string("tags")
     t.field("content", { type: "Json" })
     t.field("visibility", { type: "Visibility" })
   },
@@ -2068,7 +2329,7 @@ export const PublishMutation = extendType({
               description,
               primaryCategory,
               secondaryCategory,
-              tags: tags || publish?.tags || [],
+              tags: tags || publish?.tags,
               kind:
                 publish?.playback?.duration && publish?.playback?.duration <= 60
                   ? "Short"

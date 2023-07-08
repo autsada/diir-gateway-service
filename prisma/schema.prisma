@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["fullTextSearch"]
 }
 
 generator nexusPrisma {
@@ -61,6 +62,7 @@ model Station {
     playlists        Playlist[]
     dontRecommends   DontRecommend[]
     reports          Report[]
+    readBookmarks    ReadBookmark[]
 }
 
 model Follow {
@@ -159,7 +161,7 @@ model Publish {
     secondaryCategory Category?
     kind              PublishKind?
     visibility        Visibility      @default(draft)
-    tags              String[]        @default([])
+    tags              String?
     uploadError       Boolean         @default(false)
     transcodeError    Boolean         @default(false)
     uploading         Boolean         @default(false)
@@ -173,6 +175,7 @@ model Publish {
     playlistItems     PlaylistItem[]
     reported          Report[]
     blog              Blog?
+    readBookmarks     ReadBookmark[]
 }
 
 // Publish's Like
@@ -326,4 +329,15 @@ model Report {
     reason        ReportReason
 
     @@unique(fields: [submittedById, publishId, reason], name: "identifier")
+}
+
+// Watch later table
+model ReadBookmark {
+    createdAt DateTime @default(now())
+    station   Station  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    profileId String
+    publish   Publish  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId String
+
+    @@unique(fields: [profileId, publishId], name: "identifier")
 }
