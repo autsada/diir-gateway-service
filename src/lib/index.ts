@@ -113,7 +113,7 @@ export function calucateReadingTime(text: string) {
   // Return the number of words
   const wordCount = words.length
 
-  const wordsPerMinute = 250 // Adjust this value based on the average reading speed
+  const wordsPerMinute = 220
   const readingTime = Math.ceil(wordCount / wordsPerMinute)
   return readingTime
 }
