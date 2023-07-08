@@ -124,11 +124,12 @@ model PlaybackLink {
 
 // A model for the blog of a publish typed blog
 model Blog {
-    createdAt DateTime  @default(now())
-    updatedAt DateTime?
-    publish   Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
-    publishId String    @unique
-    content   Json
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime?
+    publish     Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
+    publishId   String    @unique
+    content     Json
+    readingTime String?
 }
 
 enum ThumbnailSource {

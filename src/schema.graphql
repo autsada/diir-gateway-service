@@ -38,6 +38,7 @@ type Blog {
   createdAt: DateTime!
   publish: Publish
   publishId: String!
+  readingTime: String
   updatedAt: DateTime
 }
 
@@ -788,6 +789,7 @@ input UpdateBlogInput {
   imageRef: String
   imageUrl: String
   owner: String!
+  preview: String
   primaryCategory: Category
   publishId: String!
   secondaryCategory: Category

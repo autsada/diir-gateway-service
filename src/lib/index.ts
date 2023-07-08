@@ -104,3 +104,16 @@ const colors = [
 export function generateColor() {
   return colors[Math.floor(Math.random() * 10)]
 }
+
+export function calucateReadingTime(text: string) {
+  // Remove HTML tags and trim leading/trailing spaces
+  const cleanText = text.replace(/<[^>]*>/g, "").trim()
+  // Split the text into an array of words
+  const words = cleanText.split(/\s+/)
+  // Return the number of words
+  const wordCount = words.length
+
+  const wordsPerMinute = 250 // Adjust this value based on the average reading speed
+  const readingTime = Math.ceil(wordCount / wordsPerMinute)
+  return readingTime
+}

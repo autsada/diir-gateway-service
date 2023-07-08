@@ -30,7 +30,7 @@ import {
   throwError,
   unauthorizedErrMessage,
 } from "./Error"
-import { validateAuthenticity } from "../lib"
+import { calucateReadingTime, validateAuthenticity } from "../lib"
 import { FETCH_QTY } from "../lib/constants"
 
 export const Category = enumType(CategoryEnum)
@@ -67,6 +67,7 @@ export const Blog = objectType({
     t.field(BlogModel.publishId)
     t.field(BlogModel.publish)
     t.field(BlogModel.content)
+    t.field(BlogModel.readingTime)
   },
 })
 
@@ -2155,6 +2156,7 @@ export const UpdateBlogInput = inputObjectType({
     t.field("secondaryCategory", { type: "Category" })
     t.string("tags")
     t.field("content", { type: "Json" })
+    t.string("preview") // Use this string to calculate estimated reading time
     t.field("visibility", { type: "Visibility" })
   },
 })
@@ -2369,6 +2371,7 @@ export const PublishMutation = extendType({
             title,
             tags,
             content,
+            preview,
             publishId,
           } = input
           if (!creatorId || !owner || !accountId || !publishId)
@@ -2405,6 +2408,10 @@ export const PublishMutation = extendType({
             },
           })
 
+          const readingTime = preview
+            ? `${calucateReadingTime(preview)} min read`
+            : null
+
           if (!blog) {
             // If no blog found, create a new blog
             // If it's a published blog, all required data must be completed
@@ -2417,6 +2424,7 @@ export const PublishMutation = extendType({
               data: {
                 publishId,
                 content: content || {},
+                readingTime,
               },
             })
           } else {
@@ -2428,13 +2436,14 @@ export const PublishMutation = extendType({
                 throwError(badRequestErrMessage, "BAD_REQUEST")
             }
 
-            if (content) {
+            if (content || preview) {
               await prisma.blog.update({
                 where: {
                   publishId,
                 },
                 data: {
                   content,
+                  readingTime,
                 },
               })
             }
