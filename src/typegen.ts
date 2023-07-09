@@ -378,6 +378,7 @@ export interface NexusGenObjects {
   Blog: { // root type
     content: NexusGenScalars['Json']; // Json!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    excerpt?: string | null; // String
     publishId: string; // String!
     readingTime?: string | null; // String
     updatedAt?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -647,6 +648,7 @@ export interface NexusGenFieldTypes {
   Blog: { // field return type
     content: NexusGenScalars['Json']; // Json!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
+    excerpt: string | null; // String
     publish: NexusGenRootTypes['Publish'] | null; // Publish
     publishId: string; // String!
     readingTime: string | null; // String
@@ -1032,6 +1034,7 @@ export interface NexusGenFieldTypeNames {
   Blog: { // field return type name
     content: 'Json'
     createdAt: 'DateTime'
+    excerpt: 'String'
     publish: 'Publish'
     publishId: 'String'
     readingTime: 'String'

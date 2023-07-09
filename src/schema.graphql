@@ -36,6 +36,7 @@ input AddToWatchLaterInput {
 type Blog {
   content: Json!
   createdAt: DateTime!
+  excerpt: String
   publish: Publish
   publishId: String!
   readingTime: String

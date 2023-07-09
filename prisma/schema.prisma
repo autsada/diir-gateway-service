@@ -130,6 +130,7 @@ model Blog {
     publishId   String    @unique
     content     Json
     readingTime String?
+    excerpt     String?
 }
 
 enum ThumbnailSource {

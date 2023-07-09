@@ -1,5 +1,6 @@
 import * as crypto from "crypto"
 import { ethers } from "ethers"
+import _ from "lodash"
 
 import { prisma as prismaClient } from "../client"
 import { WalletAPI } from "../dataSources/walletAPI"
@@ -105,15 +106,28 @@ export function generateColor() {
   return colors[Math.floor(Math.random() * 10)]
 }
 
-export function calucateReadingTime(text: string) {
+export function getCleanText(text: string) {
   // Remove HTML tags and trim leading/trailing spaces
-  const cleanText = text.replace(/<[^>]*>/g, "").trim()
+  return text.replace(/<[^>]*>/g, "").trim()
+}
+
+export function countWords(text: string) {
+  // Remove HTML tags and trim leading/trailing spaces
+  const cleanText = getCleanText(text)
   // Split the text into an array of words
   const words = cleanText.split(/\s+/)
   // Return the number of words
-  const wordCount = words.length
+  return words.length
+}
 
+export function calucateReadingTime(text: string) {
+  const wordCount = countWords(text)
   const wordsPerMinute = 220
   const readingTime = Math.ceil(wordCount / wordsPerMinute)
   return readingTime
+}
+
+export function getPostExcerpt(str: string, len = 200) {
+  const cleanText = getCleanText(str)
+  return _.truncate(cleanText, { length: len, separator: /,?\.* +/ }) // separate by spaces, including preceding commas and periods
 }

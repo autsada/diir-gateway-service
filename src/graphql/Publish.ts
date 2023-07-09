@@ -30,7 +30,11 @@ import {
   throwError,
   unauthorizedErrMessage,
 } from "./Error"
-import { calucateReadingTime, validateAuthenticity } from "../lib"
+import {
+  calucateReadingTime,
+  getPostExcerpt,
+  validateAuthenticity,
+} from "../lib"
 import { FETCH_QTY } from "../lib/constants"
 
 export const Category = enumType(CategoryEnum)
@@ -68,6 +72,7 @@ export const Blog = objectType({
     t.field(BlogModel.publish)
     t.field(BlogModel.content)
     t.field(BlogModel.readingTime)
+    t.field(BlogModel.excerpt)
   },
 })
 
@@ -284,7 +289,7 @@ export const Publish = objectType({
     })
 
     /**
-     * A boolean to check whether a station (who sends the query) bookmarked the publish or not, if no `requestorId` provided resolve to null.
+     * A boolean to check whether a profile (who sends the query) bookmarked the publish or not, if no `requestorId` provided resolve to null.
      */
     t.nullable.field("bookmarked", {
       type: "Boolean",
@@ -308,24 +313,6 @@ export const Publish = objectType({
         return !!bookmark
       },
     })
-
-    // /**
-    //  * First 50 comments.
-    //  */
-    // t.nullable.field("comments", {
-    //   type: nonNull(list("Comment")),
-    //   resolve: async (parent, _, { prisma }) => {
-    //     return prisma.comment.findMany({
-    //       where: {
-    //         publishId: parent.id,
-    //       },
-    //       orderBy: {
-    //         updatedAt: "desc",
-    //       },
-    //       take: 50,
-    //     })
-    //   },
-    // })
   },
 })
 
@@ -1928,9 +1915,14 @@ export const PublishQuery = extendType({
               take: FETCH_QTY,
               orderBy:
                 orderBy === "popular"
-                  ? {
-                      views: "desc",
-                    }
+                  ? [
+                      {
+                        views: "desc",
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ]
                   : {
                       createdAt: "desc",
                     },
@@ -1982,9 +1974,14 @@ export const PublishQuery = extendType({
               skip: 1, // Skip the cursor
               orderBy:
                 orderBy === "popular"
-                  ? {
-                      views: "desc",
-                    }
+                  ? [
+                      {
+                        views: "desc",
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ]
                   : {
                       createdAt: "desc",
                     },
@@ -2047,9 +2044,14 @@ export const PublishQuery = extendType({
               skip: 1, // Skip the cusor
               orderBy:
                 orderBy === "popular"
-                  ? {
-                      views: "desc",
-                    }
+                  ? [
+                      {
+                        views: "desc",
+                      },
+                      {
+                        createdAt: "desc",
+                      },
+                    ]
                   : {
                       createdAt: "desc",
                     },
@@ -2411,6 +2413,7 @@ export const PublishMutation = extendType({
           const readingTime = preview
             ? `${calucateReadingTime(preview)} min read`
             : null
+          const excerpt = preview ? getPostExcerpt(preview) : null
 
           if (!blog) {
             // If no blog found, create a new blog
@@ -2425,6 +2428,7 @@ export const PublishMutation = extendType({
                 publishId,
                 content: content || {},
                 readingTime,
+                excerpt,
               },
             })
           } else {
@@ -2444,6 +2448,7 @@ export const PublishMutation = extendType({
                 data: {
                   content,
                   readingTime,
+                  excerpt,
                 },
               })
             }
