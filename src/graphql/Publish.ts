@@ -71,6 +71,7 @@ export const Blog = objectType({
     t.field(BlogModel.publishId)
     t.field(BlogModel.publish)
     t.field(BlogModel.content)
+    t.field(BlogModel.htmlContent)
     t.field(BlogModel.readingTime)
     t.field(BlogModel.excerpt)
   },
@@ -2158,6 +2159,7 @@ export const UpdateBlogInput = inputObjectType({
     t.field("secondaryCategory", { type: "Category" })
     t.string("tags")
     t.field("content", { type: "Json" })
+    t.string("htmlContent") // A string used to display the content
     t.string("preview") // Use this string to calculate estimated reading time
     t.field("visibility", { type: "Visibility" })
   },
@@ -2373,9 +2375,11 @@ export const PublishMutation = extendType({
             title,
             tags,
             content,
+            htmlContent,
             preview,
             publishId,
           } = input
+
           if (!creatorId || !owner || !accountId || !publishId)
             throwError(badInputErrMessage, "BAD_USER_INPUT")
 
@@ -2419,7 +2423,7 @@ export const PublishMutation = extendType({
             // If no blog found, create a new blog
             // If it's a published blog, all required data must be completed
             if (visibility === "public") {
-              if ((!title && !publish?.title) || !content)
+              if ((!title && !publish?.title) || !content || !htmlContent)
                 throwError(badRequestErrMessage, "BAD_REQUEST")
             }
 
@@ -2429,6 +2433,7 @@ export const PublishMutation = extendType({
                 content: content || {},
                 readingTime,
                 excerpt,
+                htmlContent,
               },
             })
           } else {
@@ -2436,11 +2441,15 @@ export const PublishMutation = extendType({
 
             // If it's a published blog, all required data must be completed
             if (visibility === "public") {
-              if ((!title && !publish?.title) || (!content && !blog.content))
+              if (
+                (!title && !publish?.title) ||
+                (!htmlContent && !blog.htmlContent) ||
+                (!content && !blog.content)
+              )
                 throwError(badRequestErrMessage, "BAD_REQUEST")
             }
 
-            if (content || preview) {
+            if (content || htmlContent || preview) {
               await prisma.blog.update({
                 where: {
                   publishId,
@@ -2449,6 +2458,7 @@ export const PublishMutation = extendType({
                   content,
                   readingTime,
                   excerpt,
+                  htmlContent,
                 },
               })
             }

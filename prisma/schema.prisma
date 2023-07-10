@@ -129,6 +129,7 @@ model Blog {
     publish     Publish?  @relation(fields: [publishId], references: [id], onDelete: Cascade)
     publishId   String    @unique
     content     Json
+    htmlContent String?
     readingTime String?
     excerpt     String?
 }

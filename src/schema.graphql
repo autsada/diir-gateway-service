@@ -37,6 +37,7 @@ type Blog {
   content: Json!
   createdAt: DateTime!
   excerpt: String
+  htmlContent: String
   publish: Publish
   publishId: String!
   readingTime: String
@@ -787,6 +788,7 @@ input UpdateBlogInput {
   content: Json
   creatorId: String!
   filename: String
+  htmlContent: String
   imageRef: String
   imageUrl: String
   owner: String!
